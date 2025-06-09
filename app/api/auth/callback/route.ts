@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin + "/dashboard")
+  // Redirect to the dashboard with a full page reload
+  return NextResponse.redirect(new URL("/dashboard", request.url), {
+    status: 302, // Use 302 for temporary redirect
+  })
 }

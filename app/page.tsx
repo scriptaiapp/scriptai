@@ -55,7 +55,7 @@ export default function Home() {
                 <span>Personalized AI for YouTubers</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">
-                Your Personal AI Script Assistant
+                Your Personal AI Youtube Assistant
               </h1>
               <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-xl">
                 Train AI on your content, generate personalized scripts, and streamline your YouTube workflow with

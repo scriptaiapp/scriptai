@@ -4,7 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
-import DashboardSidebar from "@/components/dashboard-sidebar"
+import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import DashboardHeader from "@/components/dashboard-header"
 
 export default function DashboardLayout({
@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const { user, loading } = useSupabase()
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // This ensures hydration issues are avoided
   useEffect(() => {
@@ -42,9 +43,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <DashboardSidebar />
+      <DashboardSidebar collapsed={sidebarCollapsed} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader />
+        <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>
