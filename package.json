@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "scriptai",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -39,6 +39,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/auth-helpers-nextjs": "latest",
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "latest",
     "ai": "latest",
     "autoprefixer": "^10.4.20",

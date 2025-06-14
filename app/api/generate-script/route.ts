@@ -3,6 +3,7 @@ import { generateText } from "ai"
 import { NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
@@ -12,15 +13,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "OpenAI API key is not configured" }, { status: 500 })
     }
 
-    const { prompt, context, tone, includeStorytelling, reference_links, language, personalized } = await req.json()
+    const { prompt, context, tone, includeStorytelling, reference_links, language, personalized } = await req.json();
 
     // Get user data for personalization if needed
-    let userStyle = ""
-    let userId = ""
+    let userStyle = "";
+    let userId = "";
 
     // Create Supabase client
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    // const cookieStore = cookies()
+    // const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = await createClient();
 
     // Get user session
     const {
