@@ -1,7 +1,6 @@
 import { openai } from "@ai-sdk/openai"
 import { generateText } from "ai"
 import { NextResponse } from "next/server"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 
@@ -17,23 +16,14 @@ export async function POST(req: Request) {
 
     // Get user data for personalization if needed
     let userStyle = "";
-    let userId = "";
 
-    // Create Supabase client
-    // const cookieStore = cookies()
-    // const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const supabase = await createClient();
 
-    // Get user session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
+    const userId = req.headers.get("x-user-id");
+    console.log(userId);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    userId = session.user.id
 
     // Check if user has enough credits
     const { data: profileData, error: profileError } = await supabase

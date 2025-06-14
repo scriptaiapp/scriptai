@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
@@ -11,9 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Referral ID and referred user ID are required" }, { status: 400 })
     }
 
-    // Create Supabase client
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = await createClient();
 
     // Get the referral
     const { data: referral, error: referralError } = await supabase

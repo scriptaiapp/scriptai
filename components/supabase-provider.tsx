@@ -3,9 +3,9 @@
 import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import type { SupabaseClient, User } from "@supabase/auth-helpers-nextjs"
+import { type SupabaseClient, type User } from "@supabase/supabase-js"
 import { useToast } from "@/components/ui/use-toast"
+import { createClient } from "@/lib/supabase/client"
 
 type SupabaseContext = {
   supabase: SupabaseClient
@@ -21,7 +21,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast()
 
   // Create the Supabase client using environment variables
-  const supabase = createClientComponentClient()
+  const supabase = createClient();
 
   useEffect(() => {
     const getUser = async () => {

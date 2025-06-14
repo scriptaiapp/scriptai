@@ -1,12 +1,10 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
-
 import type { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
   let res = NextResponse.next({
-    request
+    request,
   })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +17,7 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           res = NextResponse.next({
-            request
+            request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             res.cookies.set(name, value, options)
@@ -31,13 +29,25 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getSession()
 
   console.log("Session:", session)
 
-  // Check auth condition
+  // Protect all API routes
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    // Pass user ID via headers for authenticated API requests
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set("x-user-id", session.user.id)
+    res = NextResponse.next({
+      request: { headers: requestHeaders },
+    })
+  }
+
+  // Protect dashboard routes
   if (request.nextUrl.pathname.startsWith("/dashboard")) {
-    // Redirect if user is not authenticated
     if (!session) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = "/login"
@@ -46,7 +56,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // If user is signed in and the current path is /login or /signup, redirect to /dashboard
+  // Redirect authenticated users from login/signup to dashboard
   if (session && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/dashboard"
@@ -57,5 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup"],
+  matcher: ["/dashboard/:path*", "/login", "/signup", "/api/:path*"],
 }
