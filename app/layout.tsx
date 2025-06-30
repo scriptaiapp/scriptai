@@ -9,8 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
   title: "Script AI - Personalized AI Assistant for YouTubers",
-  description: "Generate personalized scripts for your YouTube videos",
-    generator: 'v0.dev'
+  description: "Generate personalized scripts, titles, thumbnails for your YouTube videos"
 }
 
 export default function RootLayout({
