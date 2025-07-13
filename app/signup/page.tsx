@@ -14,24 +14,30 @@ import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+const credentials = [
+  { id: "email", name: "Email", type: "email", placeholder: "Enter your email" },
+  { id: "password", name: "Password", type: "password", placeholder: "Enter your email" },
+  { id: "confirmPassword", name: "Confirm Password", type: "password", placeholder: "Confirm your password" },
+]
+
 export default function SignupPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { supabase, user } = useSupabase()
-  const { toast } = useToast()
   const router = useRouter()
+  const { supabase, user } = useSupabase()
+  useEffect(() => {
+    if (user) router.replace("/dashboard")
+  }, [user, router])
+
+  const [details, setDetails] = useState<Record <string, string>>({})
+  const [visible, setVisible] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
-    if (user) {
-      router.replace("/dashboard")
-    }
+    if (user) router.replace("/dashboard")
   }, [user, router])
 
   const handleSignup = async (e: React.FormEvent) => {
+    const { email, password, confirmPassword } = details
     e.preventDefault()
 
     if (password !== confirmPassword) {
@@ -90,9 +96,7 @@ export default function SignupPage() {
     }
   }
 
-  if (user) {
-    return null
-  }
+  if (user) return null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
@@ -142,68 +146,37 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+            {credentials.map((option, key) => {
+              return <div key={key} className="space-y-2">
+                <Label htmlFor={option.id}>{option.name}</Label>
+                <div className="relative">
+                  <Input
+                    id={option.id}
+                    type={option.type == "password" ? (visible ? "" : "password") : option.type}
+                    placeholder={option.placeholder}
+                    value={details[option.id] || ''}
+                    onChange={e => setDetails({...details, [String(option.id)]: e.target.value})}
+                    required
+                  />
+                  { option?.type === "password" && <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setVisible(!visible)}
+                  >
+                    {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button> }
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
+            })}
             <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={loading}>
               {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="text-sm text-center">
-          Already have an account?{" "}
+          <p>Already have an account?&nbsp;</p>
           <Link
             href="/login"
             className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-medium"

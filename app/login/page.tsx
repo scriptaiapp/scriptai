@@ -14,22 +14,25 @@ import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+const credentials = [
+  { id: "email", name: "Email", type: "email", placeholder: "Enter your email" },
+  { id: "password", name: "Password", type: "password", placeholder: "Enter your email" },
+]
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [details, setDetails] = useState<Record <string, string>>({})
+  const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const { supabase, user } = useSupabase()
   const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
-    if (user) {
-      router.replace("/dashboard")
-    }
+    if (user) router.replace("/dashboard")
   }, [user, router])
 
   const handleLogin = async (e: React.FormEvent) => {
+    const { email, password } = details
     e.preventDefault()
     setLoading(true)
 
@@ -130,39 +133,31 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+            {credentials.map((option, key) => {
+              return <div key={key} className="space-y-2">
+                <Label htmlFor={option.id}>{option.name}</Label>
+                <div className="relative">
+                  <Input
+                    id={option.id}
+                    type={option.type == "password" ? (visible ? "" : "password") : option.type}
+                    placeholder={option.placeholder}
+                    value={details[option.id] || ''}
+                    onChange={e => setDetails({...details, [String(option.id)]: e.target.value})}
+                    required
+                  />
+                  { option?.type === "password" && <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setVisible(!visible)}
+                  >
+                    {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button> }
+                </div>
               </div>
-            </div>
+            })}
+
             <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </Button>
