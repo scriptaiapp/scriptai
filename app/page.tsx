@@ -3,6 +3,74 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, Video, PenTool, Zap, Globe, BookOpen, Gift, ImageIcon, FileText } from "lucide-react"
 import FeatureCard from "@/components/feature-card"
 
+const navbar = [
+  {name: "Features", href: "#features"},
+  {name: "How It Works", href: "#how-it-works"},
+  {name: "Pricing", href: "#pricing"},
+]
+
+const features = [
+  {title: "Personalized AI Training", icon: Video, description: "Upload your videos to train the AI on your unique style, tone, and content preferences."},
+  {title: "Script Generation", icon: PenTool, description: "Generate tailored scripts with simple prompts that match your personal style."},
+  {title: "Customizable Context", icon: Zap, description: "Add specific context to your scripts via text fields or dropdowns for more relevant content."},
+  {title: "Language Expansion", icon: Globe, description: "Generate scripts in multiple languages to reach a global audience."},
+  {title: "Tutorial Course Module", icon: BookOpen, description: "Break down complex topics into structured course modules with suggested video counts and topics."},
+  {title: "Referral Program", icon: Gift, description: "Earn free credits for premium features by referring other creators to Script AI."},
+  {title: "AI Thumbnail Generator", icon: ImageIcon, description: "Create eye-catching thumbnails that drive clicks and views."},
+  {title: "Subtitle Generator", icon: FileText, description: "Automatically generate accurate subtitles for your videos to improve accessibility."},
+]
+
+const chapters = [
+  {title: "Train Your AI", description: "Upload 3-5 of your videos to train the AI on your unique style, vocabulary, and pacing."},
+  {title: "Generate Scripts", description: "Input a simple prompt, select your tone, and add context to generate a personalized script."},
+  {title: "Create & Share", description: "Use additional tools to generate thumbnails, titles, and subtitles, then export and create your video."},
+]
+
+const pricing = [
+  {
+    price: 0,
+    heading: "Free",
+    confess: "Get Started",
+    description: "Perfect for trying out Script AI.",
+    features: ["3 scripts per month", "Basic script generation", "Tone selection"]
+  },
+  {
+    price: 19,
+    heading: "Pro",
+    isPopular: true,
+    confess: "Get Started",
+    description: "For serious content creators.",
+    features: ["Unlimited scripts", "Personalized AI training", "All script customization options", "Thumbnail & title generation", "Course module creaton"]
+  },
+  {
+    price: 49,
+    heading: "Enterprise",
+    confess: "Contact Sales",
+    description: "For professional YouTubers and teams.",
+    features: ["Everything in Pro", "Team collaboration", "Advanced analytics", "Priority support", "Custom integrations"]
+  },
+]
+
+const footer = {
+  Product: [
+    {name: "Features", href: "#features"},
+    {name: "Pricing", href: "#pricing"},
+    {name: "Testimonials", href: "#"},
+    {name: "FAQ", href: "#"},
+  ],
+  Company: [
+    {name: "About", href: "#"},
+    {name: "Blog", href: "#"},
+    {name: "Careers", href: "#"},
+    {name: "Contact", href: "#"},
+  ],
+  Legal: [
+    {name: "Terms", href: "#"},
+    {name: "Privacy", href: "#"},
+    {name: "Cookies", href: "#"},
+  ],
+}
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -13,24 +81,15 @@ export default function Home() {
             <span className="text-xl font-bold">Script AI</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="#features"
-              className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-            >
-              Features
-            </Link>
-            <Link
-              href="#how-it-works"
-              className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="#pricing"
-              className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-            >
-              Pricing
-            </Link>
+            {navbar.map((option, key) => {
+              return (
+                <Link key={key}
+                  href={option.href}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+                  {option.name}
+                </Link>
+              )
+            })}
           </nav>
           <div className="flex items-center gap-4">
             <Link href="/login">
@@ -91,46 +150,10 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-              <FeatureCard
-                icon={<Video className="h-6 w-6 text-slate-500" />}
-                title="Personalized AI Training"
-                description="Upload your videos to train the AI on your unique style, tone, and content preferences."
-              />
-              <FeatureCard
-                icon={<PenTool className="h-6 w-6 text-slate-500" />}
-                title="Script Generation"
-                description="Generate tailored scripts with simple prompts that match your personal style."
-              />
-              <FeatureCard
-                icon={<Zap className="h-6 w-6 text-slate-500" />}
-                title="Customizable Context"
-                description="Add specific context to your scripts via text fields or dropdowns for more relevant content."
-              />
-              <FeatureCard
-                icon={<Globe className="h-6 w-6 text-slate-500" />}
-                title="Language Expansion"
-                description="Generate scripts in multiple languages to reach a global audience."
-              />
-              <FeatureCard
-                icon={<BookOpen className="h-6 w-6 text-slate-500" />}
-                title="Tutorial Course Module"
-                description="Break down complex topics into structured course modules with suggested video counts and topics."
-              />
-              <FeatureCard
-                icon={<Gift className="h-6 w-6 text-slate-500" />}
-                title="Referral Program"
-                description="Earn free credits for premium features by referring other creators to Script AI."
-              />
-              <FeatureCard
-                icon={<ImageIcon className="h-6 w-6 text-slate-500" />}
-                title="AI Thumbnail Generator"
-                description="Create eye-catching thumbnails that drive clicks and views."
-              />
-              <FeatureCard
-                icon={<FileText className="h-6 w-6 text-slate-500" />}
-                title="Subtitle Generator"
-                description="Automatically generate accurate subtitles for your videos to improve accessibility."
-              />
+              {features.map((feature, key) => {
+                const Icon = feature.icon
+                return <FeatureCard key={key} title={feature.title} icon={<Icon className="h-6 w-6 text-slate-500"/>} description={feature.description}/>
+              })}
             </div>
           </div>
         </section>
@@ -146,33 +169,17 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-              <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-4">
-                  1
+              {chapters.map((chapter, index) => {
+                return <div key={index} className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-4">
+                    {index + 1}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">{chapter.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    {chapter.description}
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Train Your AI</h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Upload 3-5 of your videos to train the AI on your unique style, vocabulary, and pacing.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-4">
-                  2
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Generate Scripts</h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Input a simple prompt, select your tone, and add context to generate a personalized script.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-4">
-                  3
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Create & Share</h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Use additional tools to generate thumbnails, titles, and subtitles, then export and create your video.
-                </p>
-              </div>
+              })}
             </div>
           </div>
         </section>
@@ -188,207 +195,34 @@ export default function Home() {
                 Choose the plan that works best for your content creation needs.
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-              <div className="flex flex-col p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Free</h3>
-                <div className="text-3xl font-bold mb-4 text-slate-900 dark:text-slate-50">$0</div>
-                <p className="text-slate-600 dark:text-slate-400 mb-6">Perfect for trying out Script AI.</p>
-                <ul className="space-y-2 mb-6 flex-1">
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    3 scripts per month
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Basic script generation
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Tone selection
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button className="w-full" variant="outline">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="flex flex-col p-6 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm relative">
-                <div className="absolute top-0 right-0 -mt-4 mr-4 bg-slate-700 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  POPULAR
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Pro</h3>
-                <div className="text-3xl font-bold mb-4 text-slate-900 dark:text-slate-50">
-                  $19<span className="text-base font-normal text-slate-600 dark:text-slate-400">/month</span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-400 mb-6">For serious content creators.</p>
-                <ul className="space-y-2 mb-6 flex-1">
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Unlimited scripts
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Personalized AI training
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    All script customization options
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Thumbnail & title generation
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Course module creation
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white">Get Started</Button>
-                </Link>
-              </div>
-
-              <div className="flex flex-col p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">Enterprise</h3>
-                <div className="text-3xl font-bold mb-4 text-slate-900 dark:text-slate-50">
-                  $49<span className="text-base font-normal text-slate-600 dark:text-slate-400">/month</span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-400 mb-6">For professional YouTubers and teams.</p>
-                <ul className="space-y-2 mb-6 flex-1">
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Everything in Pro
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Team collaboration
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Advanced analytics
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Priority support
-                  </li>
-                  <li className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4 mr-2 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Custom integrations
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button className="w-full" variant="outline">
-                    Contact Sales
-                  </Button>
-                </Link>
-              </div>
+              {pricing.map((option, key) => {
+                return (
+                  <div key={key} className={`flex flex-col p-6 ${option?.isPopular ? "bg-slate-50" : "bg-white"} dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm ${option.isPopular && "relative"}`}>
+                    { option?.isPopular && <div className="absolute top-0 right-0 -mt-4 mr-4 bg-slate-700 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                      POPULAR
+                    </div> }
+                    <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-50">{option.heading}</h3>
+                    <div className="text-3xl font-bold mb-4 text-slate-900 dark:text-slate-50">${option.price}</div>
+                    <p className="text-slate-600 dark:text-slate-400 mb-6">{option.description}</p>
+                    <ul className="space-y-2 mb-6 flex-1">
+                      {option.features.map((feature, key) => {
+                        return <li key={key} className="flex items-center text-slate-600 dark:text-slate-400">
+                          <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                          {feature}
+                        </li>
+                      })}
+                    </ul>
+                    <Link href="/signup">
+                      <Button className={`w-full ${option.isPopular && "bg-slate-900 hover:bg-slate-800 text-white"}`} variant="outline">
+                        {option.confess}
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -424,109 +258,22 @@ export default function Home() {
                 Personalized AI assistant for YouTubers, simplifying the content creation process.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold mb-4 text-slate-900 dark:text-slate-50">Product</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="#features"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#pricing"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Testimonials
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    FAQ
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4 text-slate-900 dark:text-slate-50">Company</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4 text-slate-900 dark:text-slate-50">Legal</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                  >
-                    Cookies
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            {(Object.keys(footer) as Array<keyof typeof footer>).map((value, key) => {
+              const options = footer[value]
+              return <div key={key}>
+                <h3 className="font-semibold mb-4 text-slate-900 dark:text-slate-50">{value}</h3>
+                <ul className="space-y-2 text-sm">
+                  {options.map((option, key) => {
+                    return <li key={key}>
+                    <Link href={option.href}
+                      className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
+                      {option.name}
+                    </Link>
+                    </li>
+                  })}
+                </ul>
+              </div>
+            })}
           </div>
           <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-8 text-center text-sm text-slate-600 dark:text-slate-400">
             &copy; {new Date().getFullYear()} Script AI. All rights reserved.
