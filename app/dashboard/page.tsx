@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PenTool, Upload, ImageIcon, FileText, BookOpen, Plus, ArrowRight } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface UserProfile {
   name: string
@@ -16,7 +16,6 @@ interface UserProfile {
 
 export default function Dashboard() {
   const { supabase, user } = useSupabase()
-  const { toast } = useToast()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentScripts, setRecentScripts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +25,6 @@ export default function Dashboard() {
       if (!user) return
 
       try {
-        // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -48,18 +46,14 @@ export default function Dashboard() {
         setProfile(profileData)
         setRecentScripts(scriptsData || [])
       } catch (error: any) {
-        toast({
-          title: "Error fetching data",
-          description: error.message,
-          variant: "destructive",
-        })
+        toast.error(error.message)
       } finally {
         setLoading(false)
       }
     }
 
     fetchUserData()
-  }, [supabase, user, toast])
+  }, [supabase, user])
 
   if (loading) {
     return (

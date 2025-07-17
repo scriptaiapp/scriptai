@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSupabase } from "@/components/supabase-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Eye, EyeOff, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -30,7 +30,6 @@ export default function SignupPage() {
   const [details, setDetails] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
 
   useEffect(() => {
     if (user) router.replace("/dashboard")
@@ -41,11 +40,7 @@ export default function SignupPage() {
     e.preventDefault()
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
+      toast.error("Wrong Credentials!")
       return
     }
 
@@ -60,18 +55,11 @@ export default function SignupPage() {
       if (error) throw error
 
       if (data.user) {
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        })
+        toast.success("Account created!", { description: "Please check your email to verify your account." })
         window.location.href = "/dashboard"
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -87,19 +75,10 @@ export default function SignupPage() {
       })
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        })
         throw error;
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     }
   }
 

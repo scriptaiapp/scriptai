@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSupabase } from "@/components/supabase-provider"
-import { useToast } from "@/components/ui/use-toast"
+// import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Eye, EyeOff, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -20,11 +21,11 @@ const credentials = [
 ]
 
 export default function LoginPage() {
-  const [details, setDetails] = useState<Record <string, string>>({})
+  const [details, setDetails] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const { supabase, user } = useSupabase()
-  const { toast } = useToast()
+  // const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
@@ -42,21 +43,16 @@ export default function LoginPage() {
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
       if (data.user) {
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in.",
-        })
+        toast.success("You have been successfully logged in.")
         window.location.href = "/dashboard"
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -73,11 +69,7 @@ export default function LoginPage() {
 
       if (error) throw error
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     }
   }
 
@@ -142,10 +134,10 @@ export default function LoginPage() {
                     type={option.type == "password" ? (visible ? "" : "password") : option.type}
                     placeholder={option.placeholder}
                     value={details[option.id] || ''}
-                    onChange={e => setDetails({...details, [String(option.id)]: e.target.value})}
+                    onChange={e => setDetails({ ...details, [String(option.id)]: e.target.value })}
                     required
                   />
-                  { option?.type === "password" && <Button
+                  {option?.type === "password" && <Button
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -153,12 +145,12 @@ export default function LoginPage() {
                     onClick={() => setVisible(!visible)}
                   >
                     {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button> }
+                  </Button>}
                 </div>
               </div>
             })}
 
-            <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={loading}>
+            <Button type="submit" className="w-full bg-slate-900 dark:text-white hover:bg-slate-800" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>

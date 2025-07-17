@@ -8,12 +8,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Download, BookOpen } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { toast } from "sonner"
 
 export default function CourseModuleGenerator() {
-  const { toast } = useToast()
   const [topic, setTopic] = useState("")
   const [description, setDescription] = useState("")
   const [difficulty, setDifficulty] = useState("intermediate")
@@ -24,11 +23,7 @@ export default function CourseModuleGenerator() {
 
   const handleGenerateCourseModule = async () => {
     if (!topic) {
-      toast({
-        title: "Topic required",
-        description: "Please enter a course topic to generate a module.",
-        variant: "destructive",
-      })
+      toast.error("Topic required!", { description: "Please enter a course topic to generate a module." })
       return
     }
 
@@ -49,20 +44,17 @@ export default function CourseModuleGenerator() {
           id: i + 1,
           title: i === 0 ? `Introduction to ${topic}` : `${topic} Concept ${i}`,
           duration: `${10 + Math.floor(Math.random() * 10)} minutes`,
-          description: `Learn about ${i === 0 ? "the basics of" : "advanced concepts in"} ${topic} in this ${
-            i === 0 ? "introductory" : "in-depth"
-          } video.`,
+          description: `Learn about ${i === 0 ? "the basics of" : "advanced concepts in"} ${topic} in this ${i === 0 ? "introductory" : "in-depth"
+            } video.`,
           script: `[INTRO]
-Hello and welcome to video ${i + 1} of our ${topic} course. Today we're going to cover ${
-            i === 0 ? "the fundamentals of" : "how to master"
-          } ${topic}.
+Hello and welcome to video ${i + 1} of our ${topic} course. Today we're going to cover ${i === 0 ? "the fundamentals of" : "how to master"
+            } ${topic}.
 
 [MAIN CONTENT]
-${
-  i === 0
-    ? `Let's start by understanding what ${topic} is and why it's important. ${topic} is a crucial concept that helps you...`
-    : `Now that you understand the basics, let's dive deeper into ${topic} concept ${i}. This builds upon what we learned earlier and extends it by...`
-}
+${i === 0
+              ? `Let's start by understanding what ${topic} is and why it's important. ${topic} is a crucial concept that helps you...`
+              : `Now that you understand the basics, let's dive deeper into ${topic} concept ${i}. This builds upon what we learned earlier and extends it by...`
+            }
 
 [KEY POINTS]
 - Key point 1 about ${topic}
@@ -70,24 +62,17 @@ ${
 - Key point 3 about ${topic}
 
 [CONCLUSION]
-That's all for this video on ${topic}. In the next video, we'll explore ${
-            i < Number.parseInt(videoCount) - 1 ? `${topic} concept ${i + 2}` : "how to apply everything we've learned"
-          }.`,
+That's all for this video on ${topic}. In the next video, we'll explore ${i < Number.parseInt(videoCount) - 1 ? `${topic} concept ${i + 2}` : "how to apply everything we've learned"
+            }.`,
         })),
       }
 
       setCourseModule(sampleCourseModule)
 
-      toast({
-        title: "Course module generated!",
-        description: "Your course module has been generated successfully.",
-      })
+      toast.success("Course module generated!", { description: "Your course module has been generated successfully." })
     } catch (error: any) {
-      toast({
-        title: "Error generating course module",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      })
+
+      toast.error(error.message || "An unexpected error occurred", { description: "Please try again later." })
     } finally {
       setLoading(false)
     }
