@@ -27,7 +27,7 @@ export default function SignupPage() {
     if (user) router.replace("/dashboard")
   }, [user, router])
 
-  const [details, setDetails] = useState<Record <string, string>>({})
+  const [details, setDetails] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
@@ -86,7 +86,14 @@ export default function SignupPage() {
         },
       })
 
-      if (error) throw error
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        })
+        throw error;
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -155,10 +162,10 @@ export default function SignupPage() {
                     type={option.type == "password" ? (visible ? "" : "password") : option.type}
                     placeholder={option.placeholder}
                     value={details[option.id] || ''}
-                    onChange={e => setDetails({...details, [String(option.id)]: e.target.value})}
+                    onChange={e => setDetails({ ...details, [String(option.id)]: e.target.value })}
                     required
                   />
-                  { option?.type === "password" && <Button
+                  {option?.type === "password" && <Button
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -166,7 +173,7 @@ export default function SignupPage() {
                     onClick={() => setVisible(!visible)}
                   >
                     {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button> }
+                  </Button>}
                 </div>
               </div>
             })}
