@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+  transpilePackages: ['@repo/ui'],
+};
 
-export default nextConfig
+export default nextConfig;
