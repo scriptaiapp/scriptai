@@ -1,30 +1,120 @@
-# Script AI app
+# Turborepo starter
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/afrin127329s-projects/v0-script-ai-app)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/qMALR9MpwOs)
+## Using this example
 
-## Overview
+Run the following command:
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+```bash
+npx create-turbo@latest -e with-nestjs
+```
 
-## Deployment
+## What's inside?
 
-Your project is live at:
+This Turborepo includes the following packages/apps:
 
-**[https://vercel.com/afrin127329s-projects/v0-script-ai-app](https://vercel.com/afrin127329s-projects/v0-script-ai-app)**
+### Apps and Packages
 
-## Build your app
+    .
+    ├── apps
+    │   ├── api                       # NestJS app (https://nestjs.com).
+    │   └── web                       # Next.js app (https://nextjs.org).
+    └── packages
+        ├── @repo/api                 # Shared `NestJS` resources.
+        ├── @repo/eslint-config       # `eslint` configurations (includes `prettier`)
+        ├── @repo/jest-config         # `jest` configurations
+        ├── @repo/typescript-config   # `tsconfig.json`s used throughout the monorepo
+        └── @repo/ui                  # Shareable stub React component library.
 
-Continue building your app on:
+Each package and application are 100% [TypeScript](https://www.typescriptlang.org/) safe.
 
-**[https://v0.dev/chat/projects/qMALR9MpwOs](https://v0.dev/chat/projects/qMALR9MpwOs)**
+### Utilities
 
-## How It Works
+This `Turborepo` has some additional tools already set for you:
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- [TypeScript](https://www.typescriptlang.org/) for static type-safety
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+- [Jest](https://prettier.io) & [Playwright](https://playwright.dev/) for testing
+
+### Commands
+
+This `Turborepo` already configured useful commands for all your apps and packages.
+
+#### Build
+
+```bash
+# Will build all the app & packages with the supported `build` script.
+pnpm run build
+
+# ℹ️ If you plan to only build apps individually,
+# Please make sure you've built the packages first.
+```
+
+#### Develop
+
+```bash
+# Will run the development server for all the app & packages with the supported `dev` script.
+pnpm run dev
+```
+
+#### test
+
+```bash
+# Will launch a test suites for all the app & packages with the supported `test` script.
+pnpm run test
+
+# You can launch e2e testes with `test:e2e`
+pnpm run test:e2e
+
+# See `@repo/jest-config` to customize the behavior.
+```
+
+#### Lint
+
+```bash
+# Will lint all the app & packages with the supported `lint` script.
+# See `@repo/eslint-config` to customize the behavior.
+pnpm run lint
+```
+
+#### Format
+
+```bash
+# Will format all the supported `.ts,.js,json,.tsx,.jsx` files.
+# See `@repo/eslint-config/prettier-base.js` to customize the behavior.
+pnpm format
+```
+
+### Remote Caching
+
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+
+Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+
+```bash
+npx turbo login
+```
+
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```bash
+npx turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.com/docs/reference/configuration)
+- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
