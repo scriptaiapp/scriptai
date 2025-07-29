@@ -30,13 +30,13 @@ import logo from "@/public/dark-logo.png"
 
 interface NavProps {
   isCollapsed: boolean
-  links: {
+  links: ReadonlyArray<{
     title: string
     label?: string
     icon: React.ReactNode
     variant: "default" | "ghost"
     href: string
-  }[]
+  }>
 }
 
 export function Nav({ links, isCollapsed }: NavProps) {
@@ -107,10 +107,22 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
       href: "/dashboard",
     },
     {
+      title: "Train AI",
+      icon: <Sparkles className="h-4 w-4" />,
+      variant: "ghost",
+      href: "/dashboard/train",
+    },
+    {
       title: "Scripts",
       icon: <FileText className="h-4 w-4" />,
       variant: "ghost",
       href: "/dashboard/scripts",
+    },
+    {
+      title: "Topic Research",
+      icon: <Search className="h-4 w-4" />,
+      variant: "ghost",
+      href: "/dashboard/research",
     },
     {
       title: "Thumbnails",
@@ -125,40 +137,22 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
       href: "/dashboard/subtitles",
     },
     {
-      title: "Courses",
+      title: "Course Modules",
       icon: <BookOpen className="h-4 w-4" />,
       variant: "ghost",
       href: "/dashboard/courses",
     },
+    // {
+    //   title: "Analytics",
+    //   icon: <BarChart3 className="h-4 w-4" />,
+    //   variant: "ghost",
+    //   href: "/dashboard/analytics",
+    // },
     {
-      title: "Research",
-      icon: <Search className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/research",
-    },
-    {
-      title: "Train AI",
-      icon: <Sparkles className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/train",
-    },
-    {
-      title: "Analytics",
-      icon: <BarChart3 className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/analytics",
-    },
-    {
-      title: "Referrals",
+      title: "Audio Dubbing",
       icon: <Users className="h-4 w-4" />,
       variant: "ghost",
-      href: "/dashboard/referrals",
-    },
-    {
-      title: "Settings",
-      icon: <Settings className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/settings",
+      href: "/dashboard/dubbing",
     },
   ] as const
 
@@ -206,29 +200,15 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className={cn("flex h-14 items-center border-b", collapsed ? "px-2" : "px-4")}>
-        <Link href="/dashboard" className="flex items-center font-semibold">
+      <div className={cn("flex h-14 items-center", collapsed ? "px-2" : "px-4")}>
+        <Link href="/dashboard" className={cn("flex items-center font-semibold", collapsed ? "justify-center" : "justify-start gap-2")}>
           <Image src={logo} alt="Script AI" width={28} height={28} />
-          {!collapsed && <span>Script AI</span>}
+          {!collapsed && <span className="text-xl">Script AI</span>}
         </Link>
       </div>
       <ScrollArea className="flex-1">
         <Nav isCollapsed={collapsed} links={links} />
       </ScrollArea>
-      <div className={cn("mt-auto border-t", collapsed ? "p-2" : "p-4")}>
-        <Button
-          variant="ghost"
-          className={cn(
-            "text-slate-800 dark:text-slate-100",
-            collapsed ? "w-10 h-10 p-0" : "w-full justify-start gap-2",
-          )}
-          onClick={handleLogout}
-          title={collapsed ? "Log out" : undefined}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span>Log out</span>}
-        </Button>
-      </div>
     </aside>
   )
 }

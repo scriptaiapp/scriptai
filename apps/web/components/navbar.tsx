@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button"
 
 const Navbar = () => {
   return (
-    <header className="border-b border-slate-200 dark:border-slate-700">
+    <header className="border-b border-zinc-100 dark:border-slate-700 backdrop-blur-sm bg-white/95 dark:bg-zinc-900/95 sticky">
       <div className="container flex items-center justify-between py-4">
-        <div className="flex items-center">
-          <Image src={logo} alt="Script AI" width={32} height={32} />
-          <span className="text-xl font-bold">Script AI</span>
-        </div>
+        <Link href="/">
+          <div className="flex items-center">
+            <Image src={logo} alt="Script AI" width={32} height={32} />
+            <span className="text-xl font-bold">Script AI</span>
+          </div>
+        </Link>
         <nav className="hidden md:flex items-center gap-6">
           {navItem.map((option, key) => {
             return (
