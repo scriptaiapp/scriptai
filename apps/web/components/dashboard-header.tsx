@@ -40,10 +40,9 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
         <h1 className="text-lg font-semibold">{pageTitle}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <ThemeToggle />
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <span className="text-sm font-medium">{user?.email?.charAt(0).toUpperCase() || "U"}</span>
+            <span className="text-sm font-medium">{user?.user_metadata?.full_name?.charAt(0).toUpperCase() || "U"}</span>
           </div>
         </div>
       </div>

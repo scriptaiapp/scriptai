@@ -9,7 +9,9 @@ import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 
 interface UserProfile {
-  name: string
+  avatar_url: string
+  email: string
+  full_name: string
   credits: number
   ai_trained: boolean
 }
@@ -20,12 +22,18 @@ export default function Dashboard() {
   const [recentScripts, setRecentScripts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  console.log("User in Dashboard:", user)
+
+
   useEffect(() => {
+    console.log("Fetching user data from dashboard:", user)
+
     const fetchUserData = async () => {
+
       if (!user) return
 
       try {
-        const { data: profileData, error: profileError } = await supabase
+        const { error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("user_id", user.id)
@@ -43,7 +51,7 @@ export default function Dashboard() {
 
         if (scriptsError) throw scriptsError
 
-        setProfile(profileData)
+        setProfile(user.user_metadata as UserProfile)
         setRecentScripts(scriptsData || [])
       } catch (error: any) {
         toast.error(error.message)
@@ -66,8 +74,7 @@ export default function Dashboard() {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome, {profile?.name || "Creator"}</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">Here's an overview of your Script AI account</p>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome, {profile?.full_name || "Creator"}</h1>
       </div>
 
       {/* Stats Cards */}

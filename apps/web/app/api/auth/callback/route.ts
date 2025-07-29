@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
 
 
   // for google sign in
-
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {

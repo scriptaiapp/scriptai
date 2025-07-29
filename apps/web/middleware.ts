@@ -3,12 +3,10 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  let res = NextResponse.next({
-    request,
-  })
+  const response = NextResponse.next()
 
   if (request.nextUrl.pathname === "/api/auth/callback") {
-    return NextResponse.next()
+    return response
   }
 
   const supabase = createServerClient(
@@ -16,17 +14,11 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          res = NextResponse.next({
-            request,
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
           })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            res.cookies.set(name, value, options)
-          )
         },
       },
     }
@@ -36,19 +28,15 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  console.log("Session:", session)
-
   // Protect all API routes
   if (request.nextUrl.pathname.startsWith("/api")) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    // Pass user ID via headers for authenticated API requests
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set("x-user-id", session.user.id)
-    res = NextResponse.next({
-      request: { headers: requestHeaders },
-    })
+
+    const headers = new Headers(request.headers)
+    headers.set("x-user-id", session.user.id)
+    return NextResponse.next({ request: { headers } })
   }
 
   // Protect dashboard routes
@@ -61,7 +49,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return res
+  return response
 }
 
 export const config = {

@@ -22,7 +22,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <SupabaseProvider>
-            {children}
+            <main>
+              {children}
+            </main>
             <Toaster />
           </SupabaseProvider>
         </ThemeProvider>

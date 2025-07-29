@@ -24,7 +24,9 @@ import {
   Sparkles,
   Users,
   Search,
-} from "lucide-react"
+} from "lucide-react";
+import Image from "next/image"
+import logo from "@/public/dark-logo.png"
 
 interface NavProps {
   isCollapsed: boolean
@@ -81,13 +83,12 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut();
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       })
-      // Use window.location for a full page reload and redirect
-      window.location.href = "/login"
+      router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error)
       toast({
@@ -206,8 +207,8 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
       )}
     >
       <div className={cn("flex h-14 items-center border-b", collapsed ? "px-2" : "px-4")}>
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <Sparkles className="h-6 w-6 text-slate-500" />
+        <Link href="/dashboard" className="flex items-center font-semibold">
+          <Image src={logo} alt="Script AI" width={28} height={28} />
           {!collapsed && <span>Script AI</span>}
         </Link>
       </div>
