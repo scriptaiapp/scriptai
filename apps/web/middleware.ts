@@ -61,16 +61,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users from login/signup to dashboard
-  if (session && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = "/dashboard"
-    return NextResponse.redirect(redirectUrl)
-  }
-
   return res
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup", "/api/:path*"],
+  matcher: ["/dashboard/:path*", "/api/:path*"],
 }

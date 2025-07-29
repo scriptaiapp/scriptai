@@ -23,9 +23,6 @@ const credentials = [
 export default function SignupPage() {
   const router = useRouter()
   const { supabase, user } = useSupabase()
-  useEffect(() => {
-    if (user) router.replace("/dashboard")
-  }, [user, router])
 
   const [details, setDetails] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState(false)
@@ -56,7 +53,9 @@ export default function SignupPage() {
 
       if (data.user) {
         toast.success("Account created!", { description: "Please check your email to verify your account." })
-        window.location.href = "/dashboard"
+        setTimeout(() => {
+          window.location.href = "/login"
+        }, 3000)
       }
     } catch (error: any) {
       toast.error(error.message)
