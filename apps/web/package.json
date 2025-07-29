@@ -67,8 +67,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-
-    "@repo/eslint-config": "workspace:*",
+   "@repo/eslint-config": "workspace:*",
     "@repo/jest-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22",
