@@ -18,8 +18,8 @@ export const footerItems = {
     { name: "Contact", href: "#" },
   ],
   Legal: [
-    { name: "Terms", href: "#" },
-    { name: "Privacy", href: "#" },
+    { name: "Terms", href: "/privacy" },
+    { name: "Privacy", href: "/privacy" },
     { name: "Cookies", href: "#" },
   ],
 }
