@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PenTool, Upload, ImageIcon, FileText, BookOpen, Plus, ArrowRight } from "lucide-react"
+import { PenTool, Upload, ImageIcon, FileText, BookOpen, Plus, ArrowRight, Youtube } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 
@@ -22,14 +22,10 @@ export default function Dashboard() {
   const [recentScripts, setRecentScripts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  console.log("User in Dashboard:", user)
-
-
   useEffect(() => {
     console.log("Fetching user data from dashboard:", user)
 
     const fetchUserData = async () => {
-
       if (!user) return
 
       try {
@@ -99,7 +95,7 @@ export default function Dashboard() {
               {profile?.ai_trained ? (
                 <span className="text-green-500">Trained</span>
               ) : (
-                <span className="text-slate-900">Not Trained</span>
+                <span className="text-rose-700">Not Trained</span>
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -134,42 +130,42 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+      {/* Getting Started */}
+      <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Link href="/dashboard/scripts/new">
+        <Link href="/dashboard/youtube-connect">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
-              <PenTool className="h-10 w-10 text-slate-500 mb-4" />
-              <CardTitle className="text-lg mb-1">Create Script</CardTitle>
-              <CardDescription>Generate a new script for your video</CardDescription>
+              <Youtube className="h-10 w-10 text-zinc-900 mb-4" />
+              <CardTitle className="text-lg mb-1">Connect YouTube</CardTitle>
+              <CardDescription>Link your YouTube channel to personalize your AI</CardDescription>
             </CardContent>
           </Card>
         </Link>
         <Link href="/dashboard/train">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
-              <Upload className="h-10 w-10 text-slate-500 mb-4" />
+              <Upload className="h-10 w-10 text-zinc-900 mb-4" />
               <CardTitle className="text-lg mb-1">Train AI</CardTitle>
               <CardDescription>Upload videos to train your AI model</CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/scripts/new">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardContent className="p-6 flex flex-col items-center text-center">
+              <PenTool className="h-10 w-10 text-zinc-900 mb-4" />
+              <CardTitle className="text-lg mb-1">Create Script</CardTitle>
+              <CardDescription>Generate a new script for your video</CardDescription>
             </CardContent>
           </Card>
         </Link>
         <Link href="/dashboard/thumbnails">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
-              <ImageIcon className="h-10 w-10 text-slate-500 mb-4" />
-              <CardTitle className="text-lg mb-1">Create Thumbnail</CardTitle>
-              <CardDescription>Generate eye-catching thumbnails</CardDescription>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/courses">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <BookOpen className="h-10 w-10 text-slate-500 mb-4" />
-              <CardTitle className="text-lg mb-1">Course Module</CardTitle>
-              <CardDescription>Create a structured course module</CardDescription>
+              <ImageIcon className="h-10 w-10 text-zinc-900 mb-4" />
+              <CardTitle className="text-lg mb-1">Research a Topic</CardTitle>
+              <CardDescription>Research topics effortlessly using your trained AI</CardDescription>
             </CardContent>
           </Card>
         </Link>
@@ -222,49 +218,6 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Getting Started */}
-      <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>1. Train Your AI</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Upload 3-5 of your videos to train the AI on your unique style and content preferences.
-            </p>
-            <Link href="/dashboard/train">
-              <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white">Start Training</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>2. Create Your First Script</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Generate a personalized script based on your prompt, tone, and context preferences.
-            </p>
-            <Link href="/dashboard/scripts/new">
-              <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white">Create Script</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>3. Explore Other Tools</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Try our thumbnail generator, subtitle creator, and course module builder.
-            </p>
-            <Link href="/dashboard/thumbnails">
-              <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white">Explore Tools</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }
