@@ -1,10 +1,72 @@
+"use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Video, PenTool, Zap, Globe, BookOpen, Gift, ImageIcon, FileText } from "lucide-react"
+import { ArrowRight, Sparkles, Video, PenTool, Zap, Globe, BookOpen, Gift, ImageIcon, FileText, CheckCircle, Target, TrendingUp, Clock, AlertCircle } from "lucide-react"
 import FeatureCard from "@/components/feature-card"
-import Navbar from "@/components/navbar"
+import LandingPageNavbar from "@/components/LandingPageNavbar"
 import Footer from "@/components/footer"
+import { Spotlight } from "@/components/ui/Spotlight"
+import { SparklesCore } from "@/components/ui/sparkles";
+import { MButton } from "@/components/ui/moving-border";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
+import { motion } from "motion/react"
+import { cn } from "@/lib/utils"
+import { Timeline } from "@/components/ui/timeline"
+import ProblemSection from "@/components/ProblemSection"
+import SolutionCard from "@/components/SolutionSection"
+const problems = [
+  {
+    title: "Writer's Block Nightmare",
+    description: "Staring at a blank screen for hours, struggling to come up with fresh, engaging content ideas that resonate with your audience.",
+    icon: AlertCircle,
+    color: "text-red-500"
+  },
+  {
+    title: "Inconsistent Content Quality",
+    description: "Your content quality varies drastically - some videos perform amazingly while others barely get any views or engagement.",
+    icon: TrendingUp,
+    color: "text-orange-500"
+  },
+  {
+    title: "Time-Consuming Script Writing",
+    description: "Spending 3-5 hours writing a single script when you could be filming, editing, or engaging with your community instead.",
+    icon: Clock,
+    color: "text-yellow-500"
+  },
+  {
+    title: "Generic AI Tools",
+    description: "Current AI tools generate generic content that doesn't match your unique voice, style, or brand personality.",
+    icon: Target,
+    color: "text-blue-500"
+  }
+]
 
+const solutions = [
+  {
+    title: "AI Learns Your Voice",
+    description: "Upload 3-5 videos and watch our AI master your unique style, tone, vocabulary, and pacing patterns.",
+    icon: Video,
+    gradient: "from-purple-100 to-pink-100"
+  },
+  {
+    title: "Instant Script Generation",
+    description: "Generate personalized scripts in minutes, not hours. Focus on what you do best - creating amazing content.",
+    icon: Zap,
+    gradient: "from-blue-100 to-cyan-100"
+  },
+  {
+    title: "Consistent Quality",
+    description: "Every script maintains your brand voice and quality standards, ensuring consistent audience engagement.",
+    icon: CheckCircle,
+    gradient: "from-green-100 to-emerald-100"
+  },
+  {
+    title: "Complete Workflow",
+    description: "From scripts to thumbnails to subtitles - everything you need in one powerful, integrated platform.",
+    icon: Target,
+    gradient: "from-orange-100 to-red-100"
+  }
+]
 
 const features = [
   { title: "Personalized AI Training", icon: Video, description: "Upload your videos to train the AI on your unique style, tone, and content preferences." },
@@ -49,43 +111,129 @@ const pricing = [
 ]
 
 
+const entries = problems.map((p) => ({
+  title: p.title,
+  content: (
+    <div className="flex items-start gap-4">
+      <div className={cn("flex-shrink-0 p-2 rounded-md border bg-white dark:bg-slate-900 shadow-sm", p.color)}>
+        <p.icon className="w-6 h-6" />
+      </div>
+      <p className="text-sm text-slate-600 dark:text-slate-400">{p.description}</p>
+    </div>
+  ),
+}))
+
+
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="flex flex-col min-h-screen ">
+      <LandingPageNavbar />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+
+        <section className="relative isolate bg-gradient-to-b from-white to-slate-50 py-24 md:py-32 overflow-hidden">
+          <Spotlight className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-40" fill="white" />
+          <div
+            aria-hidden="true"
+            className="absolute -top-40 left-1/2 transform -translate-x-1/2 w-[80rem] h-[80rem] bg-gradient-radial from-purple-300/20 via-pink-300/10 to-transparent opacity-50 blur-3xl pointer-events-none"
+          />
+          <SparklesCore
+            background="transparent"
+            minSize={0.4}
+            maxSize={1}
+            className="absolute bottom-0 left-0 w-full h-[100px] z-0"
+            particleColor="#a855f7"
+          />
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            transition={{ staggerChildren: 0.15 }}
+            variants={{ hidden: {}, visible: {} }}
+            className="relative z-10 container px-4 md:px-6 text-center"
+          >
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full text-sm font-medium bg-white/60 ring-1 ring-slate-300 shadow-md backdrop-blur-md animate-float"
+            >
+              <Sparkles className="w-4 h-4 text-purple-500" aria-hidden="true" />
+              <span>Built for Creators</span>
+            </motion.div>
+            <motion.h1
+              className="mb-2 text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.6 }}
+            >
+              Script AI: Your Personal{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
+                YouTube Assistant
+              </span>
+            </motion.h1>
+            <motion.div
+              className="mb-6 text-2xl font-medium text-slate-700"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <TextGenerateEffect words="Create. Edit. Publish. Scale." />
+            </motion.div>
+            <motion.p
+              className="mt-2 max-w-2xl mx-auto text-lg md:text-xl text-slate-600"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Train AI with your past videos, and generate high-converting scripts, thumbnails, and subtitles — in your voice, at scale.
+            </motion.p>
+            <motion.div
+              className="mt-8 flex flex-col sm:flex-row justify-center gap-4"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Link href="/signup">
+                <MButton
+                  size="lg"
+                  className="bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                  borderClassName="border border-purple-500/60"
+                  aria-label="Get started with Script AI for free"
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                </MButton>
+              </Link>
+              <Link href="#how-it-works">
+                <Button size="lg" variant="outline" className="border-slate-300" aria-label="Learn how Script AI works">
+                  See How It Works
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </section>
+
+        {/* problem faced */}
+        <ProblemSection />
+
+
+        {/* solution section */}
+        <section id="solutions" className="py-20 bg-slate-50 dark:bg-slate-900">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4 md:space-y-6">
-              <div className="inline-flex items-center rounded-full px-3 py-1 text-sm bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">
-                <Sparkles className="mr-1 h-3.5 w-3.5" />
-                <span>Personalized AI for YouTubers</span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">
-                Your Personal AI Youtube Assistant
-              </h1>
-              <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-xl">
-                Train AI on your content, generate personalized scripts, and streamline your YouTube workflow with
-                powerful AI tools.
+            <div className="flex flex-col items-center text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50">
+                Solutions for Your Content Creation Challenges
+              </h2>
+              <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
+                Script AI addresses your pain points with powerful, tailored solutions to streamline your workflow.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 min-[400px]:gap-6">
-                <Link href="/signup">
-                  <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white">
-                    Get Started Free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="#how-it-works">
-                  <Button size="lg" variant="outline">
-                    See How It Works
-                  </Button>
-                </Link>
-              </div>
+            </div>
+
+            {/* Add spacing here */}
+            <div className="mt-16">
+              <SolutionCard />
             </div>
           </div>
         </section>
+
+
 
         {/* Features Section */}
         <section id="features" className="py-20 bg-white dark:bg-slate-800">
