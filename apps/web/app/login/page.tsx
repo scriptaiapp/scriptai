@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { Eye, EyeOff, Sparkles } from "lucide-react"
 import Image from "next/image";
 import logo from "@/public/dark-logo.png";
-import Navbar from "@/components/navbar"
+import Navbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
 
 const credentials = [
