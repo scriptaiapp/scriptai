@@ -60,7 +60,7 @@ export default function Home() {
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
               transition={{ duration: 0.6 }}
             >
-              Script AI: Your Personal{" "}
+              Your Personal{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
                 YouTube Assistant
               </span>

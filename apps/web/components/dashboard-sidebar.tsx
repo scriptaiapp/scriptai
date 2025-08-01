@@ -201,7 +201,7 @@ export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
       )}
     >
       <div className={cn("flex h-14 items-center", collapsed ? "px-2" : "px-4")}>
-        <Link href="/dashboard" className={cn("flex items-center font-semibold", collapsed ? "justify-center" : "justify-start gap-2")}>
+        <Link href="/" className={cn("flex items-center font-semibold", collapsed ? "justify-center" : "justify-start gap-2")}>
           <Image src={logo} alt="Script AI" width={28} height={28} />
           {!collapsed && <span className="text-xl">Script AI</span>}
         </Link>

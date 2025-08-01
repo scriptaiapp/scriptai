@@ -37,8 +37,8 @@ const LandingPageNavbar = () => {
           {/* Navbar Button */}
           <NavItems items={navItem} />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="secondary">Login</NavbarButton>
-            <NavbarButton variant="primary">Sign Up Free</NavbarButton>
+            <NavbarButton href='/login' variant="secondary">Login</NavbarButton>
+            <NavbarButton href='/signup' variant="primary">Sign Up Free</NavbarButton>
           </div>
         </NavBody>
 
