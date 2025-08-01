@@ -3,8 +3,8 @@
 import { cn } from "@/lib/utils";
 import { AlertCircle, TrendingUp, Clock, Target } from "lucide-react";
 import { motion } from "motion/react";
-import { BackgroundLines } from "./ui/background-lines";
-import { Timeline } from "./ui/timeline";
+import { BackgroundLines } from "../ui/background-lines";
+import { Timeline } from "../ui/timeline";
 
 
 const ProblemSection = () => {
@@ -61,47 +61,46 @@ const ProblemSection = () => {
     }));
 
     return (
-        <section className="bg-white py-24">
-            <div className="container max-w-5xl mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-slate-900">
-                        What’s Holding You Back?
-                    </h2>
-                    <p className="mt-4 text-lg text-slate-600">
-                        These are the most common roadblocks content creators face — and the reason we built this.
-                    </p>
-                </div>
 
-                <div className="space-y-10">
-                    {problems.map((p, i) => (
-                        <motion.div
-                            key={p.title}
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            viewport={{ once: true }}
-                            className="relative pl-14 group"
-                        >
-                            <div className="absolute left-0 top-1">
-                                <div className={cn(
-                                    "w-10 h-10 rounded-full flex items-center justify-center shadow-md",
-                                    p.color.replace("text-", "bg-").replace("-500", "-100")
-                                )}>
-                                    <p.icon className={cn("w-5 h-5", p.color)} />
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-semibold text-slate-800 group-hover:underline">{p.title}</h3>
-                                <p className="mt-1 text-slate-600">{p.description}</p>
-                            </div>
-
-                            <div className="mt-6 border-l-2 border-dashed border-slate-200 ml-[20px] h-10" />
-                        </motion.div>
-                    ))}
-                </div>
+        <div className="container max-w-5xl mx-auto px-4">
+            <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold text-slate-900">
+                    What’s Holding You Back?
+                </h2>
+                <p className="mt-4 text-lg text-slate-600">
+                    These are the most common roadblocks content creators face — and the reason we built this.
+                </p>
             </div>
-        </section>
+
+            <div className="space-y-10">
+                {problems.map((p, i) => (
+                    <motion.div
+                        key={p.title}
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                        className="relative pl-14 group"
+                    >
+                        <div className="absolute left-0 top-1">
+                            <div className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center shadow-md",
+                                p.color.replace("text-", "bg-").replace("-500", "-100")
+                            )}>
+                                <p.icon className={cn("w-5 h-5", p.color)} />
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xl font-semibold text-slate-800 group-hover:underline">{p.title}</h3>
+                            <p className="mt-1 text-slate-600">{p.description}</p>
+                        </div>
+
+                        <div className="mt-6 border-l-2 border-dashed border-slate-200 ml-[20px] h-10" />
+                    </motion.div>
+                ))}
+            </div>
+        </div>
     );
 };
 

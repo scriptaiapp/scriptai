@@ -15,7 +15,7 @@ import { Eye, EyeOff, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import logo from "@/public/dark-logo.png";
-import Navbar from "@/components/LandingPageNavbar"
+import Navbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
 
 const credentials = [
