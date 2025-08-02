@@ -69,7 +69,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
         <motion.div
             ref={ref}
             // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-            className={cn("sticky inset-x-0 top-20 z-40 w-full", className)}
+            className={cn("fixed inset-x-0 top-0 z-50 w-full", className)}
         >
             {React.Children.map(children, (child) =>
                 React.isValidElement(child)
@@ -230,44 +230,28 @@ export const MobileNavToggle = ({
     );
 };
 
-export const NavbarLogo = () => {
-    return (
-        <a
-            href="#"
-            className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
-        >
-            <img
-                src="https://assets.aceternity.com/logo-dark.png"
-                alt="logo"
-                width={30}
-                height={30}
-            />
-            <span className="font-medium text-black dark:text-white">Startup</span>
-        </a>
-    );
-};
+type NavbarButtonProps<T extends React.ElementType> = {
+    href?: string;
+    as?: T;
+    children: React.ReactNode;
+    className?: string;
+    variant?: "primary" | "secondary" | "dark" | "gradient";
+} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "className" | "children" | "variant" | "href">;
 
-export const NavbarButton = ({
+export const NavbarButton = <T extends React.ElementType = "a">({
     href,
-    as: Tag = "a",
+    as,
     children,
     className,
     variant = "primary",
     ...props
-}: {
-    href?: string;
-    as?: React.ElementType;
-    children: React.ReactNode;
-    className?: string;
-    variant?: "primary" | "secondary" | "dark" | "gradient";
-} & (
-        | React.ComponentPropsWithoutRef<"a">
-        | React.ComponentPropsWithoutRef<"button">
-    )) => {
+}: NavbarButtonProps<T>) => {
+    const Tag = as || "a";
+
     const baseStyles =
         "px-4 py-2 rounded-md bg-white button bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 
-    const variantStyles = {
+    const variantStyles: Record<"primary" | "secondary" | "dark" | "gradient", string> = {
         primary:
             "shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
         secondary: "bg-transparent shadow-none dark:text-white",
@@ -278,7 +262,7 @@ export const NavbarButton = ({
 
     return (
         <Tag
-            href={href || undefined}
+            {...(href ? { href } : {})}
             className={cn(baseStyles, variantStyles[variant], className)}
             {...props}
         >
