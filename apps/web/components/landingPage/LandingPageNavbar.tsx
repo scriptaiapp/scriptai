@@ -1,60 +1,54 @@
 "use client"
-import React from 'react'
-import { navItem } from '@repo/ui';
+
+import React, { useState } from "react"
+import { navItem } from "@repo/ui"
 import Image from "next/image"
-import logo from "@/public/dark-logo.png"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import logo from "@/public/dark-logo.png"
+
 import {
   Navbar,
   NavBody,
   NavItems,
   MobileNav,
-  NavbarLogo,
   NavbarButton,
   MobileNavHeader,
   MobileNavToggle,
   MobileNavMenu,
-} from "@/components/ui/resizable-navbar";
-import { useState } from "react";
+} from "@/components/ui/resizable-navbar"
+
+const Logo = () => (
+  <Link
+    href="#"
+    className="flex items-center space-x-2 px-2 py-1 text-sm font-medium text-black dark:text-white"
+  >
+    <Image src={logo} alt="Logo" width={30} height={30} />
+    {/* <span>Script AI</span> */}
+  </Link>
+)
 
 const LandingPageNavbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   return (
     <div className="relative w-full">
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
-          {/* <NavbarLogo /> */}
-          <Link
-            href="#"
-            className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
-          >
-            <Image src={logo} alt="Logo" width={30} height={30} />
-            <span className="font-medium text-black dark:text-white">Script AI</span>
-          </Link>
-
-          {/* Navbar Button */}
+          <Logo />
           <NavItems items={navItem} />
           <div className="flex items-center gap-4">
-            <NavbarButton href='/login' variant="secondary">Login</NavbarButton>
-            <NavbarButton href='/signup' variant="primary">Sign Up Free</NavbarButton>
+            <NavbarButton variant="dark">Sign Up Free</NavbarButton>
           </div>
         </NavBody>
 
         {/* Mobile Navigation */}
         <MobileNav>
           <MobileNavHeader>
-            <Link
-              href="#"
-              className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
-            >
-              <Image src={logo} alt="Logo" width={30} height={30} />
-              <span className="font-medium text-black dark:text-white">Script AI</span>
-            </Link>
+            <Logo />
             <MobileNavToggle
               isOpen={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             />
           </MobileNavHeader>
 
@@ -67,12 +61,12 @@ const LandingPageNavbar = () => {
                 key={`mobile-link-${idx}`}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="relative text-neutral-600 dark:text-neutral-300"
+                className="block text-neutral-600 dark:text-neutral-300"
               >
-                <span className="block">{item.name}</span>
+                {item.name}
               </a>
             ))}
-            <div className="flex w-full flex-col gap-4">
+            <div className="flex flex-col gap-4 mt-4">
               <NavbarButton
                 onClick={() => setIsMobileMenuOpen(false)}
                 variant="primary"
@@ -91,12 +85,8 @@ const LandingPageNavbar = () => {
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
-
-
-      {/* Navbar */}
     </div>
-  );
+  )
 }
 
-
-export default LandingPageNavbar;
+export default LandingPageNavbar

@@ -1,14 +1,11 @@
 "use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Video, PenTool, Zap, Globe, BookOpen, Gift, ImageIcon, FileText } from "lucide-react"
-import FeatureCard from "@/components/feature-card"
+import { ArrowRight, Sparkles } from "lucide-react"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
-import { Spotlight } from "@/components/ui/Spotlight"
 import { SparklesCore } from "@/components/ui/sparkles";
 import { MButton } from "@/components/ui/moving-border";
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
 import { motion } from "motion/react"
 import ProblemSection from "@/components/landingPage/ProblemSection"
 import SolutionCard from "@/components/landingPage/SolutionSection"
@@ -16,7 +13,7 @@ import { BackgroundBeams } from "@/components/ui/background-beams"
 import HowItWorks from "@/components/landingPage/HowItWorks"
 import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
-
+import { FlipWords } from "@/components/ui/flip-words"
 
 
 export default function Home() {
@@ -26,8 +23,7 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero Section */}
 
-        <section className="relative isolate bg-gradient-to-b from-white to-slate-50 py-24 md:py-32 overflow-hidden">
-          <Spotlight className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-40" fill="white" />
+        <section className="relative isolate bg-gradient-to-b from-white to-slate-100 py-24 md:py-32 overflow-hidden">
           <div
             aria-hidden="true"
             className="absolute -top-40 left-1/2 transform -translate-x-1/2 w-[80rem] h-[80rem] bg-gradient-radial from-purple-300/20 via-pink-300/10 to-transparent opacity-50 blur-3xl pointer-events-none"
@@ -35,7 +31,7 @@ export default function Home() {
           <SparklesCore
             background="transparent"
             minSize={0.4}
-            maxSize={1}
+            maxSize={1.2}
             className="absolute bottom-0 left-0 w-full h-[100px] z-0"
             particleColor="#a855f7"
             particleDensity={180}
@@ -66,11 +62,14 @@ export default function Home() {
               </span>
             </motion.h1>
             <motion.div
-              className="mb-6 text-2xl font-medium text-slate-700"
+              className="mb-6 text-xl font-medium text-slate-700"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <TextGenerateEffect words="Create. Edit. Publish. Scale." />
+              <FlipWords
+                words={["Create", "Edit", "Publish", "Grow"]}
+                className="text-purple-600"
+              />smarter with AI.
             </motion.div>
             <motion.p
               className="mt-2 max-w-2xl mx-auto text-lg md:text-xl text-slate-600"
