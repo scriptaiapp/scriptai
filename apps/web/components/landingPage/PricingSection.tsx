@@ -11,7 +11,7 @@ export default function PricingSection() {
             heading: "Free",
             confess: "Get Started",
             description: "Perfect for trying out Script AI.",
-            features: ["3 scripts per month", "Basic script generation", "Tone selection"]
+            features: ["10 free credits per month", "Personalized AI training", "Tone selection"]
         },
         {
             price: 19,
@@ -19,7 +19,7 @@ export default function PricingSection() {
             isPopular: true,
             confess: "Get Started",
             description: "For serious content creators.",
-            features: ["Unlimited scripts", "Personalized AI training", "All script customization options", "Thumbnail & title generation", "Course module creaton"]
+            features: ["300 credits", "Custom fine tuned model", "All script customization options", "Thumbnail & title generation", "Course module creaton"]
         },
         {
             price: 49,
@@ -34,7 +34,7 @@ export default function PricingSection() {
         <div className="container px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12 lg:mb-16">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
-                    Simple, Transparent Pricing
+                    Pricing
                 </h2>
                 <p className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-prose text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-400">
                     Choose the plan that works best for your content creation needs.
