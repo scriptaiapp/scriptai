@@ -10,13 +10,19 @@ import { createClient } from "@/lib/supabase/client"
 type SupabaseContext = {
   supabase: SupabaseClient
   user: User | null
+  providerToken: string
+  setProviderToken: (token: string) => void
+  session: any
+  setSession: (session: any) => void
   loading: boolean
 }
 
 const Context = createContext<SupabaseContext | undefined>(undefined)
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [providerToken, setProviderToken] = useState<any>(null);
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -37,6 +43,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         }
 
         setUser(session?.user ?? null)
+        setSession(session);
+        setProviderToken(session?.provider_token ?? null);
       } catch (error) {
         console.error("Unexpected error during auth:", error)
       } finally {
@@ -58,7 +66,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, toast])
 
-  return <Context.Provider value={{ supabase, user, loading }}>{children}</Context.Provider>
+  return <Context.Provider value={{ supabase, user, session, setSession, providerToken, setProviderToken, loading }}>{children}</Context.Provider>
 }
 
 export const useSupabase = () => {

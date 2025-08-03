@@ -35,10 +35,19 @@ const LandingPageNavbar = () => {
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
-          <Logo />
+          {/* <NavbarLogo /> */}
+          <Link
+            href="/"
+            className="relative z-20 flex items-center px-2 py-1 text-sm font-normal text-black"
+          >
+            <Image src={logo} alt="Logo" width={30} height={30} />
+            <span className="font-bold text-xl text-black dark:text-white">Script AI</span>
+          </Link>
+
+          {/* Navbar Button */}
           <NavItems items={navItem} />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="dark">Sign Up Free</NavbarButton>
+            <NavbarButton href="/login" variant="dark">Get Started</NavbarButton>
           </div>
         </NavBody>
 
