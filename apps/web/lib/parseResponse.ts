@@ -16,6 +16,10 @@ export interface StyleAnalysis {
     audio_conversion: string;
   };
 }
+interface ScriptResponse {
+  title: string;
+  script: string;
+}
 
 export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
   try {
@@ -63,6 +67,34 @@ export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
     return parsedObject as StyleAnalysis;
   } catch (error) {
     console.error('Error parsing Gemini response:', error, 'Raw text:', rawText);
+    return null;
+  }
+}
+
+// Function to parse Gemini response into a typed object
+export function parseScriptResponse(text: string): ScriptResponse | null {
+  try {
+    // Remove any markdown code fences if present
+    const cleanText = text.replace(/```json\n|```/g, '').trim();
+    const parsed = JSON.parse(cleanText);
+
+    // Validate the parsed response
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'title' in parsed &&
+      'script' in parsed &&
+      typeof parsed.title === 'string' &&
+      typeof parsed.script === 'string'
+    ) {
+      return {
+        title: parsed.title,
+        script: parsed.script
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing Gemini response:', error);
     return null;
   }
 }

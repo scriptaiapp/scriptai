@@ -4,14 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
 import { Upload, X, AlertCircle, Loader2, PenTool, Search, Volume2 } from "lucide-react"
 import { SuccessDialog } from "@/components/success-dialog"
+import { toast } from "sonner";
 
 export default function TrainAI() {
   const { supabase, user, session } = useSupabase()
-  const { toast } = useToast()
 
   const [videoUrls, setVideoUrls] = useState<string[]>(["", "", ""])
   const [uploading, setUploading] = useState(false)
@@ -52,11 +51,7 @@ export default function TrainAI() {
         .single()
 
       if (error) {
-        toast({
-          title: "Error checking YouTube connection",
-          description: error.message,
-          variant: "destructive",
-        })
+        toast.error("Error checking YouTube connection")
         return
       }
 
@@ -84,22 +79,14 @@ export default function TrainAI() {
 
   const validateYouTubeUrls = () => {
     if (!youtubeConnected) {
-      toast({
-        title: "YouTube not connected",
-        description: "Please connect your YouTube channel in the dashboard before training.",
-        variant: "destructive",
-      })
+      toast.error("YouTube not connected! Please connect your YouTube channel in the dashboard before training.")
       return false
     }
 
     const filledUrls = videoUrls.filter((url) => url.trim() !== "")
 
     if (filledUrls.length < 3) {
-      toast({
-        title: "Not enough videos",
-        description: "Please provide at least 3 YouTube video URLs to train your AI.",
-        variant: "destructive",
-      })
+      toast.error("Not enough videos. Please provide at least 3 YouTube video URLs to train your AI.")
       return false
     }
 
@@ -107,11 +94,7 @@ export default function TrainAI() {
     const invalidUrls = filledUrls.filter((url) => !youtubeRegex.test(url))
 
     if (invalidUrls.length > 0) {
-      toast({
-        title: "Invalid YouTube URLs",
-        description: "Please provide valid YouTube video URLs.",
-        variant: "destructive",
-      })
+      toast.error("Invalid YouTube URLs. Please provide valid YouTube video URLs.")
       return false
     }
 
@@ -134,27 +117,16 @@ export default function TrainAI() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-          toast({
-          title: "Error training AI",
-          description: errorData.error,
-          variant: "destructive",
-        })
+        const errorData = await response.json();
+        toast.error("Error training AI")
         throw new Error(errorData.error || "Failed to train AI");
       }
 
-      toast({
-        title: "AI Training Complete!",
-        description: "Your AI has been successfully trained on your content style.",
-      })
+      toast.success("AI Training Complete! Your AI has been successfully trained on your content style")
 
       setShowModal(true)
     } catch (error: any) {
-      toast({
-        title: "Error training AI",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error("Error training AI")
     } finally {
       setUploading(false)
     }
