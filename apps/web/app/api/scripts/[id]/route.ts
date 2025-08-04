@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-// Define interfaces for type safety
 interface ScriptRecord {
   id: string;
   user_id: string;
@@ -23,8 +22,12 @@ interface UpdateScriptRequest {
 }
 
 // GET: Fetch a single script by ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const supabase = await createClient();
+  const params = await context.params;
   const scriptId = params.id;
 
   try {
@@ -52,8 +55,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PATCH: Update a script's title and content
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const supabase = await createClient();
+  const params = await context.params;
   const scriptId = params.id;
 
   try {
@@ -93,8 +100,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 // DELETE: Delete a script by ID
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const supabase = await createClient();
+  const params = await context.params;
   const scriptId = params.id;
 
   try {

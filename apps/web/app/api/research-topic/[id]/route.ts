@@ -1,38 +1,77 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+interface ResearchTopicRecord {
+  id: string;
+  user_id: string;
+  topic: string;
+  context?: string;
+  research_data: {
+    summary: string;
+    keyPoints: string[];
+    trends: string[];
+    questions: string[];
+    contentAngles: string[];
+    sources: string[];
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+// GET: Fetch a single research topic by ID
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const supabase = await createClient();
+  const researchId = params.id;
+
   try {
-    const id = params.id
-
-    // Create Supabase client
-    const supabase = await createClient()
-
-    // Get user session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get research topic
     const { data, error } = await supabase
-      .from("research_topics")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", session.user.id)
-      .single()
+      .from('research_topics')
+      .select('*')
+      .eq('id', researchId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Research topic not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(data as ResearchTopicRecord);
+  } catch (error: unknown) {
+    console.error('Error fetching research topic:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// DELETE: Delete a research topic by ID
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const supabase = await createClient();
+  const researchId = params.id;
+
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { error } = await supabase
+      .from('research_topics')
+      .delete()
+      .eq('id', researchId)
+      .eq('user_id', user.id);
 
     if (error) {
-      return NextResponse.json({ error: "Research topic not found" }, { status: 404 })
+      console.error('Error deleting research topic:', error);
+      return NextResponse.json({ error: 'Failed to delete research topic' }, { status: 500 });
     }
 
-    return NextResponse.json(data)
-  } catch (error: any) {
-    console.error("Error fetching research topic:", error)
-    return NextResponse.json({ error: "Failed to fetch research topic", message: error.message }, { status: 500 })
+    return NextResponse.json({ message: 'Topic deleted successfully' });
+  } catch (error: unknown) {
+    console.error('Error in DELETE research-topic:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
