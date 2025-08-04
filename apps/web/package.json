@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.23",
+    "@google/genai": "^1.12.0",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
