@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,11 +9,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Download, BookOpen } from "lucide-react"
+import { Loader2, Download, BookOpen, Clock } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "sonner"
 
 export default function CourseModuleGenerator() {
+  const router = useRouter()
   const [topic, setTopic] = useState("")
   const [description, setDescription] = useState("")
   const [difficulty, setDifficulty] = useState("intermediate")
@@ -20,8 +22,10 @@ export default function CourseModuleGenerator() {
   const [references, setReferences] = useState("")
   const [loading, setLoading] = useState(false)
   const [courseModule, setCourseModule] = useState<any>(null)
+  const [isComingSoon] = useState(true) // Toggle this to false when feature is released
 
   const handleGenerateCourseModule = async () => {
+    if (isComingSoon) return // Prevent interaction when coming soon
     if (!topic) {
       toast.error("Topic required!", { description: "Please enter a course topic to generate a module." })
       return
@@ -71,7 +75,6 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
 
       toast.success("Course module generated!", { description: "Your course module has been generated successfully." })
     } catch (error: any) {
-
       toast.error(error.message || "An unexpected error occurred", { description: "Please try again later." })
     } finally {
       setLoading(false)
@@ -79,7 +82,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
   }
 
   const handleDownloadModule = () => {
-    if (!courseModule) return
+    if (isComingSoon || !courseModule) return
 
     const moduleText = JSON.stringify(courseModule, null, 2)
     const blob = new Blob([moduleText], { type: "application/json" })
@@ -94,7 +97,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 relative">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Course Module Generator</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">
@@ -105,13 +108,13 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
       <Tabs defaultValue="generate" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="generate">Generate Module</TabsTrigger>
-          <TabsTrigger value="preview" disabled={!courseModule}>
+          <TabsTrigger value="preview" disabled={!courseModule || isComingSoon}>
             Preview & Export
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="generate">
-          <Card>
+          <Card className="relative">
             <CardHeader>
               <CardTitle>Course Module Generator</CardTitle>
               <CardDescription>Fill in the details below to generate your course module</CardDescription>
@@ -124,7 +127,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
                   placeholder="e.g., React Hooks, Digital Marketing, Photography Basics"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || isComingSoon}
                 />
                 <p className="text-sm text-slate-500 dark:text-slate-400">Enter the main topic of your course</p>
               </div>
@@ -136,7 +139,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
                   placeholder="e.g., A comprehensive guide to mastering React Hooks for beginners"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || isComingSoon}
                 />
                 <p className="text-sm text-slate-500 dark:text-slate-400">Provide a brief description of your course</p>
               </div>
@@ -144,7 +147,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="difficulty">Difficulty Level</Label>
-                  <Select value={difficulty} onValueChange={setDifficulty} disabled={loading}>
+                  <Select value={difficulty} onValueChange={setDifficulty} disabled={loading || isComingSoon}>
                     <SelectTrigger id="difficulty">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
@@ -158,7 +161,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
 
                 <div className="space-y-2">
                   <Label htmlFor="video-count">Number of Videos</Label>
-                  <Select value={videoCount} onValueChange={setVideoCount} disabled={loading}>
+                  <Select value={videoCount} onValueChange={setVideoCount} disabled={loading || isComingSoon}>
                     <SelectTrigger id="video-count">
                       <SelectValue placeholder="Select number of videos" />
                     </SelectTrigger>
@@ -179,7 +182,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
                   placeholder="e.g., https://example.com/article, or leave empty for AI to research"
                   value={references}
                   onChange={(e) => setReferences(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || isComingSoon}
                 />
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Add URLs or sources for reference, or leave empty for AI to research
@@ -190,7 +193,7 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
               <Button
                 onClick={handleGenerateCourseModule}
                 className="w-full bg-slate-700 hover:bg-slate-800 text-white"
-                disabled={loading}
+                disabled={loading || isComingSoon}
               >
                 {loading ? (
                   <>
@@ -202,12 +205,33 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
                 )}
               </Button>
             </CardFooter>
+
+            {isComingSoon && (
+              <div className="absolute inset-0 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <Clock className="h-12 w-12 mx-auto text-slate-500 dark:text-slate-400" />
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    Coming Soon
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-400 max-w-md">
+                    Stay tuned to unlock this exciting feature to generate structured course modules with video outlines and scripts!
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/topics")}
+                    className="bg-slate-950 hover:bg-slate-900 text-white"
+                  >
+                    Back to Topics
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </TabsContent>
 
         <TabsContent value="preview">
           {courseModule && (
-            <Card>
+            <Card className="relative">
               <CardHeader>
                 <CardTitle>{courseModule.title}</CardTitle>
                 <CardDescription>{courseModule.description}</CardDescription>
@@ -257,14 +281,35 @@ That's all for this video on ${topic}. In the next video, we'll explore ${i < Nu
                 </Accordion>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setCourseModule(null)}>
+                <Button variant="outline" onClick={() => setCourseModule(null)} disabled={isComingSoon}>
                   Generate New
                 </Button>
-                <Button className="bg-slate-700 hover:bg-slate-800 text-white" onClick={handleDownloadModule}>
+                <Button className="bg-slate-700 hover:bg-slate-800 text-white" onClick={handleDownloadModule} disabled={isComingSoon}>
                   <Download className="mr-2 h-4 w-4" />
                   Export Module
                 </Button>
               </CardFooter>
+
+              {isComingSoon && (
+                <div className="absolute inset-0 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="text-center space-y-4">
+                    <Clock className="h-12 w-12 mx-auto text-slate-500 dark:text-slate-400" />
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      Coming Soon
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-md">
+                      Stay tuned to unlock this exciting feature to generate structured course modules with video outlines and scripts!
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/topics")}
+                      className="bg-slate-950 hover:bg-slate-900 text-white"
+                    >
+                      Back to Topics
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </TabsContent>

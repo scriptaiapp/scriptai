@@ -11,14 +11,11 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/'
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
 
   // for google sign in
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log(error);
     if (!error) {
       redirect("/dashboard");
     }

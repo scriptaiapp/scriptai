@@ -69,7 +69,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
+          <div className="container mx-12 px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
             {/* Left Column */}
             <motion.div
               variants={containerVariants}

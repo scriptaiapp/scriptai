@@ -82,7 +82,7 @@ export default function LoginPage() {
   return (
     <section>
       <Navbar />
-      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 mt-12">
         <Card className="w-full max-w-md bg-slate-50 dark:bg-zinc-900">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
