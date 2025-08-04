@@ -145,17 +145,6 @@ export default function Dashboard() {
                 ? "YouTube channel is connected"
                 : "Connect your YouTube channel to personalize your AI"}
             </p>
-            {!profile?.youtube_connected && (
-              <Button
-                size="sm"
-                variant={"outline"}
-                className="mt-2"
-                onClick={connectYoutubeChannel}
-                disabled={connectingYoutube}
-              >
-                {connectingYoutube ? "Connecting..." : "Connect Now"}
-              </Button>
-            )}
           </CardContent>
         </Card>
         <Card>

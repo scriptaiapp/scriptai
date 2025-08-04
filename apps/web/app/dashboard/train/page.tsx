@@ -1,24 +1,65 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
-import { Upload, X, AlertCircle, Loader2 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { Upload, X, AlertCircle, Loader2, PenTool, Search, Volume2 } from "lucide-react"
+import { SuccessDialog } from "@/components/success-dialog"
+import { toast } from "sonner";
 
 export default function TrainAI() {
-  const router = useRouter()
-  const { supabase, user } = useSupabase()
-  const { toast } = useToast()
+  const { supabase, user, session } = useSupabase()
 
   const [videoUrls, setVideoUrls] = useState<string[]>(["", "", ""])
   const [uploading, setUploading] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [step, setStep] = useState(1)
+  const [showModal, setShowModal] = useState(false)
+  const [youtubeConnected, setYoutubeConnected] = useState(false)
+
+  const nextSteps = [
+    {
+      title: "Create Scripts",
+      description: "Generate scripts tailored to your style",
+      icon: PenTool,
+      href: "/dashboard/scripts",
+    },
+    {
+      title: "Research Topics",
+      description: "Explore topics aligned with your content",
+      icon: Search,
+      href: "/dashboard/research",
+    },
+    {
+      title: "Audio Dubbing",
+      description: "Create dubbed audio in multiple languages",
+      icon: Volume2,
+      href: "/dashboard/audio-dubbing",
+    },
+  ]
+
+  useEffect(() => {
+    console.log("user", user);
+    console.log("session", session)
+    const checkYoutubeConnected = async () => {
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('youtube_connected')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error) {
+        toast.error("Error checking YouTube connection")
+        return
+      }
+
+      setYoutubeConnected(data.youtube_connected)
+    }
+
+    checkYoutubeConnected()
+  }, [supabase, user, toast])
 
   const handleAddVideoUrl = () => {
     setVideoUrls([...videoUrls, ""])
@@ -37,14 +78,15 @@ export default function TrainAI() {
   }
 
   const validateYouTubeUrls = () => {
+    if (!youtubeConnected) {
+      toast.error("YouTube not connected! Please connect your YouTube channel in the dashboard before training.")
+      return false
+    }
+
     const filledUrls = videoUrls.filter((url) => url.trim() !== "")
 
     if (filledUrls.length < 3) {
-      toast({
-        title: "Not enough videos",
-        description: "Please provide at least 3 YouTube video URLs to train your AI.",
-        variant: "destructive",
-      })
+      toast.error("Not enough videos. Please provide at least 3 YouTube video URLs to train your AI.")
       return false
     }
 
@@ -52,11 +94,7 @@ export default function TrainAI() {
     const invalidUrls = filledUrls.filter((url) => !youtubeRegex.test(url))
 
     if (invalidUrls.length > 0) {
-      toast({
-        title: "Invalid YouTube URLs",
-        description: "Please provide valid YouTube video URLs.",
-        variant: "destructive",
-      })
+      toast.error("Invalid YouTube URLs. Please provide valid YouTube video URLs.")
       return false
     }
 
@@ -67,65 +105,28 @@ export default function TrainAI() {
     if (!validateYouTubeUrls()) return
 
     setUploading(true)
-    setProgress(0)
 
     try {
-      // Simulate the training process with progress updates
       const validUrls = videoUrls.filter((url) => url.trim() !== "")
 
-      // Step 1: Extract video IDs and fetch transcripts
-      setStep(1)
-      for (let i = 0; i < 30; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        setProgress(i)
-      }
-
-      // Step 2: Analyze content and extract style patterns
-      setStep(2)
-      for (let i = 30; i < 60; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        setProgress(i)
-      }
-
-      // Step 3: Train AI model on user's style
-      setStep(3)
-      for (let i = 60; i < 100; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        setProgress(i)
-      }
-
-      // Update user profile to mark AI as trained
-      const { error } = await supabase.from("profiles").update({ ai_trained: true }).eq("user_id", user?.id)
-
-      if (error) throw error
-
-      // Save user style data
-      const { error: styleError } = await supabase.from("user_style").upsert({
-        user_id: user?.id,
-        tone: "conversational",
-        vocabulary_level: "intermediate",
-        pacing: "moderate",
-        themes: "based on uploaded content",
-        humor_style: "natural",
-        structure: "intro, main points, conclusion",
-        video_urls: validUrls,
+      // Send video URLs to backend for processing
+      const response = await fetch("/api/train-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user?.id, videoUrls: validUrls }),
       })
 
-      if (styleError) throw styleError
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error("Error training AI")
+        throw new Error(errorData.error || "Failed to train AI");
+      }
 
-      toast({
-        title: "AI Training Complete!",
-        description: "Your AI has been successfully trained on your content style.",
-      })
+      toast.success("AI Training Complete! Your AI has been successfully trained on your content style")
 
-      // Redirect to dashboard after successful training
-      router.push("/dashboard")
+      setShowModal(true)
     } catch (error: any) {
-      toast({
-        title: "Error training AI",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error("Error training AI")
     } finally {
       setUploading(false)
     }
@@ -216,20 +217,6 @@ export default function TrainAI() {
           </div>
         </CardContent>
 
-        {uploading && (
-          <div className="px-6 pb-2">
-            <div className="mb-2 flex justify-between text-sm">
-              <span>
-                {step === 1 && "Extracting video transcripts..."}
-                {step === 2 && "Analyzing content style..."}
-                {step === 3 && "Training AI model..."}
-              </span>
-              <span>{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-        )}
-
         <CardFooter className="flex justify-end">
           <Button
             onClick={handleStartTraining}
@@ -250,6 +237,14 @@ export default function TrainAI() {
           </Button>
         </CardFooter>
       </Card>
+
+      <SuccessDialog
+        open={showModal}
+        onOpenChange={setShowModal}
+        title="Congratulations!"
+        description="Your AI has been successfully trained on your unique content style."
+        nextSteps={nextSteps}
+      />
     </div>
   )
 }

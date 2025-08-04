@@ -1,127 +1,223 @@
-import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server';
+import { GoogleGenAI } from '@google/genai';
+import { NextResponse } from 'next/server';
+import { parseScriptResponse } from "@/lib/parseResponse"
 
-export async function POST(req: Request) {
+// Define interfaces for type safety
+interface ScriptRequest {
+  prompt: string;
+  context?: string;
+  tone?: string;
+  includeStorytelling: boolean;
+  references?: string;
+  language: string;
+  personalized: boolean;
+}
+
+interface ProfileData {
+  credits: number;
+  ai_trained: boolean;
+}
+
+interface ChannelData {
+  channel_name: string;
+  channel_description: string | null;
+  topic_details: Record<string, any>;
+  default_language: string | null;
+}
+
+interface StyleData {
+  tone: string;
+  vocabulary_level: string;
+  pacing: string;
+  themes: string;
+  humor_style: string;
+  structure: string;
+  style_analysis: string;
+  recommendations: Record<string, string>;
+}
+
+
+interface ScriptRecord {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  prompt: string;
+  context?: string;
+  tone?: string;
+  include_storytelling: boolean;
+  reference_links?: string;
+  language: string;
+  created_at: string;
+  updated_at: string;
+}
+
+
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+
   try {
-    // Check if OpenAI API key is available on the server
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OpenAI API key is not configured")
-      return NextResponse.json({ error: "OpenAI API key is not configured" }, { status: 500 })
+    const body: ScriptRequest = await request.json();
+    const {
+      prompt,
+      context,
+      tone,
+      includeStorytelling,
+      references,
+      language,
+      personalized
+    } = body;
+
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    const { prompt, context, tone, includeStorytelling, reference_links, language, personalized } = await req.json();
-
-    // Get user data for personalization if needed
-    let userStyle = "";
-
-    const supabase = await createClient();
-
-    const userId = req.headers.get("x-user-id");
-    console.log(userId);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Get user from session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user has enough credits
+    // Check credits
     const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("credits, ai_trained")
-      .eq("user_id", userId)
-      .single()
+      .from('profiles')
+      .select('credits, ai_trained')
+      .eq('user_id', user.id)
+      .single();
 
-    if (profileError) {
-      return NextResponse.json({ error: "Failed to fetch user profile" }, { status: 500 })
+    if (profileError || !profileData) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    if (profileData.credits < 1) {
-      return NextResponse.json({ error: "Insufficient credits" }, { status: 403 })
+    const typedProfileData: ProfileData = profileData as ProfileData;
+
+    if (typedProfileData.credits < 1) {
+      return NextResponse.json({
+        error: 'Insufficient credits. Please upgrade your plan or earn more credits.'
+      }, { status: 403 });
     }
 
-    // Get personalization data if requested
-    if (personalized) {
-      if (profileData.ai_trained) {
-        const { data: userData } = await supabase.from("user_style").select("*").eq("user_id", userId).single()
+    let channelData: ChannelData | null = null;
+    let styleData: StyleData | null = null;
 
-        if (userData) {
-          userStyle = `The user's content style has these characteristics:
-- Tone: ${userData.tone || "conversational"}
-- Vocabulary level: ${userData.vocabulary_level || "intermediate"}
-- Pacing: ${userData.pacing || "moderate"}
-- Common themes: ${userData.themes || "productivity, self-improvement"}
-- Humor style: ${userData.humor_style || "light, occasional jokes"}
-- Typical structure: ${userData.structure || "intro, main points, conclusion"}`
-        }
+    // Fetch channel details if personalized
+    if (personalized && typedProfileData.ai_trained) {
+      const { data, error } = await supabase
+        .from('youtube_channels')
+        .select('channel_name, channel_description, topic_details, default_language')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching channel data:', error);
+      } else {
+        channelData = data as ChannelData;
+      }
+
+      // Fetch user style
+      const { data: style, error: styleError } = await supabase
+        .from('user_style')
+        .select('tone, vocabulary_level, pacing, themes, humor_style, structure, style_analysis, recommendations')
+        .eq('user_id', user.id)
+        .single();
+
+      if (styleError) {
+        console.error('Error fetching style data:', styleError);
+      } else {
+        styleData = style as StyleData;
       }
     }
 
-    // Build the system prompt
-    let systemPrompt = `You are an expert YouTube script writer. Create a high-quality, engaging script for a YouTube video based on the user's prompt.`
+    // Initialize Gemini API
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
 
-    if (personalized && userStyle) {
-      systemPrompt += `\n\nPersonalize this script to match the user's style:\n${userStyle}`
+    // Craft prompt for script generation
+    const geminiPrompt = `
+Generate a unique YouTube video script based on the following details:
+- Prompt: ${prompt}
+- Context: ${context || 'None'}
+- Desired Tone: ${tone || styleData?.tone || 'conversational'}
+- Language: ${language || channelData?.default_language || 'English'}
+- Include Storytelling: ${includeStorytelling}
+- References: ${references || 'None'}
+
+${personalized && styleData ? `
+Creator's Style Profile:
+- Channel Name: ${channelData?.channel_name || 'Unknown'}
+- Channel Description: ${channelData?.channel_description || 'None'}
+- Content Style: ${styleData.style_analysis}
+- Typical Tone: ${styleData.tone}
+- Vocabulary Level: ${styleData.vocabulary_level}
+- Pacing: ${styleData.pacing}
+- Themes: ${styleData.themes}
+- Humor Style: ${styleData.humor_style}
+- Narrative Structure: ${styleData.structure}
+- Recommendations: ${JSON.stringify(styleData.recommendations)}
+` : ''}
+
+Output format:
+{
+  "title": "Suggested script title",
+  "script": "Full script text here"
+}
+`;
+
+    // Generate script with Gemini
+    const result: any = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: geminiPrompt,
+    });
+
+    const response = parseScriptResponse(result.text);
+    if (!response) {
+      return NextResponse.json({ error: 'Failed to generate valid script' }, { status: 500 });
     }
 
-    if (tone) {
-      systemPrompt += `\n\nThe tone should be ${tone}.`
-    }
-
-    if (includeStorytelling) {
-      systemPrompt += `\n\nInclude storytelling elements and structure the script into clear scenes (intro, story, main content, outro).`
-    }
-
-    if (language && language !== "english") {
-      systemPrompt += `\n\nWrite the script in ${language}.`
-    }
-
-    // Build the user prompt
-    let userPrompt = prompt
-
-    if (context) {
-      userPrompt += `\n\nAdditional context: ${context}`
-    }
-
-    if (reference_links) {
-      userPrompt += `\n\nUse these references: ${reference_links}`
-    } else {
-      userPrompt += `\n\nResearch and include relevant references, statistics, or examples to support the script.`
-    }
-
-    // Create OpenAI model - the API key is automatically read from process.env.OPENAI_API_KEY
-    const model = openai("gpt-4o")
-
-    // Generate the script using OpenAI
-    const { text } = await generateText({
-      model,
-      system: systemPrompt,
-      prompt: userPrompt,
-    })
-
-    // Extract a title from the script
-    const titleResult = await generateText({
-      model,
-      prompt: `Based on this script, generate a catchy, SEO-friendly title for a YouTube video (just the title, no quotes or explanations):\n\n${text.substring(0, 500)}...`,
-    })
-
-    // Update the user's credits
+    // Update credits
     const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ credits: profileData.credits - 1 })
-      .eq("user_id", userId)
+      .from('profiles')
+      .update({ credits: typedProfileData.credits - 1 })
+      .eq('user_id', user.id);
 
     if (updateError) {
-      console.error("Error updating credits:", updateError)
-      // Continue anyway to return the generated script
+      console.error('Error updating credits:', updateError);
+      return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 });
+    }
+
+    // Save script to database
+    const { data, error: insertError } = await supabase
+      .from('scripts')
+      .insert({
+        user_id: user.id,
+        title: response.title,
+        content: response.script,
+        prompt,
+        context,
+        tone,
+        include_storytelling: includeStorytelling,
+        reference_links: references,
+        language,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as ScriptRecord)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error saving script:', insertError);
+      return NextResponse.json({ error: 'Failed to save script' }, { status: 500 });
     }
 
     return NextResponse.json({
-      script: text,
-      title: titleResult.text.trim(),
-    })
-  } catch (error: any) {
-    console.error("Error generating script:", error)
-    return NextResponse.json({ error: "Failed to generate script", message: error.message }, { status: 500 })
+      id: (data as ScriptRecord).id,
+      title: response.title,
+      script: response.script
+    });
+
+  } catch (error: unknown) {
+    console.error('Error in generate-script:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

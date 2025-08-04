@@ -10,14 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
 import { Loader2 } from "lucide-react"
 
 export default function NewScript() {
   const router = useRouter()
   const { supabase, user } = useSupabase()
-  const { toast } = useToast()
 
   const [prompt, setPrompt] = useState("")
   const [context, setContext] = useState("")
@@ -25,17 +24,15 @@ export default function NewScript() {
   const [includeStorytelling, setIncludeStorytelling] = useState(false)
   const [references, setReferences] = useState("")
   const [language, setLanguage] = useState("english")
-
   const [loading, setLoading] = useState(false)
   const [generatedScript, setGeneratedScript] = useState("")
   const [scriptTitle, setScriptTitle] = useState("")
+  const [scriptId, setScriptId] = useState<string | null>(null)
 
   const handleGenerateScript = async () => {
     if (!prompt) {
-      toast({
-        title: "Prompt required",
+      toast.error("Prompt required", {
         description: "Please enter a prompt to generate a script.",
-        variant: "destructive",
       })
       return
     }
@@ -43,26 +40,15 @@ export default function NewScript() {
     setLoading(true)
 
     try {
-      // Check if user has enough credits
+      // Check if AI is trained for personalization
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("credits, ai_trained")
+        .select("ai_trained")
         .eq("user_id", user?.id)
         .single()
 
       if (profileError) throw profileError
 
-      if (profileData.credits < 1) {
-        toast({
-          title: "Insufficient credits",
-          description:
-            "You need at least 1 credit to generate a script. Please upgrade your plan or earn more credits.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Call the OpenAI API to generate the script
       const response = await fetch("/api/generate-script", {
         method: "POST",
         headers: {
@@ -86,27 +72,17 @@ export default function NewScript() {
 
       const data = await response.json()
 
-      // Update the user's credits
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ credits: profileData.credits - 1 })
-        .eq("user_id", user?.id)
-
-      if (updateError) throw updateError
-
-      // Set the generated script and a default title
+      // Set the generated script, title, and ID
       setGeneratedScript(data.script)
-      setScriptTitle(data.title || "New Script")
+      setScriptTitle(data.title)
+      setScriptId(data.id)
 
-      toast({
-        title: "Script generated!",
-        description: "Your script has been generated successfully.",
+      toast.success("Script generated!", {
+        description: "Your script has been generated and saved successfully.",
       })
     } catch (error: any) {
-      toast({
-        title: "Error generating script",
+      toast.error("Error generating script", {
         description: error.message,
-        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -114,11 +90,9 @@ export default function NewScript() {
   }
 
   const handleSaveScript = async () => {
-    if (!generatedScript || !scriptTitle) {
-      toast({
-        title: "Missing information",
+    if (!generatedScript || !scriptTitle || !scriptId) {
+      toast.error("Missing information", {
         description: "Please generate a script and provide a title before saving.",
-        variant: "destructive",
       })
       return
     }
@@ -126,36 +100,26 @@ export default function NewScript() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("scripts")
-        .insert([
-          {
-            user_id: user?.id,
-            title: scriptTitle,
-            content: generatedScript,
-            prompt,
-            context,
-            tone,
-            include_storytelling: includeStorytelling,
-            references,
-            language,
-          },
-        ])
-        .select()
+        .update({
+          title: scriptTitle,
+          content: generatedScript,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", scriptId)
+        .eq("user_id", user?.id)
 
       if (error) throw error
 
-      toast({
-        title: "Script saved!",
-        description: "Your script has been saved successfully.",
+      toast.success("Script updated!", {
+        description: "Your script changes have been saved successfully.",
       })
 
-      router.push(`/dashboard/scripts/${data[0].id}`)
+      router.push(`/dashboard/scripts`)
     } catch (error: any) {
-      toast({
-        title: "Error saving script",
+      toast.error("Error saving script", {
         description: error.message,
-        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -293,7 +257,7 @@ export default function NewScript() {
           <Card>
             <CardHeader>
               <CardTitle>Preview & Save Script</CardTitle>
-              <CardDescription>Review your generated script and save it to your library</CardDescription>
+              <CardDescription>Review and edit your generated script before saving</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -308,18 +272,26 @@ export default function NewScript() {
 
               <div className="space-y-2">
                 <Label htmlFor="script">Generated Script</Label>
-                <div className="border rounded-md p-4 min-h-[300px] bg-slate-50 dark:bg-slate-900 whitespace-pre-wrap">
-                  {generatedScript}
-                </div>
+                <Textarea
+                  id="script"
+                  value={generatedScript}
+                  onChange={(e) => setGeneratedScript(e.target.value)}
+                  className="min-h-[300px] bg-slate-50 dark:bg-slate-900"
+                  placeholder="Your generated script will appear here"
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setGeneratedScript("")} disabled={loading}>
+              <Button
+                variant="outline"
+                onClick={handleGenerateScript}
+                disabled={loading}
+              >
                 Regenerate
               </Button>
               <Button
                 onClick={handleSaveScript}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                className="w-full max-w-[200px] bg-slate-900 hover:bg-slate-800 text-white"
                 disabled={loading}
               >
                 {loading ? (
@@ -328,7 +300,7 @@ export default function NewScript() {
                     Saving...
                   </>
                 ) : (
-                  "Save Script"
+                  "Save Changes"
                 )}
               </Button>
             </CardFooter>

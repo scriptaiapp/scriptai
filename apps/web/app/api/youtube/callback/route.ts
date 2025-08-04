@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
     }
 
-    const { provider_token, user } = data.session;
+    const { provider_token, refresh_token, user } = data.session;
 
     if (!provider_token) {
       return NextResponse.json({ error: 'No provider token received' }, { status: 400 });
@@ -52,6 +52,8 @@ export async function GET(request: Request) {
     const channelDetails = {
       user_id: user.id,
       channel_id: channelData.id,
+      provider_token,
+      refresh_token,
       channel_name: channelData.snippet.title,
       channel_description: channelData.snippet.description,
       custom_url: channelData.snippet.customUrl,

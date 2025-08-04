@@ -1,400 +1,229 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
-import { useSupabase } from "@/components/supabase-provider"
-import { Loader2, Search, BookOpen, LinkIcon, TrendingUp, HelpCircle, Lightbulb } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { BookOpen, Search, Plus, Trash2, ExternalLink } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  AlertDialogFooter
+} from "@/components/ui/alert-dialog";
 
 interface ResearchTopic {
-  id: string
-  topic: string
-  context?: string
-  created_at: string
+  id: string;
+  topic: string;
+  context?: string;
+  created_at: string;
   research_data: {
-    summary: string
-    keyPoints: string[]
-    trends: string[]
-    questions: string[]
-    contentAngles: string[]
-    sources: string[]
-  }
+    summary: string;
+    keyPoints: string[];
+    trends: string[];
+    questions: string[];
+    contentAngles: string[];
+    sources: string[];
+  };
 }
 
-export default function TopicResearch() {
-  const router = useRouter()
-  const { supabase, user } = useSupabase()
-  const { toast } = useToast()
-
-  const [topic, setTopic] = useState("")
-  const [context, setContext] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [research, setResearch] = useState<ResearchTopic | null>(null)
-  const [recentTopics, setRecentTopics] = useState<ResearchTopic[]>([])
-  const [loadingTopics, setLoadingTopics] = useState(true)
+export default function Topics() {
+  const [topics, setTopics] = useState<ResearchTopic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [topicToDelete, setTopicToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRecentTopics = async () => {
-      if (!user) return
-
+    const fetchTopics = async () => {
       try {
-        const { data, error } = await supabase
-          .from("research_topics")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(5)
+        const response = await fetch("/api/research-topic", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        if (error) throw error
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to fetch topics");
+        }
 
-        setRecentTopics(data || [])
+        const data = await response.json();
+        setTopics(data || []);
       } catch (error: any) {
-        toast({
-          title: "Error fetching recent topics",
+        toast.error("Error fetching topics", {
           description: error.message,
-          variant: "destructive",
-        })
+        });
       } finally {
-        setLoadingTopics(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchRecentTopics()
-  }, [supabase, user, toast])
+    fetchTopics();
+  }, []);
 
-  const handleResearchTopic = async () => {
-    if (!topic) {
-      toast({
-        title: "Topic required",
-        description: "Please enter a topic to research.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoading(true)
+  const handleDeleteTopic = async () => {
+    if (!topicToDelete) return;
 
     try {
-      const response = await fetch("/api/research-topic", {
-        method: "POST",
+      const response = await fetch(`/api/research-topic/${topicToDelete}`, {
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          topic,
-          context,
-        }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to research topic")
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete topic");
       }
 
-      const data = await response.json()
-      setResearch({
-        id: data.id,
-        topic: data.topic,
-        context,
-        created_at: new Date().toISOString(),
-        research_data: data.research,
-      })
-
-      toast({
-        title: "Research complete!",
-        description: "Your topic has been researched successfully.",
-      })
-
-      // Refresh the recent topics list
-      const { data: updatedTopics, error } = await supabase
-        .from("research_topics")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false })
-        .limit(5)
-
-      if (!error) {
-        setRecentTopics(updatedTopics || [])
-      }
+      setTopics(topics.filter((topic) => topic.id !== topicToDelete));
+      toast.success("Topic deleted", {
+        description: "Your topic has been deleted successfully.",
+      });
     } catch (error: any) {
-      toast({
-        title: "Error researching topic",
+      toast.error("Error deleting topic", {
         description: error.message,
-        variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setTopicToDelete(null);
     }
-  }
+  };
 
-  const handleViewTopic = async (id: string) => {
-    try {
-      const response = await fetch(`/api/research-topic/${id}`, {
-        method: "GET",
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to fetch research topic")
-      }
-
-      const data = await response.json()
-      setResearch(data)
-    } catch (error: any) {
-      toast({
-        title: "Error fetching research topic",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
+  const filteredTopics = topics.filter((topic) =>
+    topic.topic.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Topic Research</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Research topics for your YouTube videos with AI assistance
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Topics</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Manage all your researched topics
+          </p>
+        </div>
+        <Link href="/dashboard/research/new">
+          <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            New Topic
+          </Button>
+        </Link>
       </div>
 
-      <Tabs defaultValue="research" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="research">Research Topic</TabsTrigger>
-          <TabsTrigger value="results" disabled={!research}>
-            Research Results
-          </TabsTrigger>
-        </TabsList>
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+          <Input
+            placeholder="Search topics..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
 
-        <TabsContent value="research">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Research a New Topic</CardTitle>
-                  <CardDescription>Enter a topic to research for your next YouTube video</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">Topic (Required)</Label>
-                    <Input
-                      id="topic"
-                      placeholder="e.g., Artificial Intelligence in Healthcare"
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      disabled={loading}
-                    />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Enter the main topic you want to research
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="context">Additional Context</Label>
-                    <Textarea
-                      id="context"
-                      placeholder="e.g., Focus on recent advancements and ethical considerations"
-                      value={context}
-                      onChange={(e) => setContext(e.target.value)}
-                      disabled={loading}
-                    />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Add specific details or angles you want to explore
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    onClick={handleResearchTopic}
-                    className="w-full bg-slate-950 hover:bg-slate-900 text-white"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Researching...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="mr-2 h-4 w-4" />
-                        Research Topic
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Research</CardTitle>
-                  <CardDescription>Your recently researched topics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {loadingTopics ? (
-                    <div className="flex justify-center py-6">
-                      <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
+        </div>
+      ) : filteredTopics.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredTopics.map((topic) => (
+            <Card key={topic.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-slate-100 dark:bg-slate-800/30 p-2 rounded-md">
+                      <BookOpen className="h-5 w-5 text-slate-500" />
                     </div>
-                  ) : recentTopics.length > 0 ? (
-                    <div className="space-y-4">
-                      {recentTopics.map((topic) => (
-                        <div
-                          key={topic.id}
-                          className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                          onClick={() => handleViewTopic(topic.id)}
+                    <div>
+                      <h3 className="font-semibold">{topic.topic}</h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
+                          {new Date(topic.created_at).toLocaleDateString()}
+                        </span>
+                        {topic.context && (
+                          <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
+                            {topic.context.slice(0, 20) + (topic.context.length > 20 ? "..." : "")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <Link href={`/dashboard/research/${topic.id}`}>
+                      <Button variant="outline" size="sm">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                    </Link>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => setTopicToDelete(topic.id)}
                         >
-                          <div>
-                            <h3 className="font-medium">{topic.topic}</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {new Date(topic.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <BookOpen className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                      <p className="text-slate-500 dark:text-slate-400">No research topics yet</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="results">
-          {research && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{research.topic}</CardTitle>
-                <CardDescription>Researched on {new Date(research.created_at).toLocaleDateString()}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Summary</h3>
-                  <p className="text-slate-600 dark:text-slate-400">{research.research_data.summary}</p>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your topic.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setTopicToDelete(null)}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteTopic}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
-
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="key-points">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-slate-500" />
-                        <span>Key Points</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2 pl-6 list-disc">
-                        {research.research_data.keyPoints.map((point, index) => (
-                          <li key={index} className="text-slate-600 dark:text-slate-400">
-                            {point}
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="trends">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-slate-500" />
-                        <span>Current Trends</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2 pl-6 list-disc">
-                        {research.research_data.trends.map((trend, index) => (
-                          <li key={index} className="text-slate-600 dark:text-slate-400">
-                            {trend}
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="questions">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <HelpCircle className="h-5 w-5 text-slate-500" />
-                        <span>Common Questions</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2 pl-6 list-disc">
-                        {research.research_data.questions.map((question, index) => (
-                          <li key={index} className="text-slate-600 dark:text-slate-400">
-                            {question}
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="angles">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <Lightbulb className="h-5 w-5 text-slate-500" />
-                        <span>Content Angles</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2 pl-6 list-disc">
-                        {research.research_data.contentAngles.map((angle, index) => (
-                          <li key={index} className="text-slate-600 dark:text-slate-400">
-                            {angle}
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="sources">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <LinkIcon className="h-5 w-5 text-slate-500" />
-                        <span>Sources</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2 pl-6 list-disc">
-                        {research.research_data.sources.map((source, index) => (
-                          <li key={index} className="text-slate-600 dark:text-slate-400">
-                            {source}
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setResearch(null)}>
-                  Research New Topic
-                </Button>
-                <Button
-                  className="bg-slate-900 hover:bg-slate-800 text-white"
-                  onClick={() => router.push("/dashboard/scripts/new")}
-                >
-                  Create Script from Research
-                </Button>
-              </CardFooter>
             </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+      ) : (
+        <Card className="text-center py-12">
+          <div className="flex flex-col items-center">
+            <BookOpen className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
+            <h3 className="font-semibold mb-2">No topics found</h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+              {searchQuery
+                ? `No topics matching "${searchQuery}". Try a different search term.`
+                : "You haven't researched any topics yet. Create your first topic to get started."}
+            </p>
+            {!searchQuery && (
+              <Link href="/dashboard/research/new">
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Topic
+                </Button>
+              </Link>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
-  )
+  );
 }
