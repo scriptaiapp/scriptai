@@ -66,14 +66,14 @@ const LandingPageNavbar = () => {
             onClose={() => setIsMobileMenuOpen(false)}
           >
             {navItem.map((item, idx) => (
-              <a
+              <Link
                 key={`mobile-link-${idx}`}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block text-neutral-600 dark:text-neutral-300"
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
             <div className="flex flex-col gap-4 mt-4">
               <NavbarButton
@@ -82,13 +82,6 @@ const LandingPageNavbar = () => {
                 className="w-full"
               >
                 Login
-              </NavbarButton>
-              <NavbarButton
-                onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
-                className="w-full"
-              >
-                Book a call
               </NavbarButton>
             </div>
           </MobileNavMenu>
