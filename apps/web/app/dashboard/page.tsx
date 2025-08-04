@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PenTool, Upload, ImageIcon, FileText, BookOpen, Plus, ArrowRight, Youtube } from "lucide-react"
+import { PenTool, Upload, ImageIcon, FileText, Plus, ArrowRight, Youtube, XCircle } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 
@@ -14,24 +14,31 @@ interface UserProfile {
   full_name: string
   credits: number
   ai_trained: boolean
+  youtube_connected: boolean
+}
+
+interface Script {
+  id: string
+  title: string
+  created_at: string
 }
 
 export default function Dashboard() {
-  const { supabase, user } = useSupabase()
+  const { supabase, user, session } = useSupabase()
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [recentScripts, setRecentScripts] = useState<any[]>([])
+  const [recentScripts, setRecentScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
+  const [connectingYoutube, setConnectingYoutube] = useState(false)
 
   useEffect(() => {
-    console.log("Fetching user data from dashboard:", user)
-
     const fetchUserData = async () => {
       if (!user) return
 
       try {
-        const { error: profileError } = await supabase
+        // Fetch user profile including youtube_connected
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected")
           .eq("user_id", user.id)
           .single()
 
@@ -40,17 +47,17 @@ export default function Dashboard() {
         // Fetch recent scripts
         const { data: scriptsData, error: scriptsError } = await supabase
           .from("scripts")
-          .select("*")
+          .select("id, title, created_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(3)
 
         if (scriptsError) throw scriptsError
 
-        setProfile(user.user_metadata as UserProfile)
+        setProfile(profileData as UserProfile)
         setRecentScripts(scriptsData || [])
       } catch (error: any) {
-        toast.error(error.message)
+        toast.error(error.message || "Failed to fetch user data")
       } finally {
         setLoading(false)
       }
@@ -58,6 +65,34 @@ export default function Dashboard() {
 
     fetchUserData()
   }, [supabase, user])
+
+  const connectYoutubeChannel = async () => {
+    setConnectingYoutube(true)
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/youtube/callback`,
+          scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly',
+          queryParams: {
+            access_type: 'offline', // Ensures refresh token is returned
+            prompt: 'consent', // Forces consent screen
+          },
+        },
+      })
+
+      if (error) throw error
+
+      if (data.url) {
+        window.location.href = data.url // Redirect to Google consent screen
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to connect YouTube channel")
+    } finally {
+      setConnectingYoutube(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -74,7 +109,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Available Credits</CardTitle>
@@ -84,6 +119,43 @@ export default function Dashboard() {
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Use credits to generate scripts and other content
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">YouTube Channel</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              {profile?.youtube_connected ? (
+                <Youtube className="h-6 w-6 text-green-500" />
+              ) : (
+                <XCircle className="h-6 w-6 text-rose-700" />
+              )}
+              <div className="text-xl font-bold">
+                {profile?.youtube_connected ? (
+                  <span className="text-green-500">Connected</span>
+                ) : (
+                  <span className="text-rose-700">Not Connected</span>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {profile?.youtube_connected
+                ? "YouTube channel is connected"
+                : "Connect your YouTube channel to personalize your AI"}
+            </p>
+            {!profile?.youtube_connected && (
+              <Button
+                size="sm"
+                variant={"outline"}
+                className="mt-2"
+                onClick={connectYoutubeChannel}
+                disabled={connectingYoutube}
+              >
+                {connectingYoutube ? "Connecting..." : "Connect Now"}
+              </Button>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -105,7 +177,7 @@ export default function Dashboard() {
             </p>
             {!profile?.ai_trained && (
               <Link href="/dashboard/train">
-                <Button size="sm" className="mt-2 bg-slate-900 hover:bg-slate-800 text-white">
+                <Button size="sm" variant={"outline"} className="mt-2 ">
                   Train Now
                 </Button>
               </Link>
@@ -128,20 +200,30 @@ export default function Dashboard() {
             </Link>
           </CardContent>
         </Card>
+
       </div>
 
       {/* Getting Started */}
       <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Link href="/dashboard/youtube-connect">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        {!profile?.youtube_connected && (
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
               <Youtube className="h-10 w-10 text-zinc-900 mb-4" />
               <CardTitle className="text-lg mb-1">Connect YouTube</CardTitle>
               <CardDescription>Link your YouTube channel to personalize your AI</CardDescription>
+              <Button
+                size="sm"
+                className="mt-4 bg-slate-900 hover:bg-slate-800 text-white"
+                onClick={connectYoutubeChannel}
+                disabled={connectingYoutube}
+              >
+                {connectingYoutube ? "Connecting..." : "Connect"}
+              </Button>
             </CardContent>
           </Card>
-        </Link>
+        )}
+
         <Link href="/dashboard/train">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
@@ -217,7 +299,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
-
     </div>
   )
 }

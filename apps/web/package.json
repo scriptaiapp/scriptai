@@ -44,6 +44,7 @@
     "@repo/ui": "workspace:*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "latest",
+    "@tabler/icons-react": "^3.34.1",
     "@tsparticles/engine": "^3.8.1",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.8.1",

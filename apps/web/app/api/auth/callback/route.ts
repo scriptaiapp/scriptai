@@ -35,5 +35,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // update profiles table on db
+
   redirect('/error')
 }

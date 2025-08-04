@@ -66,6 +66,7 @@ export default function LoginPage() {
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
         },
+
       })
 
       if (error) throw error

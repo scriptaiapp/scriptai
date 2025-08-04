@@ -219,6 +219,9 @@ importers:
       '@supabase/supabase-js':
         specifier: latest
         version: 2.53.0
+      '@tabler/icons-react':
+        specifier: ^3.34.1
+        version: 3.34.1(react@19.1.0)
       '@tsparticles/engine':
         specifier: ^3.8.1
         version: 3.8.1
