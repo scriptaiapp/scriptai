@@ -4,56 +4,89 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
-import { Eye, EyeOff, Sparkles } from "lucide-react"
-import Image from "next/image";
-import logo from "@/public/dark-logo.png";
+import { Eye, EyeOff } from "lucide-react"
+import { loginUserSchema } from "@repo/validation"
+import { ZodError } from "zod"
+
+import logo from "@/public/dark-logo.png"
 import Navbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
 
-const credentials = [
-  { id: "email", name: "Email", type: "email", placeholder: "Enter your email" },
-  { id: "password", name: "Password", type: "password", placeholder: "Enter your email" },
+// IMPROVEMENT: More descriptive constant name and corrected placeholder.
+const formFields = [
+  { id: "email" as const, name: "Email", type: "email", placeholder: "Enter your email" },
+  { id: "password" as const, name: "Password", type: "password", placeholder: "Enter your password" },
 ]
 
+//Define a type for the form state for better type safety.
+type FormState = Record<"email" | "password", string>
+type ErrorState = Partial<FormState>
+
 export default function LoginPage() {
-  const [details, setDetails] = useState<Record<string, string>>({})
+  // Initializing state with a more specific type.
+  const [details, setDetails] = useState<FormState>({ email: "", password: "" })
+  //  Added state to hold and display validation errors.
+  const [errors, setErrors] = useState<ErrorState>({})
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const { supabase, user } = useSupabase()
-  // const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
-    if (user) router.replace("/dashboard")
+    if (user) {
+      router.replace("/dashboard")
+    }
   }, [user, router])
 
   const handleLogin = async (e: React.FormEvent) => {
-    const { email, password } = details
     e.preventDefault()
+    // Clear previous errors on a new submission attempt.
+    setErrors({})
     setLoading(true)
 
     try {
+      // Validate form data before sending it to the server
+      loginUserSchema.parse(details)
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: details.email,
+        password: details.password,
       })
 
       if (error) {
-        throw error
+        throw new Error(error.message) // Centralize error handling in the catch block
       }
 
       if (data.user) {
         toast.success("You have been successfully logged in.")
-        window.location.href = "/dashboard"
+        // Use Next.js router for client-side navigation instead of a full page reload.
+        router.push("/dashboard")
       }
     } catch (error: any) {
-      toast.error(error.message)
+      if (error instanceof ZodError) {
+        // Map Zod errors to our state format
+        const fieldErrors: ErrorState = {}
+        error.errors.forEach(err => {
+          if (err.path[0] === "email" || err.path[0] === "password") {
+            fieldErrors[err.path[0] as keyof ErrorState] = err.message
+          }
+        })
+        setErrors(fieldErrors)
+      } else {
+        // Handle Supabase auth errors or other unexpected errors
+        // console.error("Login error:", error)
+        toast.error("Login Failed", {
+          description: error.message || "An unexpected error occurred. Please try again.",
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -61,20 +94,22 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
         },
-
       })
 
       if (error) throw error
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error("Google Login Failed", {
+        description: error.message || "Could not sign in with Google. Please try again.",
+      })
     }
   }
 
+  // Prevents a flash of the login form while redirecting.
   if (user) {
     return null
   }
@@ -123,30 +158,39 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
-              {credentials.map((option, key) => {
-                return <div key={key} className="space-y-2">
-                  <Label htmlFor={option.id}>{option.name}</Label>
+              {formFields.map(field => (
+                <div key={field.id} className="space-y-2">
+                  <Label htmlFor={field.id}>{field.name}</Label>
                   <div className="relative">
                     <Input
-                      id={option.id}
-                      type={option.type == "password" ? (visible ? "" : "password") : option.type}
-                      placeholder={option.placeholder}
-                      value={details[option.id] || ''}
-                      onChange={e => setDetails({ ...details, [String(option.id)]: e.target.value })}
+                      id={field.id}
+                      // sets type to "text" when visible.
+                      type={field.type === "password" ? (visible ? "text" : "password") : field.type}
+                      placeholder={field.placeholder}
+                      value={details[field.id]}
+                      onChange={e => setDetails({ ...details, [field.id]: e.target.value })}
                       required
+                      // Visually indicate which field has an error.
+                      className={errors[field.id] ? "border-destructive" : ""}
                     />
-                    {option?.type === "password" && <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setVisible(!visible)}
-                    >
-                      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>}
+                    {field.type === "password" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setVisible(!visible)}
+                      >
+                        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    )}
                   </div>
+                  {/* Display validation error message if it exists. */}
+                  {errors[field.id] && (
+                    <p className="text-sm text-destructive mt-1">{errors[field.id]}</p>
+                  )}
                 </div>
-              })}
+              ))}
 
               <Button type="submit" className="w-full bg-slate-900 dark:text-white hover:bg-slate-800" disabled={loading}>
                 {loading ? "Signing in..." : "Sign in"}
