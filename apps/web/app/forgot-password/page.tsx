@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -26,17 +25,19 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
 
+    const redirectTo = `${window.location.origin}/reset-password`
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo,
       })
 
       if (error) throw error
 
       setSuccess(true)
       toast({
-        title: "Password reset email sent",
-        description: "Check your email for the password reset link.",
+        title: "Check your email",
+        description: "A password reset link has been sent.",
       })
     } catch (error: any) {
       setError(error.message)
@@ -74,7 +75,15 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm">
                   We've sent an email to <strong>{email}</strong> with instructions to reset your password.
                 </p>
-                <p className="text-sm mt-2">Please check your inbox and spam folder. The link is valid for 24 hours.</p>
+
+                <div className="mt-4 w-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded-md flex items-start gap-2 text-sm text-left">
+                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Important:</strong> For your security, you must open the reset link in this same browser.
+                  </span>
+                </div>
+
+
               </div>
             ) : (
               <form onSubmit={handlePasswordReset}>
@@ -97,7 +106,7 @@ export default function ForgotPasswordPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200"
                     disabled={loading}
                   >
                     {loading ? (

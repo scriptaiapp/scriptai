@@ -8,6 +8,7 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "*.{js,ts,jsx,tsx,mdx}",
   ],
+  
   theme: {
     container: {
       center: true,
@@ -15,8 +16,10 @@ const config: Config = {
       screens: {
         "2xl": "1400px",
       },
-    },
+    },  
     extend: {
+
+      
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -95,13 +98,23 @@ const config: Config = {
         float: {
       '0%, 100%': { transform: 'translateY(0px)' },
       '50%': { transform: 'translateY(-4px)' },
+      
     },
+     aurora: {
+          from: {
+            backgroundPosition: "50% 50%, 50% 50%",
+          },
+          to: {
+            backgroundPosition: "350% 50%, 350% 50%",
+          },
+        },
       },
       
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": 'float 3s ease-in-out infinite',
+        "aurora": "aurora 60s linear infinite",
       },
     },
   },

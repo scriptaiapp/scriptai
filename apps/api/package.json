@@ -26,7 +26,8 @@
     "motion": "^12.23.12",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "@repo/validation": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

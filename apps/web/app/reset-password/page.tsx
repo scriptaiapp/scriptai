@@ -3,93 +3,110 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { z, ZodError } from "zod"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
-import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react"
+import { resetPasswordSchema } from "@repo/validation"
 import AuthHeader from "@/components/auth-header"
 
-const credentials = [
-  { id: "password", name: "New Password", type: "password", placeholder: "Enter your email" },
-  { id: "confirmPassword", name: "Confirm New Password", type: "password", placeholder: "Confirm your password" },
-]
+type FormData = z.infer<typeof resetPasswordSchema>
+type FormErrors = Partial<Record<keyof FormData, string>>
 
 export default function ResetPasswordPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
-  const [details, setDetails] = useState<Record <string, string>>({})
+  const [formData, setFormData] = useState<FormData>({ newPassword: "", confirmNewPassword: "" })
+  const [errors, setErrors] = useState<FormErrors>({})
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [isValidLink, setIsValidLink] = useState(false)
+  const [canUpdatePassword, setCanUpdatePassword] = useState(false)
   const [visible, setVisible] = useState(false)
 
-  // Check if URL has valid query parameters for password reset
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search)
-    const type = queryParams.get("type")
-    const accessToken = queryParams.get("token")
 
-    if (type === "recovery" && accessToken) {
-      setIsValidLink(true)
-    } else {
-      setIsValidLink(false)
-      toast({
-        title: "Invalid password reset link",
-        description: "Please use the link sent to your email.",
-        variant: "destructive",
-      })
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session)
+      if (event === "SIGNED_IN") {
+        setCanUpdatePassword(true)
+      } else if (event === "PASSWORD_RECOVERY") {
+        setCanUpdatePassword(true)
+      }
+    })
+
+    const timer = setTimeout(() => {
+      if (!canUpdatePassword) {
+        toast.error("Invalid or Expired Link", {
+          description: "The password reset link is invalid or has expired. Please request a new one.",
+        })
+      }
+    }, 5000) // 5-second timeout
+
+    // Cleanup the listener and the timer on component unmount.
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timer)
     }
-  }, [toast])
+    // The dependency array is updated to reflect the variables used inside.
+  }, [supabase, canUpdatePassword])
+
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        router.push("/login")
+      }, 3000)
+      return () => clearTimeout(timer) // Cleanup the timer on component unmount
+    }
+  }, [success, router])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
-    const { password, confirmPassword } = details
     e.preventDefault()
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
+    setErrors({}) // Clear previous errors
 
     try {
-      const { error } = await supabase.auth.updateUser({ password })
+      resetPasswordSchema.parse(formData)
+      setLoading(true)
 
+      const { error } = await supabase.auth.updateUser({ password: formData.newPassword })
       if (error) throw error
 
       setSuccess(true)
-      toast({
-        title: "Password updated",
+      toast.success("Password Updated!", {
         description: "Your password has been successfully reset.",
       })
-
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push("/login")
-      }, 3000)
     } catch (error: any) {
-      setError(error.message)
-      toast({
-        title: "Password update failed",
-        description: error.message,
-        variant: "destructive",
-      })
+      if (error instanceof ZodError) {
+        const newErrors: FormErrors = {}
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as keyof FormData] = err.message
+          }
+        })
+        setErrors(newErrors)
+      } else {
+        toast.error("Password Update Failed", {
+          description: error.message,
+        })
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  // --- The JSX remains unchanged as it's already well-structured. ---
   return (
     <>
       <AuthHeader />
@@ -97,79 +114,85 @@ export default function ResetPasswordPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Reset Your Password</CardTitle>
-            <CardDescription>Create a new password for your account</CardDescription>
+            <CardDescription>Create a new, strong password for your account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-4 py-2 rounded-md flex items-start gap-2 text-sm">
+            {!canUpdatePassword && !success && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-4 py-2 rounded-md flex items-start gap-2 text-sm">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {!isValidLink && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-4 py-2 rounded-md flex items-start gap-2 text-sm">
-                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>Invalid password reset link. Please use the link sent to your email.</span>
+                <span>
+                  Verifying your reset link. If this message persists, the link may be invalid or expired.
+                </span>
               </div>
             )}
 
             {success ? (
               <div className="bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 p-4 rounded-md flex flex-col items-center gap-2 text-center">
                 <CheckCircle className="h-8 w-8 mb-2" />
-                <h3 className="font-medium">Password reset successful!</h3>
-                <p className="text-sm">Your password has been successfully updated.</p>
-                <p className="text-sm mt-2">You'll be redirected to login shortly...</p>
+                <h3 className="font-medium">Password Reset Successful!</h3>
+                <p className="text-sm">You will be redirected to the login page shortly.</p>
               </div>
             ) : (
               <form onSubmit={handlePasswordUpdate}>
                 <div className="grid gap-4">
-                  {credentials.map((option, key) => {
-                    return <div key={key} className="space-y-2">
-                      <Label htmlFor={option.id}>{option.name}</Label>
-                      <div className="relative">
-                        <Input
-                          id={option.id}
-                          type={option.type == "password" ? (visible ? "" : "password") : option.type}
-                          placeholder={option.placeholder}
-                          value={details[option.id] || ''}
-                          onChange={e => setDetails({...details, [String(option.id)]: e.target.value})}
-                          disabled={loading || !isValidLink}
-                          className="pr-10"
-                          required
-                        />
-                        { option?.type === "password" && <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setVisible(!visible)}
-                        >
-                          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button> }
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={visible ? "text" : "password"}
+                        placeholder="Enter new password"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
+                        disabled={loading || !canUpdatePassword}
+                        className={errors.newPassword ? "border-destructive" : ""}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setVisible(!visible)}
+                      >
+                        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
                     </div>
-                    })}
+                    {errors.newPassword && <p className="text-sm text-destructive">{errors.newPassword}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmNewPassword"
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={formData.confirmNewPassword}
+                      onChange={handleInputChange}
+                      disabled={loading || !canUpdatePassword}
+                      className={errors.confirmNewPassword ? "border-destructive" : ""}
+                      required
+                    />
+                    {errors.confirmNewPassword && (
+                      <p className="text-sm text-destructive">{errors.confirmNewPassword}</p>
+                    )}
+                  </div>
                   <Button
                     type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-                    disabled={loading || !isValidLink}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200"
+                    disabled={loading || !canUpdatePassword}
                   >
-                    {loading ? "Updating Password..." : "Update Password"}
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Password"
+                    )}
                   </Button>
                 </div>
               </form>
             )}
-
-            <div className="text-center">
-              <Button
-                variant="link"
-                onClick={() => router.push("/login")}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-              >
-                Back to Login
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
