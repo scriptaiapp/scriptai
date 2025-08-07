@@ -101,7 +101,7 @@ export async function GET(request: Request) {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -113,13 +113,13 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching recent topics:', error);
-      return NextResponse.json({ error: 'Failed to fetch recent topics' }, { status: 500 });
+      return NextResponse.json({ message: 'Failed to fetch recent topics' }, { status: 500 });
     }
 
     return NextResponse.json(data as ResearchTopicRecord[]);
   } catch (error: unknown) {
     console.error('Error in GET research-topic:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -132,12 +132,12 @@ export async function POST(request: Request) {
     const { topic, context, autoResearch } = body;
 
     if (!autoResearch && !topic) {
-      return NextResponse.json({ error: 'Topic is required unless auto-research is enabled' }, { status: 400 });
+      return NextResponse.json({ message: 'Topic is required unless auto-research is enabled' }, { status: 400 });
     }
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     // Check credits
@@ -148,14 +148,14 @@ export async function POST(request: Request) {
       .single();
 
     if (profileError || !profileData) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
     }
 
     const typedProfileData: ProfileData = profileData as ProfileData;
 
     if (typedProfileData.credits < 1) {
       return NextResponse.json({
-        error: 'Insufficient credits. Please upgrade your plan or earn more credits.'
+        message: 'Insufficient credits. Please upgrade your plan or earn more credits.'
       }, { status: 403 });
     }
 
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
     // Initialize Gemini API
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'Server configuration error: Missing API key' }, { status: 500 });
+      return NextResponse.json({ message: 'Server configuration error: Missing API key' }, { status: 500 });
     }
     const ai = new GoogleGenAI({ apiKey });
 
@@ -276,7 +276,7 @@ Output format:
 
     const response = parseResearchResponse(result.text);
     if (!response) {
-      return NextResponse.json({ error: 'Failed to generate valid research data' }, { status: 500 });
+      return NextResponse.json({ message: 'Failed to generate valid research data' }, { status: 500 });
     }
 
     // Set topic for auto-research case
@@ -292,7 +292,7 @@ Output format:
 
     if (updateError) {
       console.error('Error updating credits:', updateError);
-      return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 });
+      return NextResponse.json({ message: 'Failed to update credits' }, { status: 500 });
     }
 
     // Save research to database
@@ -314,7 +314,7 @@ Output format:
 
     if (insertError) {
       console.error('Error saving research:', insertError);
-      return NextResponse.json({ error: `Failed to save research: ${insertError.message}` }, { status: 500 });
+      return NextResponse.json({ message: `Failed to save research: ${insertError.message}` }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -324,6 +324,6 @@ Output format:
     });
   } catch (error: unknown) {
     console.error('Error in POST research-topic:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

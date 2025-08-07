@@ -33,7 +33,7 @@ export async function GET(
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -44,13 +44,13 @@ export async function GET(
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ error: 'Script not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Script not found' }, { status: 404 });
     }
 
     return NextResponse.json(data as ScriptRecord);
   } catch (error: unknown) {
     console.error('Error fetching script:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -68,12 +68,12 @@ export async function PATCH(
     const { title, content } = body;
 
     if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+      return NextResponse.json({ message: 'Title and content are required' }, { status: 400 });
     }
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -89,13 +89,13 @@ export async function PATCH(
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ error: 'Script not found or update failed' }, { status: 404 });
+      return NextResponse.json({ message: 'Script not found or update failed' }, { status: 404 });
     }
 
     return NextResponse.json(data as ScriptRecord);
   } catch (error: unknown) {
     console.error('Error updating script:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -111,7 +111,7 @@ export async function DELETE(
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { error } = await supabase
@@ -121,12 +121,12 @@ export async function DELETE(
       .eq('user_id', user.id);
 
     if (error) {
-      return NextResponse.json({ error: 'Script not found or deletion failed' }, { status: 404 });
+      return NextResponse.json({ message: 'Script not found or deletion failed' }, { status: 404 });
     }
 
     return NextResponse.json({ message: 'Script deleted successfully' });
   } catch (error: unknown) {
     console.error('Error deleting script:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

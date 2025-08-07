@@ -85,7 +85,7 @@ export async function GET(request: Request) {
     // Save channel details to youtube_channels table
     const { error: channelError } = await supabase
       .from('youtube_channels')
-      .upsert(channelDetails, { onConflict: 'user_id,channel_id' });
+      .upsert(channelDetails);
 
     if (channelError) {
       console.error('Error saving to youtube_channels:', channelError);

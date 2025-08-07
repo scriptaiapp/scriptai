@@ -223,7 +223,7 @@ Provide the analysis in the following JSON format:
         style_analysis: styleAnalysis.style_analysis,
         recommendations: styleAnalysis.recommendations,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
+      });
 
     if (styleError) {
       console.error('Error saving to user_style:', styleError);

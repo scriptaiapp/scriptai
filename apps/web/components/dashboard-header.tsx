@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
 import { Menu, X, LogOut, Settings, UserPlus } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
 import { useSupabase } from "@/components/supabase-provider"
@@ -22,7 +23,6 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
   const [pageTitle, setPageTitle] = useState("")
 
   useEffect(() => {
-    // Set page title based on pathname
     const path = pathname.split("/").filter(Boolean)
     if (path.length === 1) {
       setPageTitle("Dashboard")
@@ -50,7 +50,9 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
       <div className="flex-1">
         <h1 className="text-lg font-semibold">{pageTitle}</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* Add Badge for credits */}
+        <Badge variant="secondary">{user?.user_metadata?.credits || "0"} Credits</Badge>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" className="p-0 w-8 h-8 rounded-full">
