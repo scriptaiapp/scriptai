@@ -40,7 +40,7 @@ export default function Dashboard() {
           .from("profiles")
           .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected")
           .eq("user_id", user.id)
-          .single()
+          .single();
 
         if (profileError) throw profileError
 
