@@ -43,6 +43,7 @@
     "@react-three/fiber": "^9.3.0",
     "@repo/api": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/validation": "workspace:*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "latest",
     "@tabler/icons-react": "^3.34.1",
@@ -69,6 +70,7 @@
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "resend": "^6.0.1",
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
@@ -76,8 +78,7 @@
     "three": "^0.178.0",
     "uuid": "^11.1.0",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1",
-    "@repo/validation": "workspace:*"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
