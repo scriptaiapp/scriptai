@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
 import { Loader2, Mail, AlertCircle, ArrowLeft, CheckCircle } from "lucide-react"
-import AuthHeader from "@/components/auth-header"
+import logo from "@/public/dark-logo.png"
+import Image from "next/image"
 
 export default function ForgotPasswordPage() {
   const { supabase } = useSupabase()
@@ -53,10 +54,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <AuthHeader />
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 pt-16">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center items-center">
+              <Image src={logo} alt="Script AI" width={100} height={100} className="mb-4" />
+            </div>
             <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
             <CardDescription>Enter your email to receive a password reset link</CardDescription>
           </CardHeader>
@@ -75,13 +78,6 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm">
                   We've sent an email to <strong>{email}</strong> with instructions to reset your password.
                 </p>
-
-                <div className="mt-4 w-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded-md flex items-start gap-2 text-sm text-left">
-                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Important:</strong> For your security, you must open the reset link in this same browser.
-                  </span>
-                </div>
 
 
               </div>
@@ -125,7 +121,7 @@ export default function ForgotPasswordPage() {
             <div className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               <Link
                 href="/login"
-                className="flex items-center text-slate-900 dark:text-slate-300 font-medium hover:underline"
+                className="flex items-center text-slate-900 dark:text-slate-300 font-medium hover:underline transition-all"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back to login
               </Link>
