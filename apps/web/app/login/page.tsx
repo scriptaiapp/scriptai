@@ -26,6 +26,18 @@ const formFields = [
   { id: "password" as const, name: "Password", type: "password", placeholder: "Enter your password" },
 ]
 
+
+function isZodError(error: unknown): error is ZodError {
+  return Boolean(
+    error &&
+    typeof error === 'object' &&
+    'name' in error &&
+    error.name === 'ZodError' &&
+    'errors' in error &&
+    Array.isArray((error as any).errors)
+  );
+}
+
 //Define a type for the form state for better type safety.
 type FormState = Record<"email" | "password", string>
 type ErrorState = Partial<FormState>
@@ -71,7 +83,7 @@ export default function LoginPage() {
         router.push("/dashboard")
       }
     } catch (error: any) {
-      if (error instanceof ZodError) {
+      if (isZodError(error)) {
         // Map Zod errors to our state format
         const fieldErrors: ErrorState = {}
         error.errors.forEach(err => {
