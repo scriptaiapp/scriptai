@@ -5,7 +5,10 @@ import type { NextRequest } from "next/server"
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
 
-  if (request.nextUrl.pathname === "/api/auth/callback") {
+  if (request.nextUrl.pathname === "/api/auth/callback" ||
+    request.nextUrl.pathname === "/api/early-access" ||
+    request.nextUrl.pathname === "/api/grant-access"
+  ) {
     return response
   }
 

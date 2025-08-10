@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
-import { Loader2, Mail, AlertCircle, ArrowLeft, CheckCircle } from "lucide-react"
-import logo from "@/public/dark-logo.png";
+import { Loader2, Mail, AlertCircle, ArrowLeft } from "lucide-react"
+import logo from "@/public/dark-logo.png"
+import Image from "next/image"
 
 export default function ForgotPasswordPage() {
   const { supabase } = useSupabase()
@@ -19,7 +20,6 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +35,6 @@ export default function ForgotPasswordPage() {
 
       if (error) throw error
 
-      setSuccess(true)
       toast({
         title: "Check your email",
         description: "A password reset link has been sent.",
@@ -53,34 +52,23 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-
-      <Card className="w-full max-w-md rounded-2xl shadow-lg">
-        <CardHeader className="text-center">
-          <div className="mb-8 justify-center gap-4 flex">
-            <Link href="/">
-              <Image src={logo} alt="Script AI" width={80} height={80} />
-            </Link>
-          </div>
-          <CardTitle className="text-2xl font-bold">Forgot Password?</CardTitle>
-          <CardDescription>
-            {success ? "Check your inbox for the reset link." : "No worries, we'll send you reset instructions."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {success ? (
-            <div className="flex flex-col items-center space-y-4 rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-800/30">
-                <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium text-green-900 dark:text-green-200">Email Sent Successfully</h3>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  We've sent an email to <strong>{email}</strong> with instructions to reset your password.
-                </p>
-              </div>
+    <>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 pt-16">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center items-center">
+              <Image src={logo} alt="Script AI" width={100} height={100} className="mb-4" />
             </div>
-          ) : (
+            <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
+            <CardDescription>Enter your email to receive a password reset link</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-4 py-2 rounded-md flex items-start gap-2 text-sm">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
             <form onSubmit={handlePasswordReset} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
@@ -98,15 +86,9 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
               </div>
-              {error && (
-                <div className="flex items-start gap-x-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                  <AlertCircle className="h-5 w-5 shrink-0" />
-                  <p>{error}</p>
-                </div>
-              )}
               <Button
                 type="submit"
-                className="w-full h-12 text-base font-semibold  bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                className="w-full h-12 text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-md"
                 disabled={loading}
               >
                 {loading ? (
@@ -118,17 +100,20 @@ export default function ForgotPasswordPage() {
                 )}
               </Button>
             </form>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button variant="ghost" className="w-full text-slate-600" asChild>
-            <Link href="/login">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Login
-            </Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+          </CardContent>
+          <CardFooter className="flex flex-col">
+            <div className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              <Link
+                href="/login"
+                className="flex items-center text-slate-900 dark:text-slate-300 font-medium hover:underline transition-all"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    </>
   )
 }

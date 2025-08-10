@@ -166,13 +166,15 @@ export default function MultiStepSignupPage() {
       <div className="relative grid min-h-screen w-full grid-cols-1 items-start justify-center gap-8 px-4 pt-16 md:grid-cols-2 md:items-center md:px-8 md:pt-0 lg:px-16">
 
         <motion.div initial={{ opacity: 0.0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }} className="hidden flex-col justify-center gap-4 md:flex">
-          <Image src={logo} alt="Script AI" width={80} height={80} className="mb-4" />
+          <Link href="/">
+            <Image src={logo} alt="Script AI" width={80} height={80} className="mb-4" />
+          </Link>
           <h1 className="text-4xl lg:text-5xl font-bold text-slate-900">Start Building Smarter, Faster.</h1>
           <p className="max-w-md text-lg text-slate-600">Join the revolution in automated scripting. Create your free account to get started.</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0.0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }} className="flex w-full justify-center md:justify-end">
-          <Card className="w-full max-w-md bg-white/20 dark:bg-black/20 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl">
+          <Card className="w-full max-w-md bg-white/30 dark:bg-black/20 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl h-full bg-clip-padding backdrop-filter bg-opacity-20">
             <CardHeader className="space-y-4 pt-8">
               <div className="flex justify-center md:hidden"><Image src={logo} alt="Script AI" width={60} height={60} /></div>
               <CardTitle className="text-2xl text-center text-slate-900 dark:text-white">Create an account</CardTitle>

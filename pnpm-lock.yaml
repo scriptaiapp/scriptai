@@ -299,7 +299,10 @@ importers:
         version: 2.1.9(react-dom@19.1.1)(react@19.1.1)
       recharts:
         specifier: 2.15.0
-        version: 2.15.0(react-dom@19.1.1)(react@19.1.1)
+        version: 2.15.0(react-dom@19.1.0)(react@19.1.0)
+      resend:
+        specifier: ^6.0.1
+        version: 6.0.1
       simplex-noise:
         specifier: ^4.0.3
         version: 4.0.3
@@ -10338,6 +10341,16 @@ packages:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /resend@6.0.1:
+    resolution: {integrity: sha512-xNZ0gKAOqQcH83lXsqNOwBbpKROnsZpQr9mXRdG6hrHTF9G9Il2pkoTRtq7rJzXMvCZX+I79oahsbSeaYOWRFA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@react-email/render': ^1.1.0
+    peerDependenciesMeta:
+      '@react-email/render':
+        optional: true
+    dev: false
 
   /resolve-cwd@3.0.0:
     resolution: {integrity: sha512-OrZaX2Mb+rJCpH/6CpSqt9xFVpN++x01XnN2ie9g6P5/3xelLAkXWVADpdz1IHD/KFfEXyE6V0U01OQ3UO2rEg==}
