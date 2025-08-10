@@ -3,13 +3,14 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
-import { Loader2, Mail, AlertCircle, ArrowLeft, CheckCircle } from "lucide-react"
+import { Loader2, Mail, AlertCircle, ArrowLeft } from "lucide-react"
 import logo from "@/public/dark-logo.png"
 import Image from "next/image"
 
@@ -19,7 +20,6 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +35,6 @@ export default function ForgotPasswordPage() {
 
       if (error) throw error
 
-      setSuccess(true)
       toast({
         title: "Check your email",
         description: "A password reset link has been sent.",
@@ -70,52 +69,37 @@ export default function ForgotPasswordPage() {
                 <span>{error}</span>
               </div>
             )}
-
-            {success ? (
-              <div className="bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 p-4 rounded-md flex flex-col items-center gap-2 text-center">
-                <CheckCircle className="h-8 w-8 mb-2" />
-                <h3 className="font-medium">Password reset email sent</h3>
-                <p className="text-sm">
-                  We've sent an email to <strong>{email}</strong> with instructions to reset your password.
-                </p>
-
-
-              </div>
-            ) : (
-              <form onSubmit={handlePasswordReset}>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500 dark:text-slate-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-10"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200"
+            <form onSubmit={handlePasswordReset} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="pl-10 h-12"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
-                      </>
-                    ) : (
-                      "Send Reset Link"
-                    )}
-                  </Button>
+                  />
                 </div>
-              </form>
-            )}
+              </div>
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  "Send Reset Link"
+                )}
+              </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex flex-col">
             <div className="text-sm text-slate-500 dark:text-slate-400 mt-2">
@@ -123,7 +107,8 @@ export default function ForgotPasswordPage() {
                 href="/login"
                 className="flex items-center text-slate-900 dark:text-slate-300 font-medium hover:underline transition-all"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" /> Back to login
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
               </Link>
             </div>
           </CardFooter>

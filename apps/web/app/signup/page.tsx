@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion, AnimatePresence } from "motion/react";
-import { z, ZodError } from "zod";
+
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,10 +16,22 @@ import { Progress } from "@/components/ui/progress";
 import { useSupabase } from "@/components/supabase-provider";
 import { registerUserSchema } from "@repo/validation";
 import logo from "@/public/dark-logo.png";
-
+import * as z from "zod";
 
 type FormData = z.infer<typeof registerUserSchema> & { confirmPassword?: string };
 type FormErrors = Partial<Record<keyof FormData, string>>;
+
+
+function isZodError(error: unknown): error is z.ZodError {
+  return Boolean(
+    error &&
+    typeof error === 'object' &&
+    'name' in error &&
+    error.name === 'ZodError' &&
+    'errors' in error &&
+    Array.isArray((error as any).errors)
+  );
+}
 
 
 export default function MultiStepSignupPage() {
@@ -56,15 +68,19 @@ export default function MultiStepSignupPage() {
       schemaToValidate.parse(details);
       setStep(step + 1);
     } catch (error) {
-      if (error instanceof ZodError) {
+      if (isZodError(error)) {
         const fieldErrors: FormErrors = {};
-        error.errors.forEach(err => {
+        error.errors.forEach((err) => {
           const path = err.path[0] as keyof FormData;
           if (path) {
             fieldErrors[path] = err.message;
           }
         });
         setErrors(fieldErrors);
+      } else {
+        toast.error("Validation failed", {
+          description: "Please check your input and try again.",
+        });
       }
     }
   };
@@ -77,11 +93,6 @@ export default function MultiStepSignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-
-    if (details.password !== details.confirmPassword) {
-      setErrors({ confirmPassword: "Passwords do not match." });
-      return;
-    }
 
     setLoading(true);
     try {
@@ -104,7 +115,7 @@ export default function MultiStepSignupPage() {
         router.push("/login");
       }
     } catch (error: any) {
-      if (error instanceof ZodError) {
+      if (isZodError(error)) {
         const fieldErrors: FormErrors = {};
         error.errors.forEach(err => {
           const path = err.path[0] as keyof FormData;
