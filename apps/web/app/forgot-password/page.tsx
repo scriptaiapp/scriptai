@@ -12,7 +12,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
 import { Loader2, Mail, AlertCircle, ArrowLeft } from "lucide-react"
 import logo from "@/public/dark-logo.png"
-import Image from "next/image"
 
 export default function ForgotPasswordPage() {
   const { supabase } = useSupabase()
