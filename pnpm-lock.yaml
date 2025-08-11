@@ -283,7 +283,7 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.1)(react@19.1.1)
       react:
-        specifier: ^19
+        specifier: ^19.1.1
         version: 19.1.1
       react-day-picker:
         specifier: 8.10.1
@@ -299,7 +299,7 @@ importers:
         version: 2.1.9(react-dom@19.1.1)(react@19.1.1)
       recharts:
         specifier: 2.15.0
-        version: 2.15.0(react-dom@19.1.0)(react@19.1.0)
+        version: 2.15.0(react-dom@19.1.1)(react@19.1.1)
       resend:
         specifier: ^6.0.1
         version: 6.0.1
