@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import { createClient } from '@/lib/supabase/server';
-import { EarlyAccessEmail } from "@repo/ui"
+// import { EarlyAccessEmail } from "@repo/ui"
 // import { EmailTemplate } from "@/components/templates/test"
 
 /**
@@ -9,7 +9,7 @@ import { EarlyAccessEmail } from "@repo/ui"
  */
 
 // Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY!)
+const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY!)
 
 export async function POST(request: Request) {
   const supabase = await createClient();
