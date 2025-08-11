@@ -52,7 +52,8 @@ export default function EarlyAccessModal({ isOpen, onOpenChange }: EarlyAccessMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+
+      <DialogContent className="w-[90vw] max-w-md rounded-lg">
         <AnimatePresence mode="wait">
           {showThankYou ? (
             <motion.div
@@ -92,7 +93,11 @@ export default function EarlyAccessModal({ isOpen, onOpenChange }: EarlyAccessMo
                   required
                 />
 
-                <Button type="submit" disabled={isLoading} className="w-full bg-zinc-900 flex items-center justify-center gap-2">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-zinc-900 flex items-center justify-center gap-2"
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />

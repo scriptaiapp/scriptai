@@ -25,7 +25,7 @@ export default function RootLayout({
             <main>
               {children}
             </main>
-            <Toaster />
+            <Toaster closeButton />
           </SupabaseProvider>
         </ThemeProvider>
       </body>

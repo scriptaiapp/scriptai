@@ -34,35 +34,6 @@ const Logo = () => (
 
 const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModalOpen, setIsEarlyAccessModalOpen }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setMessage("")
-
-    try {
-      const response = await fetch("/api/early-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      if (response.ok) {
-        setMessage("Thank you! You're on the waitlist.")
-        setEmail("")
-      } else {
-        const data = await response.json()
-        setMessage(data.error || "Error: Please try again.")
-      }
-    } catch (error) {
-      setMessage("Error: Something went wrong.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   return (
     <div className="relative w-full">
@@ -109,10 +80,10 @@ const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModa
             <div className="flex flex-col gap-4 mt-4">
               <NavbarButton
                 onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
+                variant="secondary"
                 className="w-full"
               >
-                Login
+                <ShimmerButton className="w-full" onClick={() => setIsEarlyAccessModalOpen(!isEarlyAccessModalOpen)}>Get Early Access</ShimmerButton>
               </NavbarButton>
             </div>
           </MobileNavMenu>
