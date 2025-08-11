@@ -8,10 +8,9 @@ import { createClient } from '@/lib/supabase/server';
  * @todo add email template: react or html
  */
 
-// Initialize Resend client
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY!)
 
 export async function POST(request: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY!)
   const supabase = await createClient();
   try {
     const { email } = await request.json()
