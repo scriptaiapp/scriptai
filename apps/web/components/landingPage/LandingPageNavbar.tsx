@@ -76,11 +76,16 @@ const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModa
             <span className="font-bold text-xl text-black dark:text-white">Script AI</span>
           </Link>
           <NavItems items={navItem} />
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <ShimmerButton className="text-sm h-9" onClick={() => setIsEarlyAccessModalOpen(!isEarlyAccessModalOpen)}>
               Get Early Access
             </ShimmerButton>
-          </div>
+          </div> */}
+          <Link href={"/login"} className="flex items-center gap-4">
+            <ShimmerButton className="text-sm h-9">
+              Get Started
+            </ShimmerButton>
+          </Link>
         </NavBody>
 
         <MobileNav>
