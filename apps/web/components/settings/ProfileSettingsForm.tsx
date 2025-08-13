@@ -1,10 +1,9 @@
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Shield } from "lucide-react"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -13,7 +12,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-// Define the shape of the props this component expects
 interface ProfileSettingsFormProps {
     name: string;
     setName: (name: string) => void;
@@ -38,33 +36,43 @@ export function ProfileSettingsForm({
     supportedLanguages,
 }: ProfileSettingsFormProps) {
     return (
-        <>
-            <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
-                {nameError && <p className="text-red-500 text-xs">{nameError}</p>}
+        <div className="space-y-6 p-6 rounded-xl border border-border bg-background shadow-sm">
+            {/* --- Full Name --- */}
+            <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+                <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={loading}
+                    className="max-w-sm"
+                />
+                {nameError && (
+                    <p className="text-xs text-red-500">{nameError}</p>
+                )}
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+            {/* --- Email Address --- */}
+            <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                 <Input
                     id="email"
                     type="email"
                     value={email}
-                    disabled={true}
-                    className="bg-slate-50 dark:bg-slate-800"
+                    disabled
+                    className="max-w-sm cursor-not-allowed bg-muted"
                 />
-                <p className="text-xs text-slate-500 dark:text-slate-400">Your email cannot be changed</p>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="languageSelector">Language</Label>
+            {/* --- Language --- */}
+            <div className="space-y-1.5">
+                <Label htmlFor="languageSelector" className="text-sm font-medium">Language</Label>
                 <Select
                     value={language}
                     onValueChange={setLanguage}
                     disabled={loading}
                 >
-                    <SelectTrigger id="languageSelector">
+                    <SelectTrigger id="languageSelector" className="max-w-sm">
                         <SelectValue placeholder="Select a language" />
                     </SelectTrigger>
                     <SelectContent>
@@ -77,16 +85,23 @@ export function ProfileSettingsForm({
                 </Select>
             </div>
 
-            <Separator className="my-4" />
-
-            <div className="space-y-2">
-                <h3 className="text-lg font-medium">Security</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Manage your account security settings</p>
-                <Button variant="outline" onClick={handleChangePassword} disabled={loading} className="mt-2">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Change Password
-                </Button>
+            <div className="border-t border-border pt-4 space-y-3">
+                <Label className="text-sm font-medium">Security</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={handleChangePassword}
+                        disabled={loading}
+                        className="gap-2"
+                    >
+                        <Shield className="h-4 w-4" />
+                        Change Password
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                        We’ll send you an email with password reset instructions.
+                    </p>
+                </div>
             </div>
-        </>
-    )
+        </div>
+    );
 }
