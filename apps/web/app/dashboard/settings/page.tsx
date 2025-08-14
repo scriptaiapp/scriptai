@@ -12,6 +12,9 @@ import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm";
 import { NotificationSettingsForm } from "@/components/settings/NotificationSettingsForm";
 import { BillingInfo } from "@/components/settings/BillingInfo";
 
+// Define NavItem type for clarity
+type NavItemId = "profile" | "notifications" | "billing";
+
 export default function Settings() {
   const { supabase, user } = useSupabase();
 
@@ -29,7 +32,14 @@ export default function Settings() {
   const [currentPlan, setCurrentPlan] = useState("Free");
   const [nextBillingDate, setNextBillingDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [activeTab, setActiveTab] = useState<"profile" | "notifications" | "billing">("profile");
+  const [activeTab, setActiveTab] = useState<NavItemId>("profile");
+
+  // Centralized navigation items for reuse
+  const navItems = [
+    { id: "profile" as NavItemId, icon: UserCircle, label: "Profile" },
+    { id: "notifications" as NavItemId, icon: Bell, label: "Notifications" },
+    { id: "billing" as NavItemId, icon: CreditCard, label: "Billing" },
+  ];
 
   const supportedLanguages = [
     { code: "ar", name: "العربية (Arabic)" },
@@ -108,8 +118,6 @@ export default function Settings() {
     setSavingNotifications(false);
   };
 
-
-
   const handleChangePassword = async () => {
     if (!user?.email) return;
     setSavingProfile(true);
@@ -125,30 +133,6 @@ export default function Settings() {
       setSavingProfile(false);
     }
   };
-
-  const NavItem = ({
-    id,
-    icon: Icon,
-    label,
-  }: {
-    id: "profile" | "notifications" | "billing";
-    icon: any;
-    label: string;
-  }) => (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => setActiveTab(id)}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-        ${activeTab === id
-          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-          : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-        }`}
-    >
-      <Icon className="h-5 w-5" />
-      {label}
-    </motion.button>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -168,27 +152,66 @@ export default function Settings() {
           </p>
         </motion.div>
 
-        <div className="flex flex-col gap-10 md:flex-row md:gap-16">
-          <aside className="w-full md:w-1/4 lg:w-1/5">
-            <nav
-              className="
-      flex overflow-x-auto md:overflow-visible
-      gap-2 md:gap-0
-      md:flex-col md:space-y-1
-      rounded-lg md:rounded-none
-      p-1 md:p-0
-      bg-slate-100/60 dark:bg-slate-900/40 md:bg-transparent
-      scrollbar-hide
-    "
-            >
-              <NavItem id="profile" icon={UserCircle} label="Profile" />
-              <NavItem id="notifications" icon={Bell} label="Notifications" />
-              <NavItem id="billing" icon={CreditCard} label="Billing" />
+        <div className="flex flex-col gap-8 md:flex-row md:gap-16">
+          {/* --- DESKTOP SIDEBAR (Visible on medium screens and up) --- */}
+          <aside className="hidden w-full md:flex md:w-1/4 lg:w-1/5">
+            <nav className="flex w-full flex-col space-y-1 relative">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+          ${isActive
+                        ? "text-purple-700 dark:text-purple-300"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-desktop-tab"
+                        className="absolute inset-0 rounded-lg bg-purple-100 dark:bg-purple-900/30"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <item.icon className="h-5 w-5 relative z-10" />
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                );
+              })}
             </nav>
+
           </aside>
 
-
           <main className="flex-1">
+            {/* --- MINIMAL MOBILE TAB BAR (Visible only on small screens) --- */}
+            <nav className="relative mb-6 rounded-full bg-slate-100 p-1 dark:bg-slate-800/60 md:hidden">
+              <div className="flex items-center relative justify-center gap-8">
+                {navItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className="relative z-10 rounded-full p-2.5 w-28 flex items-center justify-center transition-colors"
+                    >
+                      <item.icon className={`h-5 w-5 ${isActive ? "text-purple-600" : "text-slate-500"}`} />
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-settings-tab"
+                          className="absolute inset-0 -z-10 rounded-full w-full bg-white shadow-md dark:bg-purple-900/40 flex items-center justify-center"
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+            </nav>
+
+            {/* --- CONTENT AREA (Dynamically rendered based on activeTab) --- */}
             <AnimatePresence mode="wait">
               {activeTab === "profile" && (
                 <motion.div
