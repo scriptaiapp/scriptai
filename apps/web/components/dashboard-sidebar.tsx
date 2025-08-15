@@ -3,68 +3,104 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { usePathname } from "next/navigation"
+import Image from "next/image"
+import { motion } from "motion/react"
+import {
+  Home,
+  Sparkles,
+  FileText,
+  Search,
+  ImageIcon,
+  MessageSquare,
+  BookOpen,
+  Users,
+  Menu
+} from "lucide-react"
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { useSupabase } from "@/components/supabase-provider"
-import { useToast } from "@/components/ui/use-toast"
 import { useMobile } from "@/hooks/use-mobile"
-import {
-  BarChart3,
-  BookOpen,
-  FileText,
-  Home,
-  ImageIcon,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Settings,
-  Sparkles,
-  Users,
-  Search,
-} from "lucide-react";
-import Image from "next/image"
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
+
 import logo from "@/public/dark-logo.png"
 
-interface NavProps {
-  isCollapsed: boolean
-  links: ReadonlyArray<{
-    title: string
-    label?: string
-    icon: React.ReactNode
-    variant: "default" | "ghost"
-    href: string
-  }>
+interface NavLink {
+  label: string
+  icon: React.ReactNode
+  variant: "default" | "ghost"
+  href: string
 }
 
-export function Nav({ links, isCollapsed }: NavProps) {
+interface NavProps {
+  isCollapsed?: boolean
+  onLinkClick?: () => void
+  links: ReadonlyArray<NavLink>
+}
+
+export const Logo = ({
+  showText = true,
+  href = "/dashboard",
+}) => (
+  <Link
+    href={href}
+    className={cn(
+      "flex items-center gap-2 font-medium text-black dark:text-white",
+    )}
+  >
+    <Image
+      src={logo}
+      alt="Script AI Logo"
+      width={24}
+      height={20}
+      className="shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm"
+    />
+
+
+    {showText && (
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="whitespace-pre"
+      >
+        Script AI
+      </motion.span>
+    )}
+  </Link>
+);
+
+export function Nav({ links, isCollapsed, onLinkClick }: NavProps) {
   const pathname = usePathname()
 
   return (
-    <div data-collapsed={isCollapsed} className="group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2">
+    <div
+      data-collapsed={isCollapsed}
+      className="group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2"
+    >
       <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
-        {links.map((link, index) => (
-          <Link
-            key={index}
-            href={link.href}
-            className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 transition-all hover:text-slate-900 dark:hover:text-white",
-              pathname === link.href
-                ? "bg-slate-100 dark:bg-slate-800 font-medium text-slate-900 dark:text-white"
-                : "hover:bg-slate-100 dark:hover:bg-slate-800",
-              isCollapsed && "h-9 w-9 justify-center px-2",
-            )}
-            title={isCollapsed ? link.title : undefined}
-          >
-            {link.icon}
-            {!isCollapsed && <span>{link.title}</span>}
-            {!isCollapsed && link.label && (
-              <span className="ml-auto text-xs font-medium text-slate-600 dark:text-slate-400">{link.label}</span>
-            )}
-          </Link>
-        ))}
+        {links?.map((link, index) => {
+          const isActive = pathname === link.href
+          return (
+            <Link
+              key={index}
+              href={link.href}
+              onClick={onLinkClick}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 transition-all hover:text-slate-900 dark:hover:text-white",
+                isActive
+                  ? "bg-slate-100 dark:bg-slate-800 font-medium text-slate-900 dark:text-white"
+                  : "hover:bg-slate-100 dark:hover:bg-slate-800",
+                isCollapsed && "h-9 w-9 justify-center px-2"
+              )}
+              title={isCollapsed ? link.label : undefined}
+            >
+              {link.icon}
+              {!isCollapsed && <span>{link.label}</span>}
+
+            </Link>
+          )
+        })}
       </nav>
     </div>
   )
@@ -72,143 +108,77 @@ export function Nav({ links, isCollapsed }: NavProps) {
 
 interface DashboardSidebarProps {
   collapsed: boolean
+  setCollapsed: (collapsed: boolean) => void
 }
 
-export function DashboardSidebar({ collapsed }: DashboardSidebarProps) {
-  const { supabase } = useSupabase()
-  const router = useRouter()
-  const { toast } = useToast()
+export function DashboardSidebar({
+  collapsed,
+  setCollapsed
+}: DashboardSidebarProps) {
   const [open, setOpen] = useState(false)
   const isMobile = useMobile()
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      })
-      router.push("/login");
-    } catch (error) {
-      console.error("Error logging out:", error)
-      toast({
-        title: "Error",
-        description: "There was a problem logging out. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
 
-  const links = [
-    {
-      title: "Dashboard",
-      icon: <Home className="h-4 w-4" />,
-      variant: "default",
-      href: "/dashboard",
-    },
-    {
-      title: "Train AI",
-      icon: <Sparkles className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/train",
-    },
-    {
-      title: "Scripts",
-      icon: <FileText className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/scripts",
-    },
-    {
-      title: "Topic Research",
-      icon: <Search className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/research",
-    },
-    {
-      title: "Thumbnails",
-      icon: <ImageIcon className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/thumbnails",
-    },
-    {
-      title: "Subtitles",
-      icon: <MessageSquare className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/subtitles",
-    },
-    {
-      title: "Course Modules",
-      icon: <BookOpen className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/courses",
-    },
-    // {
-    //   title: "Analytics",
-    //   icon: <BarChart3 className="h-4 w-4" />,
-    //   variant: "ghost",
-    //   href: "/dashboard/analytics",
-    // },
-    {
-      title: "Audio Dubbing",
-      icon: <Users className="h-4 w-4" />,
-      variant: "ghost",
-      href: "/dashboard/dubbing",
-    },
-  ] as const
+  const links: ReadonlyArray<NavLink> = [
+    { label: "Dashboard", icon: <Home className="h-4 w-4" />, variant: "default", href: "/dashboard" },
+    { label: "Train AI", icon: <Sparkles className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
+    { label: "Scripts", icon: <FileText className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
+    { label: "Topic Research", icon: <Search className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
+    { label: "Thumbnails", icon: <ImageIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/thumbnails" },
+    { label: "Subtitles", icon: <MessageSquare className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
+    { label: "Course Modules", icon: <BookOpen className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },
+    { label: "Audio Dubbing", icon: <Users className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" }
+  ]
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="lg:hidden">
-            <Menu className="h-4 w-4" />
-            <span className="sr-only">Toggle navigation</span>
-          </Button>
-        </SheetTrigger>
+      <Sheet open={collapsed} onOpenChange={setCollapsed}>
         <SheetContent side="left" className="w-64 p-0">
           <div className="flex h-14 items-center border-b px-4">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <Sparkles className="h-6 w-6 text-slate-500" />
-              <span>Script AI</span>
+            <Link href="/dashboard">
+              <Logo />
             </Link>
           </div>
-          <ScrollArea className="flex-1">
-            <Nav isCollapsed={false} links={links} />
-          </ScrollArea>
-          <div className="mt-auto border-t p-4">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2 text-slate-800 dark:text-slate-100"
-              onClick={() => {
-                handleLogout()
-                setOpen(false)
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Log out</span>
-            </Button>
+
+          <div className="p-2">
+            <Nav links={links} onLinkClick={() => setCollapsed(false)} />
           </div>
+
         </SheetContent>
       </Sheet>
     )
   }
 
+  const pathname = usePathname();
+
   return (
-    <aside
-      className={cn(
-        "border-r bg-white dark:bg-slate-950 flex flex-col transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
-      )}
-    >
-      <div className={cn("flex h-14 items-center", collapsed ? "px-2" : "px-4")}>
-        <Link href="/" className={cn("flex items-center font-semibold", collapsed ? "justify-center" : "justify-start gap-2")}>
-          <Image src={logo} alt="Script AI" width={28} height={28} />
-          {!collapsed && <span className="text-xl">Script AI</span>}
-        </Link>
-      </div>
-      <ScrollArea className="flex-1">
-        <Nav isCollapsed={collapsed} links={links} />
-      </ScrollArea>
-    </aside>
+    <Sidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          {open ? <Logo showText={true} /> : <Logo showText={false} />}
+          <div className="mt-8 flex flex-col gap-2">
+            {links.map((link, idx) => {
+              const isActive = pathname === link.href;
+              return (
+                <SidebarLink
+                  key={idx}
+                  link={link}
+                  className={`
+                py-2 font-medium transition-colors duration-150 rounded-md
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 flex items-center justify-start
+                ${open ? "px-3" : "justify-center"}
+                ${isActive
+                      ? 'bg-purple-100 text-purple-800 font-semibold'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }
+              `}
+                />
+              );
+            })}
+          </div>
+        </div>
+        <div />
+      </SidebarBody>
+    </Sidebar>
   )
 }

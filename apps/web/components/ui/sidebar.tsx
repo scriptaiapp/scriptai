@@ -88,7 +88,7 @@ export const DesktopSidebar = ({
         <>
             <motion.div
                 className={cn(
-                    "h-full px-4 py-4 hidden  md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 w-[300px] shrink-0",
+                    "h-full px-4 py-4 hidden  md:flex md:flex-col bg-white dark:bg-neutral-800 w-[300px] shrink-0",
                     className
                 )}
                 animate={{
@@ -167,7 +167,7 @@ export const SidebarLink = ({
         <a
             href={link.href}
             className={cn(
-                "flex items-center justify-start gap-2  group/sidebar py-2",
+                "flex items-center justify-start gap-2  group/sidebar py-2 ",
                 className
             )}
             {...props}

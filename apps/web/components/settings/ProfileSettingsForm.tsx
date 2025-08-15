@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { ImageDropzone } from "@/components/ui/image-dropzone";
 
 interface ProfileSettingsFormProps {
     name: string;
@@ -22,6 +23,10 @@ interface ProfileSettingsFormProps {
     loading: boolean;
     handleChangePassword: () => void;
     supportedLanguages: { code: string; name: string }[];
+    avatar: File | null;
+    setAvatar: (file: File | null) => void;
+    initialAvatar: string | null;
+    setInitialAvatar: (initialAvatar: string | null) => void;
 }
 
 export function ProfileSettingsForm({
@@ -34,9 +39,24 @@ export function ProfileSettingsForm({
     loading,
     handleChangePassword,
     supportedLanguages,
+    avatar,
+    setAvatar,
+    initialAvatar,
+    setInitialAvatar
 }: ProfileSettingsFormProps) {
+    // console.log("my avatar", initialAvatar)
     return (
         <div className="space-y-6 p-6 rounded-xl border border-border bg-background shadow-sm">
+
+            {/* --- Avatar Upload --- */}
+            <ImageDropzone
+                avatar={avatar}
+                setAvatar={setAvatar}
+                initialAvatar={initialAvatar}
+                setInitialAvatar={setInitialAvatar}
+                disabled={loading}
+            />
+
             {/* --- Full Name --- */}
             <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>

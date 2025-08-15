@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, LogOut, Settings, UserPlus, Gem } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
@@ -23,6 +22,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
   const pathname = usePathname();
   const { supabase, user, profile } = useSupabase();
   const [pageTitle, setPageTitle] = useState("");
+
 
   useEffect(() => {
     const path = pathname.split("/").filter(Boolean);
@@ -55,7 +55,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
       <Button
         variant="ghost"
         size="icon"
-        className="p-2 w-8 h-8 hidden md:block"
+        className="md:hidden"
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
       >
         <Menu className="h-5 w-5" />
@@ -67,7 +67,6 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Credits Display in Header --- */}
         <div className="flex items-center gap-2 rounded-md border border-border/40 px-3 py-1.5 text-sm">
           <Gem className="h-4 w-4 text-muted-foreground" />
           <span className="font-semibold">{profile?.credits || "0"}</span>
@@ -78,7 +77,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
             <Button variant="ghost" className="p-0 w-9 h-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarImage
-                  src={user?.user_metadata?.avatar_url || ""}
+                  src={profile?.avatar_url || ""}
                   alt="User avatar"
                 />
                 <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-black dark:text-white">

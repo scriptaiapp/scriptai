@@ -16,16 +16,20 @@ import { BillingInfo } from "@/components/settings/BillingInfo";
 type NavItemId = "profile" | "notifications" | "billing";
 
 export default function Settings() {
-  const { supabase, user } = useSupabase();
-
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const { supabase, user, profile } = useSupabase();
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingNotifications, setSavingNotifications] = useState(false);
-  const [initialFetchComplete, setInitialFetchComplete] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [language, setLanguage] = useState("en");
+
+
+  const [name, setName] = useState(profile?.full_name || "");
+  const [initialAvatar, setInitialAvatar] = useState<string | null>(profile?.avatar_url || null);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [email, setEmail] = useState(user?.email || "");
+  const [language, setLanguage] = useState(profile?.language || "en");
   const [nameError, setNameError] = useState("");
+
+
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [scriptCompletionNotifications, setScriptCompletionNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
@@ -59,29 +63,23 @@ export default function Settings() {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!user || initialFetchComplete) return;
-      setLoadingProfile(true);
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-        if (error) throw error;
-        if (data) {
-          setName(data.full_name || "");
-          setEmail(user.email || "");
-          setLanguage(data.language || "en");
-          setInitialFetchComplete(true);
-        }
-      } catch (error: any) {
-        toast.error("Error fetching profile", { description: error.message });
-      } finally {
-        setLoadingProfile(false);
+      if (!profile) {
+        setLoadingProfile(true);
+        return;
       }
+
+      // When profile becomes available
+      setName(profile.full_name || "");
+      setInitialAvatar(profile.avatar_url || null);
+      setEmail(profile.email || "");
+      setLanguage(profile.language || "en");
+      // setInitialFetchComplete(true);
+      setLoadingProfile(false);
+
+
     };
     fetchUserProfile();
-  }, [supabase, user, initialFetchComplete]);
+  }, [user, profile]);
 
 
   const handleUpdateProfile = async () => {
@@ -92,19 +90,65 @@ export default function Settings() {
     }
     setNameError("");
     setSavingProfile(true);
+
     try {
+      const updates: {
+        full_name: string;
+        language: string;
+        updated_at: string;
+        avatar_url?: string | null;
+      } = {
+        full_name: name,
+        language,
+        updated_at: new Date().toISOString(),
+      };
+
+
+
+      if (avatar) {
+        const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+        if (!allowedTypes.includes(avatar.type)) {
+          toast.error("Invalid file type. Please upload JPG, PNG, GIF, or WEBP.");
+          return false;
+        }
+
+        const formData = new FormData();
+        formData.append('file', avatar);
+
+        const response = await fetch('/api/uploads/avatar', {
+          method: 'POST',
+          body: formData, // no manual Content-Type
+        });
+
+        const result = await response.json();
+        console.log(result.url);
+
+
+        if (!response.ok) {
+          const errorBody = await response.json();
+          throw new Error(errorBody.error || 'Failed to upload.');
+        }
+        updates.avatar_url = result.url;
+      } else if (!initialAvatar && !avatar) {
+        // Call the DELETE method of API route
+        await fetch('/api/uploads/avatar', {
+          method: 'DELETE',
+        });
+        updates.avatar_url = null;
+      }
+
+      // console.log(updates)
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          full_name: name,
-          language,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updates)
         .eq("user_id", user.id);
+
       if (error) throw error;
 
       toast.success("Profile updated", { description: "Your profile has been updated successfully." });
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       toast.error("Error updating profile", { description: error.message });
     } finally {
       setSavingProfile(false);
@@ -244,6 +288,10 @@ export default function Settings() {
                           loading={savingProfile}
                           handleChangePassword={handleChangePassword}
                           supportedLanguages={supportedLanguages}
+                          avatar={avatar}
+                          setAvatar={setAvatar}
+                          initialAvatar={initialAvatar}
+                          setInitialAvatar={setInitialAvatar}
                         />
                       )}
                     </CardContent>
