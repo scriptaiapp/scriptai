@@ -5,6 +5,7 @@ export interface UserProfile {
   credits: number
   ai_trained: boolean
   youtube_connected: boolean
+  language: string
 }
 
 export interface Script {
