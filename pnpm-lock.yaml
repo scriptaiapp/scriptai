@@ -216,6 +216,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -379,6 +382,21 @@ importers:
         version: 10.9.2(@types/node@20.19.9)(typescript@5.5.4)
       typescript:
         specifier: 5.5.4
+        version: 5.5.4
+
+  packages/config:
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
+      typescript:
+        specifier: ^5.5.3
         version: 5.5.4
 
   packages/eslint-config:

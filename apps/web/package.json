@@ -44,6 +44,7 @@
     "@repo/api": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/validation": "workspace:*",
+    "@repo/config": "workspace:*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "latest",
     "@tabler/icons-react": "^3.34.1",

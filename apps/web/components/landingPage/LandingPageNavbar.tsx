@@ -85,6 +85,17 @@ const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModa
               >
                 <ShimmerButton className="w-full" onClick={() => setIsEarlyAccessModalOpen(!isEarlyAccessModalOpen)}>Get Early Access</ShimmerButton>
               </NavbarButton>
+
+              {/* 
+              // Login button for future use
+              <NavbarButton
+                onClick={() => setIsMobileMenuOpen(false)}
+                variant="primary"
+                variant="secondary"
+                className="w-full"
+              >
+                Login
+                </NavbarButton> */}
             </div>
           </MobileNavMenu>
         </MobileNav>

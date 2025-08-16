@@ -1,11 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { useSupabase } from "@/components/supabase-provider";
-import { Loader2, Save, Bell, CreditCard, UserCircle } from "lucide-react";
+import { useState } from "react";
+import { Bell, CreditCard, UserCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm";
@@ -16,167 +12,13 @@ import { BillingInfo } from "@/components/settings/BillingInfo";
 type NavItemId = "profile" | "notifications" | "billing";
 
 export default function Settings() {
-  const { supabase, user, profile } = useSupabase();
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savingNotifications, setSavingNotifications] = useState(false);
-
-
-  const [name, setName] = useState(profile?.full_name || "");
-  const [initialAvatar, setInitialAvatar] = useState<string | null>(profile?.avatar_url || null);
-  const [avatar, setAvatar] = useState<File | null>(null);
-  const [email, setEmail] = useState(user?.email || "");
-  const [language, setLanguage] = useState(profile?.language || "en");
-  const [nameError, setNameError] = useState("");
-
-
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [scriptCompletionNotifications, setScriptCompletionNotifications] = useState(true);
-  const [marketingEmails, setMarketingEmails] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState("Free");
-  const [nextBillingDate, setNextBillingDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [activeTab, setActiveTab] = useState<NavItemId>("profile");
-
-  // Centralized navigation items for reuse
   const navItems = [
     { id: "profile" as NavItemId, icon: UserCircle, label: "Profile" },
     { id: "notifications" as NavItemId, icon: Bell, label: "Notifications" },
     { id: "billing" as NavItemId, icon: CreditCard, label: "Billing" },
   ];
 
-  const supportedLanguages = [
-    { code: "ar", name: "العربية (Arabic)" },
-    { code: "bn", name: "বাংলা (Bengali)" },
-    { code: "zh", name: "中文 (Chinese)" },
-    { code: "en", name: "English" },
-    { code: "fr", name: "Français (French)" },
-    { code: "de", name: "Deutsch (German)" },
-    { code: "hi", name: "हिन्दी (Hindi)" },
-    { code: "it", name: "Italiano (Italian)" },
-    { code: "ja", name: "日本語 (Japanese)" },
-    { code: "ko", name: "한국어 (Korean)" },
-    { code: "pt", name: "Português (Portuguese)" },
-    { code: "ru", name: "Русский (Russian)" },
-    { code: "es", name: "Español (Spanish)" },
-  ];
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!profile) {
-        setLoadingProfile(true);
-        return;
-      }
-
-      // When profile becomes available
-      setName(profile.full_name || "");
-      setInitialAvatar(profile.avatar_url || null);
-      setEmail(profile.email || "");
-      setLanguage(profile.language || "en");
-      // setInitialFetchComplete(true);
-      setLoadingProfile(false);
-
-
-    };
-    fetchUserProfile();
-  }, [user, profile]);
-
-
-  const handleUpdateProfile = async () => {
-    if (!user) return;
-    if (!name || name.length < 3) {
-      setNameError("Name must be at least 3 characters long");
-      return;
-    }
-    setNameError("");
-    setSavingProfile(true);
-
-    try {
-      const updates: {
-        full_name: string;
-        language: string;
-        updated_at: string;
-        avatar_url?: string | null;
-      } = {
-        full_name: name,
-        language,
-        updated_at: new Date().toISOString(),
-      };
-
-
-
-      if (avatar) {
-        const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-        if (!allowedTypes.includes(avatar.type)) {
-          toast.error("Invalid file type. Please upload JPG, PNG, GIF, or WEBP.");
-          return false;
-        }
-
-        const formData = new FormData();
-        formData.append('file', avatar);
-
-        const response = await fetch('/api/uploads/avatar', {
-          method: 'POST',
-          body: formData, // no manual Content-Type
-        });
-
-        const result = await response.json();
-        console.log(result.url);
-
-
-        if (!response.ok) {
-          const errorBody = await response.json();
-          throw new Error(errorBody.error || 'Failed to upload.');
-        }
-        updates.avatar_url = result.url;
-      } else if (!initialAvatar && !avatar) {
-        // Call the DELETE method of API route
-        await fetch('/api/uploads/avatar', {
-          method: 'DELETE',
-        });
-        updates.avatar_url = null;
-      }
-
-      // console.log(updates)
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      toast.success("Profile updated", { description: "Your profile has been updated successfully." });
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast.error("Error updating profile", { description: error.message });
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  const handleUpdateNotifications = async () => {
-    setSavingNotifications(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.success("Notification preferences updated");
-    setSavingNotifications(false);
-  };
-
-  const handleChangePassword = async () => {
-    if (!user?.email) return;
-    setSavingProfile(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
-      toast.success("Password reset email sent");
-    } catch (error: any) {
-      toast.error("Error sending password reset email", { description: error.message });
-    } finally {
-      setSavingProfile(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -265,47 +107,9 @@ export default function Settings() {
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <CardHeader>
-                      <CardTitle>Profile Settings</CardTitle>
-                      <CardDescription>
-                        Update your personal information and account settings.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {loadingProfile ? (
-                        <div className="flex min-h-[200px] items-center justify-center">
-                          <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
-                        </div>
-                      ) : (
-                        <ProfileSettingsForm
-                          name={name}
-                          setName={setName}
-                          email={email}
-                          language={language}
-                          setLanguage={setLanguage}
-                          nameError={nameError}
-                          loading={savingProfile}
-                          handleChangePassword={handleChangePassword}
-                          supportedLanguages={supportedLanguages}
-                          avatar={avatar}
-                          setAvatar={setAvatar}
-                          initialAvatar={initialAvatar}
-                          setInitialAvatar={setInitialAvatar}
-                        />
-                      )}
-                    </CardContent>
-                    <div className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50 rounded-b-lg">
-                      <Button onClick={handleUpdateProfile} disabled={savingProfile || loadingProfile}>
-                        {savingProfile ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Save className="mr-2 h-4 w-4" />
-                        )}
-                        Save Changes
-                      </Button>
-                    </div>
-                  </Card>
+
+                  <ProfileSettingsForm />
+
                 </motion.div>
               )}
 
@@ -317,35 +121,8 @@ export default function Settings() {
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <CardHeader>
-                      <CardTitle>Notification Preferences</CardTitle>
-                      <CardDescription>
-                        Manage how and when you receive notifications.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <NotificationSettingsForm
-                        emailNotifications={emailNotifications}
-                        setEmailNotifications={setEmailNotifications}
-                        scriptCompletionNotifications={scriptCompletionNotifications}
-                        setScriptCompletionNotifications={setScriptCompletionNotifications}
-                        marketingEmails={marketingEmails}
-                        setMarketingEmails={setMarketingEmails}
-                        loading={savingNotifications}
-                      />
-                    </CardContent>
-                    <div className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50 rounded-b-lg">
-                      <Button onClick={handleUpdateNotifications} disabled={savingNotifications}>
-                        {savingNotifications ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Bell className="mr-2 h-4 w-4" />
-                        )}
-                        Save Preferences
-                      </Button>
-                    </div>
-                  </Card>
+
+                  <NotificationSettingsForm />
                 </motion.div>
               )}
 
@@ -357,21 +134,8 @@ export default function Settings() {
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <CardHeader>
-                      <CardTitle>Billing Information</CardTitle>
-                      <CardDescription>
-                        Manage your subscription and payment details.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <BillingInfo
-                        currentPlan={currentPlan}
-                        nextBillingDate={nextBillingDate}
-                        paymentMethod={paymentMethod}
-                      />
-                    </CardContent>
-                  </Card>
+
+                  <BillingInfo />
                 </motion.div>
               )}
             </AnimatePresence>
