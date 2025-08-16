@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, Settings, UserPlus } from "lucide-react";
+import { Menu, LogOut, Settings, UserPlus, Gem } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 interface DashboardHeaderProps {
   sidebarCollapsed: boolean;
@@ -23,6 +23,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
   const { supabase, user, profile } = useSupabase();
   const [pageTitle, setPageTitle] = useState("");
 
+
   useEffect(() => {
     const path = pathname.split("/").filter(Boolean);
     if (path.length === 1) {
@@ -33,42 +34,51 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
     }
   }, [pathname]);
 
-  console.log("profile data: ", profile);
-  console.log("user data: ", user);
+  // console.log("profile data: ", profile);
+  // console.log("user data: ", user);
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
-    } catch (error: any) {
-      toast.error("Error logging out: " + error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Error logging out: " + error.message);
+      } else {
+        toast.error("An unknown error occurred during logout.");
+      }
     }
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-4 backdrop-blur-sm sm:px-6">
       <Button
         variant="ghost"
         size="icon"
-        className="p-2 w-8 h-8 hidden md:block"
+        className="md:hidden"
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
       >
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle sidebar</span>
       </Button>
+
       <div className="flex-1">
         <h1 className="text-lg font-semibold">{pageTitle}</h1>
       </div>
+
       <div className="flex items-center gap-4">
-        <Badge variant="secondary">{profile?.credits || "0"} Credits</Badge>
+        <div className="flex items-center gap-2 rounded-md border border-border/40 px-3 py-1.5 text-sm">
+          <Gem className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">{profile?.credits || "0"}</span>
+        </div>
+
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" className="p-0 w-8 h-8 rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" className="p-0 w-9 h-9 rounded-full">
+              <Avatar className="h-9 w-9">
                 <AvatarImage
-                  src={user?.user_metadata?.avatar_url || ""}
+                  src={profile?.avatar_url || ""}
                   alt="User avatar"
-                  onError={(e) => console.error("Avatar image failed to load:", user?.user_metadata?.avatar_url)}
                 />
                 <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-black dark:text-white">
                   {profile?.full_name?.charAt(0)?.toUpperCase() ||
@@ -78,24 +88,56 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
               </Avatar>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-40" align="end" sideOffset={10}>
-            <div className="flex flex-col gap-1">
-              <Link href="/dashboard/settings">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <Settings className="h-4 w-4" />
-                  Settings
+
+          <PopoverContent
+            className="w-64 rounded-xl border-border/20 bg-background/95 p-0 backdrop-blur-md"
+            align="end"
+            sideOffset={12}
+          >
+            <div className="flex flex-col">
+              {/* User Info Section */}
+              <div className="p-4">
+                <p className="font-semibold text-md text-foreground">
+                  {profile?.full_name || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {user?.email}
+                </p>
+              </div>
+
+              <Separator className="bg-border/50" />
+
+
+
+              {/* Links Section */}
+              <div className="p-2">
+                <Link href="/dashboard/settings">
+                  <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Button>
+                </Link>
+                <Link href="/dashboard/referrals">
+                  <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+                    <UserPlus className="h-4 w-4" />
+                    Referrals
+                  </Button>
+                </Link>
+              </div>
+
+              <Separator className="bg-border/50" />
+
+              {/* Logout Section */}
+              <div className="p-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 px-2 text-red-500 hover:text-red-500 hover:bg-red-500/10"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </Button>
-              </Link>
-              <Link href="/dashboard/referrals">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Referrals
-                </Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
@@ -103,3 +145,5 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
     </header>
   );
 }
+
+

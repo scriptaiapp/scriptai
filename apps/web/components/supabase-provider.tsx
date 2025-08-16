@@ -34,7 +34,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected")
+        .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language")
         .eq("user_id", userId)
         .single();
 

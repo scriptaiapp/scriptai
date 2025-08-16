@@ -16,7 +16,6 @@ import FeatureSection from "@/components/landingPage/FeatureSection"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
 import { useState } from "react"
-
 // DYNAMIC IMPORT
 const LandingPageSVG = dynamic(
   () => import('@/components/landingPage/LandingPageSVG'),
@@ -109,6 +108,7 @@ export default function Home() {
                 className="mt-6 flex flex-col sm:flex-row items-center gap-4"
               >
                 <Link href="/signup">
+
                   <MButton
                     size="lg"
                     className="bg-slate-900 text-white hover:bg-slate-800 shadow-md"

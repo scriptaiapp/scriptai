@@ -43,7 +43,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <DashboardSidebar collapsed={sidebarCollapsed} />
+      <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
         <div className="flex-1 overflow-auto">{children}</div>

@@ -26,6 +26,45 @@
     --radius: 0.5rem;
   }
 
+/* === MINIMAL SCROLLBAR === */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* No visible track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3); /* Slate-500 with transparency */
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5); /* Slightly darker on hover */
+}
+
+/* Dark mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25); /* Slate-400 transparent */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+/* Hide scrollbar for nav on mobile */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+  
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
