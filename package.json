@@ -19,7 +19,8 @@
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/config": "workspace:*",
+     "@repo/typescript-config": "workspace:*",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5"
   },
