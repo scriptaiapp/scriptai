@@ -1,4 +1,4 @@
-// route file: app/api/grant-access/route.ts (assumed path)
+
 
 import { error } from "console"
 import { NextResponse } from "next/server"
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     // Send access request email to admin
     const res = await resend.emails.send({
-      from: "Script AI <afrinnahar1999@gmail.com>",
+      from: "Script AI <no-reply@tryscriptai.com>",
       to: "afrinnahar1999@gmail.com",
       subject: "Script AI youtube access grant request",
       text: "Please grant access to the following email: " + email,
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     // Send confirmation email to the user
     const confirmationRes = await resend.emails.send({
-      from: "Script AI <afrinnahar1999@gmail.com>",
+      from: "Script AI <no-reply@tryscriptai.com>",
       to: email,
       subject: "Your Script AI YouTube Access Request",
       text: "Your request for YouTube access has been submitted. We will notify you once it's approved.",
