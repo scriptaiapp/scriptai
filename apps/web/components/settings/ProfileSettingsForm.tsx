@@ -28,7 +28,7 @@ interface formDataState {
 
 
 export function ProfileSettingsForm() {
-    const { user, profile } = useSupabase();
+    const { user, profile, fetchUserProfile } = useSupabase();
     const { updateProfile, changePassword, isUpdatingProfile, isChangingPassword } = useSettings();
 
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -60,18 +60,20 @@ export function ProfileSettingsForm() {
         fetchUserProfile();
     }, [user, profile]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setNameError("");
         if (formData.name.length < 3) {
             setNameError("Name must be at least 3 characters long.");
             return;
         }
-        updateProfile({
+        await updateProfile({
             name: formData.name,
             language: formData.language,
             avatar: avatarFile,
             initialAvatar: formData.initialAvatar,
         });
+        await fetchUserProfile(user?.id || "");
+
     };
 
     const isSaving = isLoadingData || isUpdatingProfile;

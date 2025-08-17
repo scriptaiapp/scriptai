@@ -16,6 +16,7 @@ type SupabaseContext = {
   loading: boolean;
   profile: UserProfile | null;
   setProfile: Dispatch<SetStateAction<UserProfile | null>>;
+  fetchUserProfile: (userId: string) => Promise<void>;
 };
 
 const Context = createContext<SupabaseContext | undefined>(undefined);
@@ -102,7 +103,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <Context.Provider
-      value={{ supabase, user, profile, setProfile, session, setSession, providerToken, setProviderToken, loading }}
+      value={{ supabase, user, profile, setProfile, session, setSession, providerToken, setProviderToken, loading, fetchUserProfile }}
     >
       {children}
     </Context.Provider>

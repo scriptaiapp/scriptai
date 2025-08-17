@@ -8,29 +8,31 @@ import { PenTool, Upload, ImageIcon, FileText, Plus, ArrowRight, Youtube, XCircl
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 import { Script, UserProfile } from "@repo/validation"
+import { YoutubePermissionDialog } from "@/components/YoutubePermissionDialog"
 
 
 
 export default function Dashboard() {
-  const { supabase, user, session } = useSupabase()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const { supabase, user, session, profile } = useSupabase()
+  // const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentScripts, setRecentScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
   const [connectingYoutube, setConnectingYoutube] = useState(false)
 
+  const [youtubeConnectionAccess, setYoutubeConnectionAccess] = useState(false)
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return
 
       try {
         // Fetch user profile including youtube_connected
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected")
-          .eq("user_id", user.id)
-          .single();
+        // const { data: profileData, error: profileError } = await supabase
+        //   .from("profiles")
+        //   .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected")
+        //   .eq("user_id", user.id)
+        //   .single();
 
-        if (profileError) throw profileError
+        // if (profileError) throw profileError
 
         // Fetch recent scripts
         const { data: scriptsData, error: scriptsError } = await supabase
@@ -42,7 +44,7 @@ export default function Dashboard() {
 
         if (scriptsError) throw scriptsError
 
-        setProfile(profileData as UserProfile)
+        // setProfile(profileData as UserProfile)
         setRecentScripts(scriptsData || [])
       } catch (error: any) {
         toast.error(error.message || "Failed to fetch user data")
@@ -54,33 +56,68 @@ export default function Dashboard() {
     fetchUserData()
   }, [supabase, user])
 
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
+
   const connectYoutubeChannel = async () => {
-    setConnectingYoutube(true)
+    setConnectingYoutube(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/api/youtube/callback`,
-          scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly',
-          queryParams: {
-            access_type: 'offline', // Ensures refresh token is returned
-            prompt: 'consent', // Forces consent screen
-          },
-        },
-      })
-
-      if (error) throw error
-
-      if (data.url) {
-        window.location.href = data.url // Redirect to Google consent screen
+      if (!user?.id) {
+        throw new Error("User not authenticated.");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to connect YouTube channel")
+
+      // Fetch permission flag
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select(`"youtube-grant-access"`)
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const allowed = data?.["youtube-grant-access"] === true;
+      setYoutubeConnectionAccess(allowed);
+
+      if (allowed) {
+        // ✅ Proceed with OAuth
+        const { data: oauthData, error: oauthError } =
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${window.location.origin}/api/youtube/callback`,
+              scopes:
+                "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly",
+              queryParams: {
+                access_type: "offline",
+                prompt: "consent",
+              },
+            },
+          });
+
+        if (oauthError) throw oauthError;
+
+        if (oauthData?.url) {
+          window.location.href = oauthData.url;
+          return;
+        } else {
+          throw new Error("Failed to retrieve Google authentication URL.");
+        }
+      } else {
+        // Permission not granted → open dialog
+        setPermissionDialogOpen(true);
+        toast.error("You do not have permission to connect a YouTube channel.");
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
+      console.error("YouTube Connection Error:", errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setConnectingYoutube(false)
+      setConnectingYoutube(false);
     }
-  }
+  };
+
+
 
   if (loading) {
     return (
@@ -276,6 +313,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      <YoutubePermissionDialog
+        open={permissionDialogOpen}
+        onClose={() => setPermissionDialogOpen(false)}
+      />
     </div>
   )
 }
