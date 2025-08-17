@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [connectingYoutube, setConnectingYoutube] = useState(false)
 
   const [youtubeConnectionAccess, setYoutubeConnectionAccess] = useState(false)
+  const [youtubeAccessRequested, setYoutubeAccessRequested] = useState(false)
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return
@@ -66,20 +68,26 @@ export default function Dashboard() {
         throw new Error("User not authenticated.");
       }
 
-      // Fetch permission flag
-      const { data, error: profileError } = await supabase
-        .from("profiles")
-        .select(`"youtube-grant-access"`)
-        .eq("user_id", user.id)
-        .single();
+      // Use the GET handler to check the values
+      const response = await fetch("/api/grant-youtube-access", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (profileError) throw profileError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch access status.");
+      }
 
-      const allowed = data?.["youtube-grant-access"] === true;
-      setYoutubeConnectionAccess(allowed);
+      const { granted, requested } = await response.json();
 
-      if (allowed) {
-        // ✅ Proceed with OAuth
+      setYoutubeConnectionAccess(granted);
+      setYoutubeAccessRequested(requested);
+
+      if (granted) {
+        // Proceed with OAuth
         const { data: oauthData, error: oauthError } =
           await supabase.auth.signInWithOAuth({
             provider: "google",
@@ -105,7 +113,6 @@ export default function Dashboard() {
       } else {
         // Permission not granted → open dialog
         setPermissionDialogOpen(true);
-        toast.error("You do not have permission to connect a YouTube channel.");
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -317,6 +324,7 @@ export default function Dashboard() {
       <YoutubePermissionDialog
         open={permissionDialogOpen}
         onClose={() => setPermissionDialogOpen(false)}
+        isRequested={youtubeAccessRequested}
       />
     </div>
   )
