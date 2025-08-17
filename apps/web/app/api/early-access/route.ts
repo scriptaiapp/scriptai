@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     // Send waiting approval email
     const { data, error } = await resend.emails.send({
-      from: "Script AI <onboarding@resend.dev>",
+      from: "Script AI <no-reply@tryscriptai.com>",
       to: email,
       subject: "Script AI Early Access Waitlist",
       // react: EarlyAccessEmail(),
