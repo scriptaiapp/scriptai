@@ -2,15 +2,16 @@
   "name": "@repo/validation",  
   "version": "0.0.0",
   "private": true,             
-  "main": "./index.ts",        
-  "types": "./index.ts",       
+  "main": "./src/index.ts",        
+  "types": "./src/index.ts",       
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "build": "tsc"
+    "build": "tsc -p tsconfig.json"
   },
   "devDependencies": {        
     "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/config": "workspace:*",
+      "@repo/typescript-config": "workspace:*",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5",
     "zod": "^3.23.8"

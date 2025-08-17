@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Loader2, ShieldCheck, Youtube } from "lucide-react" // A popular icon library used with shadcn/ui
+import { Loader2, ShieldCheck, Youtube } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -18,9 +18,11 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert"
 export function YoutubePermissionDialog({
     open,
     onClose,
+    isRequested,
 }: {
     open: boolean
     onClose: () => void
+    isRequested: boolean
 }) {
     const { user } = useSupabase()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -63,46 +65,48 @@ export function YoutubePermissionDialog({
         <Dialog open={open} onOpenChange={() => !isSubmitting && onClose()}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    {/* 3. Use an engaging layout with an icon */}
                     <div className="flex items-center justify-center space-x-2 mb-4">
                         <Youtube className="h-8 w-8 text-red-500" />
-                        <span className="text-2xl font-semibold">Connect YouTube</span>
+                        <span className="text-2xl font-semibold">Connect Channel</span>
                     </div>
                     <DialogTitle className="text-center text-xl">
-                        Admin Approval Required
+                        {isRequested ? "Access Request Pending" : "Admin Approval Required"}
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                        Your workspace requires admin approval to connect new channels.
+                        {isRequested
+                            ? "You have already requested access to connect your YouTube channel. Please wait for admin approval."
+                            : "Your workspace requires admin approval to connect new channels."}
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* 4. Use an Alert to clearly explain the process */}
                 <Alert>
                     <ShieldCheck className="h-4 w-4" />
-                    <AlertTitle>What Happens Next?</AlertTitle>
+                    <AlertTitle>{isRequested ? "Awaiting Approval" : "What Happens Next?"}</AlertTitle>
                     <AlertDescription>
-                        A request will be sent to your admin. You'll be notified by email
-                        once your request has been approved.
+                        {isRequested
+                            ? "Your request has been sent to the admin. You'll receive an email notification once approved."
+                            : "A request will be sent to your admin. You'll be notified by email once your request has been approved."}
                     </AlertDescription>
                 </Alert>
 
                 <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
                     <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-                        Cancel
+                        Close
                     </Button>
-                    <Button onClick={onConfirm} disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Requesting Access...
-                            </>
-                        ) : (
-                            "I Understand, Request Access"
-                        )}
-                    </Button>
+                    {!isRequested && (
+                        <Button onClick={onConfirm} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Requesting Access...
+                                </>
+                            ) : (
+                                "I Understand, Request Access"
+                            )}
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     )
-
 }

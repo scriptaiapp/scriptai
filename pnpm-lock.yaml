@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:packages/config
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
@@ -442,6 +445,9 @@ importers:
 
   packages/ui:
     devDependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -475,6 +481,9 @@ importers:
 
   packages/validations:
     devDependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
