@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,8 +19,13 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed }: DashboardHeaderProps) {
   const pathname = usePathname();
-  const { supabase, user, profile } = useSupabase();
+  const { supabase, user, profile: initialProfile } = useSupabase();
   const [pageTitle, setPageTitle] = useState("");
+  const [profile, setProfile] = useState(initialProfile);
+
+  useEffect(() => {
+    setProfile(initialProfile);
+  }, [initialProfile]);
 
 
   useEffect(() => {
