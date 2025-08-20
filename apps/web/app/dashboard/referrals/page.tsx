@@ -6,14 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
-import { Copy, Gift, Share2, Users, ArrowRight } from "lucide-react"
+import { Copy, Gift, Share2, Users, ArrowRight, RefreshCw, Plus } from "lucide-react"
 
 interface Referral {
   id: string
   referred_email: string
-  status: "pending" | "completed"
+  status: "pending" | "completed" | "expired"
   credits_awarded: number
   created_at: string
+  completed_at?: string
+  referral_code: string
+  expires_at: string
 }
 
 export default function Referrals() {
@@ -23,7 +26,43 @@ export default function Referrals() {
   const [referralLink, setReferralLink] = useState("")
   const [referrals, setReferrals] = useState<Referral[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [totalCreditsEarned, setTotalCreditsEarned] = useState(0)
+  const [pendingReferrals, setPendingReferrals] = useState(0)
+  const [totalReferrals, setTotalReferrals] = useState(0)
+  const [showAllReferrals, setShowAllReferrals] = useState(false)
+
+  // Fetch referrals from API
+  const fetchReferrals = async () => {
+    try {
+      const response = await fetch("/api/referrals", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to fetch referrals")
+      }
+
+      const data = await response.json()
+      setReferrals(data.referrals || [])
+      setTotalCreditsEarned(data.totalCreditsEarned || 0)
+      setPendingReferrals(data.pendingReferrals || 0)
+      setTotalReferrals(data.totalReferrals || 0)
+    } catch (error: any) {
+      toast({
+        title: "Error fetching referrals",
+        description: error.message || "Failed to load referral data",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
     if (user) {
@@ -32,59 +71,58 @@ export default function Referrals() {
       setReferralCode(code)
       setReferralLink(`${window.location.origin}/signup?ref=${code}`)
 
-      // Fetch referrals (simulated for now)
-      const fetchReferrals = async () => {
-        setLoading(true)
-        try {
-          // In a real app, this would be a Supabase query
-          // Simulated data for now
-          const mockReferrals: Referral[] = [
-            {
-              id: "1",
-              referred_email: "friend1@example.com",
-              status: "completed",
-              credits_awarded: 5,
-              created_at: "2023-05-15T10:30:00Z",
-            },
-            {
-              id: "2",
-              referred_email: "friend2@example.com",
-              status: "pending",
-              credits_awarded: 0,
-              created_at: "2023-05-20T14:45:00Z",
-            },
-            {
-              id: "3",
-              referred_email: "colleague@example.com",
-              status: "completed",
-              credits_awarded: 5,
-              created_at: "2023-06-01T09:15:00Z",
-            },
-          ]
-
-          setReferrals(mockReferrals)
-          setTotalCreditsEarned(mockReferrals.reduce((total, referral) => total + referral.credits_awarded, 0))
-        } catch (error: any) {
-          toast({
-            title: "Error fetching referrals",
-            description: error.message,
-            variant: "destructive",
-          })
-        } finally {
-          setLoading(false)
-        }
-      }
-
+      // Fetch referrals
       fetchReferrals()
     }
-  }, [user, toast])
+  }, [user])
 
-  const handleCopyReferralLink = () => {
-    navigator.clipboard.writeText(referralLink)
-    toast({
-      title: "Referral link copied!",
-      description: "Share this link with friends to earn credits.",
-    })
+  // Set up real-time subscription for referrals
+  useEffect(() => {
+    if (!user) return
+
+    const channel = supabase
+      .channel('referrals')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'referrals',
+          filter: `referrer_id=eq.${user.id}`,
+        },
+        () => {
+          // Refresh data when referrals change
+          fetchReferrals()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user, supabase])
+
+  const handleCopyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      toast({
+        title: "Referral link copied!",
+        description: "Share this link with friends to earn credits.",
+      })
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea")
+      textArea.value = referralLink
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textArea)
+      
+      toast({
+        title: "Referral link copied!",
+        description: "Share this link with friends to earn credits.",
+      })
+    }
   }
 
   const handleShareReferral = async () => {
@@ -97,17 +135,64 @@ export default function Referrals() {
         })
       } catch (error) {
         console.error("Error sharing:", error)
+        // Fallback to copy if sharing fails
+        handleCopyReferralLink()
       }
     } else {
       handleCopyReferralLink()
     }
   }
 
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchReferrals()
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+      case "expired":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+      default:
+        return "bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400"
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "Completed"
+      case "pending":
+        return "Pending"
+      case "expired":
+        return "Expired"
+      default:
+        return status
+    }
+  }
+
+  const displayedReferrals = showAllReferrals ? referrals : referrals.slice(0, 3)
+
   return (
     <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Referral Program</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">Invite friends and earn credits for premium features</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Referral Program</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">Invite friends and earn credits for premium features</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -129,7 +214,7 @@ export default function Referrals() {
             <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">Pending Referrals</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{referrals.filter((r) => r.status === "pending").length}</div>
+            <div className="text-3xl font-bold">{pendingReferrals}</div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Waiting for friends to complete signup</p>
           </CardContent>
         </Card>
@@ -174,9 +259,16 @@ export default function Referrals() {
 
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold">Your Referrals</h2>
-        <Button variant="outline" size="sm" className="gap-1">
-          View All <ArrowRight className="h-4 w-4" />
-        </Button>
+        {referrals.length > 3 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAllReferrals(!showAllReferrals)}
+            className="gap-1"
+          >
+            {showAllReferrals ? "Show Less" : "View All"} <ArrowRight className={`h-4 w-4 transition-transform ${showAllReferrals ? "rotate-180" : ""}`} />
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -185,7 +277,7 @@ export default function Referrals() {
         </div>
       ) : referrals.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
-          {referrals.map((referral) => (
+          {displayedReferrals.map((referral) => (
             <Card key={referral.id}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
@@ -198,17 +290,18 @@ export default function Referrals() {
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         {new Date(referral.created_at).toLocaleDateString()}
                       </p>
+                      {referral.status === "pending" && (
+                        <p className="text-xs text-slate-400 mt-1">
+                          Expires: {new Date(referral.expires_at).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
                     <span
-                      className={`text-sm px-2 py-1 rounded-full ${
-                        referral.status === "completed"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                      }`}
+                      className={`text-sm px-2 py-1 rounded-full ${getStatusColor(referral.status)}`}
                     >
-                      {referral.status === "completed" ? "Completed" : "Pending"}
+                      {getStatusText(referral.status)}
                     </span>
                     {referral.status === "completed" && (
                       <span className="text-sm text-slate-500 dark:text-slate-400 mt-1">

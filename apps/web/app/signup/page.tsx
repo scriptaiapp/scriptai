@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion, AnimatePresence } from "motion/react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,6 @@ import * as z from "zod";
 type FormData = z.infer<typeof registerUserSchema> & { confirmPassword?: string };
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
-
 function isZodError(error: unknown): error is z.ZodError {
   return Boolean(
     error &&
@@ -33,9 +32,9 @@ function isZodError(error: unknown): error is z.ZodError {
   );
 }
 
-
 export default function MultiStepSignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { supabase, user } = useSupabase();
 
   const [step, setStep] = useState(1);
@@ -43,6 +42,8 @@ export default function MultiStepSignupPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralInfo, setReferralInfo] = useState<{ referrerName: string; credits: number } | null>(null);
 
   const totalSteps = 2;
   const progress = (step / totalSteps) * 100;
@@ -52,6 +53,16 @@ export default function MultiStepSignupPage() {
       router.replace("/dashboard");
     }
   }, [user, router]);
+
+  // Extract referral code from URL
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+      // In a real app, you might want to validate the referral code here
+      // For now, we'll just set it
+    }
+  }, [searchParams]);
 
   const handleNext = async () => {
     setErrors({});
@@ -111,6 +122,31 @@ export default function MultiStepSignupPage() {
       if (error) throw new Error(error.message);
 
       if (data.user) {
+        // If there's a referral code, track the referral
+        if (referralCode && details.email) {
+          try {
+            const response = await fetch("/api/track-referral", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                referralCode,
+                userEmail: details.email,
+              }),
+            });
+
+            if (response.ok) {
+              toast.success("Referral tracked!", {
+                description: "You've been referred to Script AI! Welcome!",
+              });
+            }
+          } catch (referralError) {
+            console.error("Error tracking referral:", referralError);
+            // Don't fail the signup if referral tracking fails
+          }
+        }
+
         toast.success("Account created!", { description: "Please check your email to verify your account." });
         router.push("/login");
       }
@@ -135,7 +171,6 @@ export default function MultiStepSignupPage() {
   };
 
   const handleGoogleSignup = async () => {
-
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -178,7 +213,22 @@ export default function MultiStepSignupPage() {
             <CardHeader className="space-y-4 pt-8">
               <div className="flex justify-center md:hidden"><Image src={logo} alt="Script AI" width={60} height={60} /></div>
               <CardTitle className="text-2xl text-center text-slate-900 dark:text-white">Create an account</CardTitle>
-              {/* ## CHANGE: Progress bar is now only shown for the multi-step form ## */}
+              
+              {/* Referral Banner */}
+              {referralCode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 p-3 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 border border-purple-200 dark:border-purple-700 rounded-lg"
+                >
+                  <Gift className="h-5 w-5 text-purple-600" />
+                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                    You've been referred to Script AI! 🎉
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Progress bar is now only shown for the multi-step form */}
               {step > 0 && (
                 <div className="px-6">
                   <Progress value={progress} className="w-full" />
@@ -187,7 +237,7 @@ export default function MultiStepSignupPage() {
               )}
             </CardHeader>
             <CardContent className="overflow-hidden min-h-[280px]">
-              {/* ## CHANGE: Added Google Sign-in button and divider ## */}
+              {/* Google Sign-in button and divider */}
               <div className="space-y-4">
                 <Button variant="outline" className="w-full bg-white/50 hover:bg-white/70" onClick={handleGoogleSignup} type="button">
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -252,7 +302,6 @@ export default function MultiStepSignupPage() {
             </CardFooter>
           </Card>
         </motion.div>
-
 
       </div>
     </AuroraBackground>

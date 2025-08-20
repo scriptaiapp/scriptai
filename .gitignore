@@ -60,3 +60,6 @@ pnpm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+# Development Documentation
+DEVELOPMENT.md

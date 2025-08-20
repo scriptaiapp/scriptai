@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
@@ -11,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 })
     }
 
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     // Get user session
     const {
@@ -34,6 +33,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You have already referred this email" }, { status: 400 })
     }
 
+    // Generate unique referral code
+    const referralCode = session.user.id.substring(0, 8)
+
     // Create the referral
     const { data, error } = await supabase
       .from("referrals")
@@ -43,11 +45,14 @@ export async function POST(req: Request) {
           referred_email: email,
           status: "pending",
           credits_awarded: 0,
+          referral_code: referralCode,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
         },
       ])
       .select()
 
     if (error) {
+      console.error("Error creating referral:", error)
       return NextResponse.json({ error: "Failed to create referral" }, { status: 500 })
     }
 

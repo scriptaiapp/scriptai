@@ -3,20 +3,21 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
-    const { referralCode, referredUserId } = await req.json()
+    const { referralCode, userEmail } = await req.json()
 
     // Validate inputs
-    if (!referralCode || !referredUserId) {
-      return NextResponse.json({ error: "Referral code and referred user ID are required" }, { status: 400 })
+    if (!referralCode || !userEmail) {
+      return NextResponse.json({ error: "Referral code and user email are required" }, { status: 400 })
     }
 
     const supabase = await createClient()
 
-    // Get the referral by referral code
+    // Find the referral by referral code and email
     const { data: referral, error: referralError } = await supabase
       .from("referrals")
       .select("*")
       .eq("referral_code", referralCode)
+      .eq("referred_email", userEmail)
       .eq("status", "pending")
       .single()
 
@@ -29,13 +30,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Referral has expired" }, { status: 400 })
     }
 
-    // Update the referral
+    // Get the newly created user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Update the referral to completed
     const { error: updateError } = await supabase
       .from("referrals")
       .update({
-        referred_id: referredUserId,
+        referred_id: user.id,
         status: "completed",
-        credits_awarded: 5, // Award 5 credits for a successful referral
+        credits_awarded: 5,
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -72,11 +80,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Referral completed successfully",
+      message: "Referral tracked and completed successfully",
       creditsAwarded: 5,
     })
   } catch (error: any) {
-    console.error("Error completing referral:", error)
-    return NextResponse.json({ error: "Failed to complete referral", message: error.message }, { status: 500 })
+    console.error("Error tracking referral:", error)
+    return NextResponse.json({ error: "Failed to track referral", message: error.message }, { status: 500 })
   }
 }
