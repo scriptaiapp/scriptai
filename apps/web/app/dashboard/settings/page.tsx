@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Bell, CreditCard, UserCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm";
-import { NotificationSettingsForm } from "@/components/settings/NotificationSettingsForm";
-import { BillingInfo } from "@/components/settings/BillingInfo";
+import { ProfileSettingsForm } from "@/components/dashboard/settings/ProfileSettingsForm";
+import { NotificationSettingsForm } from "@/components/dashboard/settings/NotificationSettingsForm";
+import { BillingInfo } from "@/components/dashboard/settings/BillingInfo";
 
 // Define NavItem type for clarity
 type NavItemId = "profile" | "notifications" | "billing";
