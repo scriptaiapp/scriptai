@@ -32,6 +32,7 @@
   height: 5px;
 }
 
+
 ::-webkit-scrollbar-track {
   background: transparent; /* No visible track */
 }
@@ -62,8 +63,6 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-  
 
   .dark {
     --background: 222.2 84% 4.9%;

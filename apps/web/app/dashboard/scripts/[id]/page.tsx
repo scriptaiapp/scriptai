@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { BookText, Hash, Languages, LinkIcon, Loader2, Smile, Sparkles } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog"
+import ScriptEditor from "@/components/dashboard/scripts/ScriptEditor"
+import { ScriptLoaderSkeleton } from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton"
 
 interface Script {
   id: string
@@ -136,9 +135,7 @@ export default function ScriptPage() {
 
   if (isLoadingScript) {
     return (
-      <div className="container py-8 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <ScriptLoaderSkeleton />
     )
   }
 
@@ -153,87 +150,101 @@ export default function ScriptPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-1">View and edit your YouTube video script</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Script</CardTitle>
-          <CardDescription>Modify the script title and content or delete the script</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Script Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for your script"
-            />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
 
-          <div className="space-y-2">
-            <Label htmlFor="content">Script Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] bg-slate-50 dark:bg-slate-900"
-              placeholder="Your script content will appear here"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Script Details</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400">
-              <div>
-                <p><strong>Prompt:</strong> {script.prompt || "None"}</p>
-                <p><strong>Context:</strong> {script.context || "None"}</p>
-                <p><strong>Tone:</strong> {script.tone || "None"}</p>
-              </div>
-              <div>
-                <p><strong>Storytelling:</strong> {script.include_storytelling ? "Yes" : "No"}</p>
-                <p><strong>References:</strong> {script.reference_links || "None"}</p>
-                <p><strong>Language:</strong> {script.language}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={loading}>
-                Delete Script
+        {/* Main content column */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Script Content</CardTitle>
+              <CardDescription>Modify the title and the main content of your script.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ScriptEditor
+                script={content}
+                setScript={setContent}
+                title={title}
+                size="400"
+                setTitle={setTitle}
+                animation={false}
+              />
+            </CardContent>
+            <CardFooter className="flex justify-between items-center">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50 transition-all focus-visible:ring-2 focus-visible:ring-red-500" disabled={loading}>
+                    Delete Script
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the script "{script.title}".
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteScript} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button
+                onClick={handleUpdateScript}
+                className="w-full max-w-[200px] bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the script "{script.title}".
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteScript}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button
-            onClick={handleUpdateScript}
-            className="w-full max-w-[200px] bg-slate-900 hover:bg-slate-800 text-white"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+            </CardFooter>
+          </Card>
+        </div>
+
+        {/* Metadata column */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generation Details</CardTitle>
+              <CardDescription>The parameters used to generate this script.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
+                <li className="flex items-start gap-3">
+                  <Hash className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>Prompt:</strong> {script.prompt || "N/A"}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <BookText className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>Context:</strong> {script.context || "N/A"}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Smile className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>Tone:</strong> {script.tone || "N/A"}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Sparkles className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>Storytelling:</strong> {script.include_storytelling ? "Yes" : "No"}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <LinkIcon className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>References:</strong> {script.reference_links || "N/A"}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Languages className="h-4 w-4 mt-0.5 text-slate-400" />
+                  <span><strong>Language:</strong> {script.language}</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
