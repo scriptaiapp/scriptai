@@ -72,7 +72,7 @@ const PrivacyAndTerms = () => {
           <section>
             <h2 className="text-xl font-semibold">8. Contact</h2>
             <p>
-              For questions, concerns, or data requests, please reach out to us at <a href="mailto:afrinnahar1999@gmail.com" className="underline text-blue-600">afrinnahar1999@gmail.com</a>.
+              For questions, concerns, or data requests, please reach out to us at <a href="mailto:support@scriptai.com" className="underline text-blue-600">support@scriptai.com</a>.
             </p>
           </section>
         </CardContent>

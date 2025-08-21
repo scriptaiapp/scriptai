@@ -3,21 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { BookOpen, Search, Plus, Trash2, ExternalLink } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogFooter
-} from "@/components/ui/alert-dialog";
+import { Search, Plus } from "lucide-react";
+import { ContentCard } from "@/components/dashboard/common/ContentCard";
+import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton";
+import { EmptySvg } from "@/components/dashboard/common/EmptySvg";
+import { motion } from "motion/react";
 
 interface ResearchTopic {
   id: string;
@@ -34,6 +27,17 @@ interface ResearchTopic {
   };
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      // This creates the staggered effect. Each child will animate 0.07s after the previous one.
+      staggerChildren: 0.07,
+    },
+  },
+};
+
 export default function Topics() {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +52,8 @@ export default function Topics() {
           headers: {
             "Content-Type": "application/json",
           },
+
+
         });
 
         if (!response.ok) {
@@ -103,121 +109,74 @@ export default function Topics() {
   );
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 md:py-12">
+      {/* SECTION: Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Topics</h1>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            My Topics
+          </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Manage all your researched topics
+            Manage and explore all your researched topics in one place.
           </p>
         </div>
         <Link href="/dashboard/research/new">
-          <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+          <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
             <Plus className="mr-2 h-4 w-4" />
             New Topic
           </Button>
         </Link>
       </div>
 
-      <div className="mb-6">
+      {/* SECTION: Search and Filters */}
+      <div className="mb-8">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <Input
-            placeholder="Search topics..."
-            className="pl-10"
+            placeholder="Search topics by name or context..."
+            className="pl-12 py-6 text-base focus:border-purple-500" // Larger input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
+      {/* SECTION: Content Area */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
-        </div>
+        <ContentCardSkeleton />
       ) : filteredTopics.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="flex flex-col gap-3">
           {filteredTopics.map((topic) => (
-            <Card key={topic.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-slate-100 dark:bg-slate-800/30 p-2 rounded-md">
-                      <BookOpen className="h-5 w-5 text-slate-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{topic.topic}</h3>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
-                          {new Date(topic.created_at).toLocaleDateString()}
-                        </span>
-                        {topic.context && (
-                          <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
-                            {topic.context.slice(0, 20) + (topic.context.length > 20 ? "..." : "")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:ml-auto">
-                    <Link href={`/dashboard/research/${topic.id}`}>
-                      <Button variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                    </Link>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-600"
-                          onClick={() => setTopicToDelete(topic.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your topic.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={() => setTopicToDelete(null)}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteTopic}
-                            className="bg-red-500 hover:bg-red-600 text-white"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              key="script-list"
+              className="grid grid-cols-1 gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+
+              <ContentCard key={topic.id} id={topic.id} title={topic.topic} created_at={topic.created_at} onDelete={handleDeleteTopic} setToDelete={setTopicToDelete} type="research" />
+            </motion.div>
           ))}
         </div>
       ) : (
-        <Card className="text-center py-12">
+        <Card className="text-center py-20">
           <div className="flex flex-col items-center">
-            <BookOpen className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-            <h3 className="font-semibold mb-2">No topics found</h3>
+            {/* Placeholder for illustration */}
+            <EmptySvg className="h-32 w-auto mb-6 text-slate-300 dark:text-slate-700" />
+            <h3 className="font-semibold text-xl text-slate-800 dark:text-slate-200 mb-2">
+              {searchQuery ? "No topics found" : "Start a New Topic"}
+            </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
               {searchQuery
-                ? `No topics matching "${searchQuery}". Try a different search term.`
-                : "You haven't researched any topics yet. Create your first topic to get started."}
+                ? `We couldn't find any topics matching "${searchQuery}".`
+                : "Your research journey begins here. Create your first topic to get started."}
             </p>
             {!searchQuery && (
               <Link href="/dashboard/research/new">
-                <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+                <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Topic
+                  Create topic
                 </Button>
               </Link>
             )}
