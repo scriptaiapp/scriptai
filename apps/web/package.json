@@ -61,6 +61,7 @@
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
+    "jsonrepair": "^3.13.0",
     "lucide-react": "^0.454.0",
     "motion": "^12.23.12",
     "next": "15.2.4",
