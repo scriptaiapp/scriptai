@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import {
     Trash2,
     Download,
     CalendarDays,
+    Loader2,
 } from "lucide-react";
 
 import {
@@ -29,6 +31,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -37,12 +40,12 @@ const itemVariants = {
 
 interface ContentCardProps {
     id: string;
-    title: string; // Script title or Research topic
+    title: string;
     created_at: string;
     onDelete: () => Promise<void>;
-    onExport?: () => Promise<void>;
+    onExport?: (scriptId: string) => Promise<void>;
     setToDelete: (id: string | null) => void;
-    type: "scripts" | "research"; // used for links & dialog wording
+    type: "scripts" | "research";
 }
 
 export function ContentCard({
@@ -54,6 +57,8 @@ export function ContentCard({
     setToDelete,
     type,
 }: ContentCardProps) {
+    const [isExporting, setIsExporting] = useState(false);
+
     const creationDate = new Date(created_at).toLocaleDateString();
     const isScript = type === "scripts";
 
@@ -64,6 +69,19 @@ export function ContentCard({
     const dialogDescription = isScript
         ? "This will permanently delete your script and all its associated data."
         : "This will permanently delete your research and all its associated data.";
+
+
+    const handleExport = () => {
+        if (!onExport) return;
+        const exportPromise = onExport(id);
+        const contentTypeName = type === 'scripts' ? 'script' : 'research';
+
+        toast.promise(exportPromise, {
+            loading: `Exporting your ${contentTypeName}...`,
+            success: `Your ${contentTypeName} has been exported successfully!`,
+            error: (err) => `Failed to export: ${err.message || 'An unknown error occurred'}`,
+        });
+    };
 
     return (
         <motion.div
@@ -121,10 +139,19 @@ export function ContentCard({
                                     <ExternalLink className="mr-2 h-4 w-4" />
                                     <span>View</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={onExport}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    <span>Export</span>
-                                </DropdownMenuItem>
+                                {onExport &&
+                                    (isExporting ? (
+                                        <DropdownMenuItem disabled>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>Exporting...</span>
+                                        </DropdownMenuItem>
+                                    ) : (
+                                        <DropdownMenuItem onClick={handleExport}>
+                                            <Download className="mr-2 h-4 w-4" />
+                                            <span>Export</span>
+                                        </DropdownMenuItem>
+                                    ))}
+
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem
                                         className="text-red-500 focus:text-red-500"
@@ -144,7 +171,9 @@ export function ContentCard({
                                 <AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setToDelete(null)}>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={() => setToDelete(null)}>
+                                    Cancel
+                                </AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={onDelete}
                                     className="bg-red-600 hover:bg-red-700 text-white"

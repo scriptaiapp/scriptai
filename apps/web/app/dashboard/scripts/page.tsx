@@ -45,6 +45,7 @@ export default function Scripts() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [scriptToDelete, setScriptToDelete] = useState<string | null>(null)
+  const [exportLoading, setExportLoading] = useState(false)
 
   useEffect(() => {
     const fetchScripts = async () => {
@@ -78,6 +79,7 @@ export default function Scripts() {
     if (!scriptToDelete) return
 
     try {
+      setExportLoading(true);
       const { error } = await supabase.from("scripts").delete().eq("id", scriptToDelete)
 
       if (error) throw error
@@ -95,7 +97,39 @@ export default function Scripts() {
         variant: "destructive",
       })
     } finally {
+      setExportLoading(false);
       setScriptToDelete(null)
+    }
+  }
+
+  const handleExportScript = async (scriptId: string) => {
+    if (!scriptId) return
+
+    try {
+      const response = await fetch(`/api/scripts/${scriptId}/export`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      })
+
+      if (!response.ok) throw new Error("Failed to export script")
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `script-${scriptId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (error: any) {
+      toast({
+        title: "Error exporting script",
+        description: error.message,
+        variant: "destructive",
+      })
     }
   }
 
@@ -158,6 +192,7 @@ export default function Scripts() {
                 created_at={script.created_at}
                 onDelete={handleDeleteScript}
                 setToDelete={setScriptToDelete}
+                onExport={handleExportScript}
                 type="scripts"
               />
             ))}
