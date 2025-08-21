@@ -1,3 +1,5 @@
+import { jsonrepair } from 'jsonrepair';
+
 export interface StyleAnalysis {
   style_analysis: string;
   tone: string;
@@ -32,7 +34,7 @@ export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
     }
 
     // Parse the cleaned text into a JSON object
-    const parsedObject = JSON.parse(cleanedText);
+    const parsedObject = JSON.parse(jsonrepair(cleanedText));
 
     // Define expected keys for validation
     const expectedKeys = [
@@ -75,8 +77,15 @@ export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
 export function parseScriptResponse(text: string): ScriptResponse | null {
   try {
     // Remove any markdown code fences if present
-    const cleanText = text.replace(/```json\n|```/g, '').trim();
-    const parsed = JSON.parse(cleanText);
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(7, -3).trim();
+    } else if (cleanedText.startsWith('```') && cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(3, -3).trim();
+    }
+    const parsed = JSON.parse(jsonrepair(cleanedText));
+
+    console.log(parsed)
 
     // Validate the parsed response
     if (
