@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { jsonrepair } from "jsonrepair"
 
 // Define interfaces for type safety
 interface ResearchRequest {
@@ -62,7 +63,7 @@ function parseResearchResponse(text: string): GeminiResponse | null {
   try {
     // Remove markdown code fences if present
     const cleanedText = text.replace(/```json\n|\n```/g, '').trim();
-    const parsed = JSON.parse(cleanedText);
+    const parsed = JSON.parse(jsonrepair(cleanedText));
 
     if (
       typeof parsed.topic !== 'string' ||
