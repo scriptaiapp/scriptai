@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { ImageDropzone } from "@/components/ui/image-dropzone";
 import { useEffect, useState } from "react";
-import { useSupabase } from "../supabase-provider";
+import { useSupabase } from "../../supabase-provider";
 import { supportedLanguages } from "@repo/config"; // 2
 import ProfileSettingSkeleton from "./loadingSkeleton/ProfileSettingSkeleton";
 

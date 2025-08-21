@@ -3,6 +3,8 @@ import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { parseScriptResponse } from "@/lib/parseResponse"
 
+
+
 // Define interfaces for type safety
 interface ScriptRequest {
   prompt: string;
@@ -142,6 +144,7 @@ Generate a unique YouTube video script based on the following details:
 - Language: ${language || channelData?.default_language || 'English'}
 - Include Storytelling: ${includeStorytelling}
 - References: ${references || 'None'}
+- Include timestamps: Include timestamps on the script
 
 ${personalized && styleData ? `
 Creator's Style Profile:
@@ -157,7 +160,7 @@ Creator's Style Profile:
 - Recommendations: ${JSON.stringify(styleData.recommendations)}
 ` : ''}
 
-Output format:
+Output should be valid json format:
 {
   "title": "Suggested script title",
   "script": "Full script text here"

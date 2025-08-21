@@ -6,24 +6,22 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { motion } from "motion/react"
-import {
-  Home,
-  Sparkles,
-  FileText,
-  Search,
-  ImageIcon,
-  MessageSquare,
-  BookOpen,
-  Users,
-  Menu
-} from "lucide-react"
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
 
 import logo from "@/public/dark-logo.png"
+import HomeIcon from "./icons/HomeIcon"
+import SparklesIcon from "./icons/SparklesIcon"
+import SearchIcon from "./icons/SearchIcon"
+import FileTextIcon from "./icons/FileTextIcon"
+import ImageIcon from "./icons/ImageIcon"
+import MessageSquareIcon from "./icons/MessageSquareIcon"
+import BookOpenIcon from "./icons/BookopenIcon"
+import MicIcon from "./icons/MicIcon"
+import ScriptAiIcon from "./ScriptAiIcon"
 
 interface NavLink {
   label: string
@@ -51,10 +49,14 @@ export const Logo = ({
     <Image
       src={logo}
       alt="Script AI Logo"
-      width={24}
-      height={20}
+      width={28}
+      height={24}
       className="shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm"
     />
+
+    {/* <ScriptAiIcon
+      className="w-8 h-8 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm"
+    /> */}
 
 
     {showText && (
@@ -78,6 +80,7 @@ export function Nav({ links, isCollapsed, onLinkClick }: NavProps) {
       data-collapsed={isCollapsed}
       className="group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2"
     >
+
       <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
         {links?.map((link, index) => {
           const isActive = pathname === link.href
@@ -120,14 +123,14 @@ export function DashboardSidebar({
 
 
   const links: ReadonlyArray<NavLink> = [
-    { label: "Dashboard", icon: <Home className="h-4 w-4" />, variant: "default", href: "/dashboard" },
-    { label: "Train AI", icon: <Sparkles className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
-    { label: "Scripts", icon: <FileText className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
-    { label: "Topic Research", icon: <Search className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
+    { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
+    { label: "Train AI", icon: <SparklesIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
+    { label: "Scripts", icon: <FileTextIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
+    { label: "Topic Research", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
     { label: "Thumbnails", icon: <ImageIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/thumbnails" },
-    { label: "Subtitles", icon: <MessageSquare className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
-    { label: "Course Modules", icon: <BookOpen className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },
-    { label: "Audio Dubbing", icon: <Users className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" }
+    { label: "Subtitles", icon: <MessageSquareIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
+    { label: "Course Modules", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },
+    { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" }
   ]
 
   if (isMobile) {
@@ -164,7 +167,7 @@ export function DashboardSidebar({
                   key={idx}
                   link={link}
                   className={`
-                py-2 font-medium transition-colors duration-150 rounded-md
+                py-2 font-medium transition-colors duration-150 rounded-md group 
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 flex items-center justify-start
                 ${open ? "px-3" : "justify-center"}
                 ${isActive
