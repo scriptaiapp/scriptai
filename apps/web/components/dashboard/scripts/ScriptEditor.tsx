@@ -6,6 +6,8 @@ import ReactMarkdown from "react-markdown"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Copy, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ScriptEditorProps {
@@ -27,6 +29,8 @@ export default function ScriptEditor({
 }: ScriptEditorProps) {
     const [viewMode, setViewMode] = useState<"write" | "preview">("preview")
     const [typedScript, setTypedScript] = useState("")
+    const [copiedTitle, setCopiedTitle] = useState(false)
+    const [copiedScript, setCopiedScript] = useState(false)
     const hasAnimated = useRef(!animation) // only animate once on first load
 
     useEffect(() => {
@@ -57,9 +61,23 @@ export default function ScriptEditor({
         }
     }, [script, viewMode])
 
+    const copyToClipboard = async (text: string, type: "title" | "script") => {
+        try {
+            await navigator.clipboard.writeText(text)
+            if (type === "title") {
+                setCopiedTitle(true)
+                setTimeout(() => setCopiedTitle(false), 2000)
+            } else {
+                setCopiedScript(true)
+                setTimeout(() => setCopiedScript(false), 2000)
+            }
+        } catch (err) {
+            console.error("Failed to copy:", err)
+        }
+    }
+
     const editorClassName =
         `min-h-[300px] max-h-[350px] overflow-y-auto w-full rounded-md rounded-t-none border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`
-    console.log(editorClassName)
 
     return (
         <motion.div
@@ -69,19 +87,30 @@ export default function ScriptEditor({
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="space-y-6"
         >
-            {/* --- Title Input --- */}
+            {/* --- Title Input with Copy Button --- */}
             <div className="space-y-2">
                 <Label htmlFor="title">Script Title</Label>
-                <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter a title for your script"
-                    className="focus-visible:ring-purple-500"
-                />
+                <div className="relative">
+                    <Input
+                        id="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Enter a title for your script"
+                        className="focus-visible:ring-purple-500"
+                    />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                        onClick={() => copyToClipboard(title, "title")}
+                        aria-label="Copy script title"
+                    >
+                        {copiedTitle ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                </div>
             </div>
 
-            {/* --- Editor / Preview Tabs --- */}
+            {/* --- Editor / Preview Tabs with Copy Button --- */}
             <div className="space-y-2">
                 <div className="flex items-center">
                     <button
@@ -106,6 +135,15 @@ export default function ScriptEditor({
                     >
                         Preview
                     </button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto"
+                        onClick={() => copyToClipboard(script, "script")}
+                        aria-label="Copy script content"
+                    >
+                        {copiedScript ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
                 </div>
 
                 {viewMode === "write" ? (
