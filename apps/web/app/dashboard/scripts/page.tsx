@@ -24,11 +24,10 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      // This creates the staggered effect. Each child will animate 0.07s after the previous one.
       staggerChildren: 0.07,
     },
   },
-};
+}
 
 const emptyStateVariants = {
   hidden: { opacity: 0 },
@@ -37,9 +36,7 @@ const emptyStateVariants = {
     scale: 1,
     transition: { duration: 0.4 },
   },
-};
-
-
+}
 
 export default function Scripts() {
   const { supabase, user } = useSupabase()
@@ -136,9 +133,15 @@ export default function Scripts() {
         </div>
       </div>
       <AnimatePresence mode="wait">
-
         {loading ? (
-          <ContentCardSkeleton />
+          <motion.div
+            key="loading-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <ContentCardSkeleton />
+          </motion.div>
         ) : filteredScripts.length > 0 ? (
           <motion.div
             key="script-list"
@@ -148,7 +151,15 @@ export default function Scripts() {
             animate="visible"
           >
             {filteredScripts.map((script) => (
-              <ContentCard key={script.id} id={script.id} title={script.title} created_at={script.created_at} onDelete={handleDeleteScript} setToDelete={setScriptToDelete} type="scripts" />
+              <ContentCard
+                key={script.id}
+                id={script.id}
+                title={script.title}
+                created_at={script.created_at}
+                onDelete={handleDeleteScript}
+                setToDelete={setScriptToDelete}
+                type="scripts"
+              />
             ))}
           </motion.div>
         ) : (
@@ -161,7 +172,6 @@ export default function Scripts() {
             <div className="text-center py-16">
               <div className="flex flex-col items-center">
                 <EmptySvg className="h-32 w-auto mb-6 text-slate-300 dark:text-slate-700" />
-
                 <h3 className="font-semibold text-xl text-slate-800 dark:text-slate-200 mb-2">
                   Start your first masterpiece
                 </h3>
@@ -170,7 +180,6 @@ export default function Scripts() {
                     ? `We couldn't find a script matching "${searchQuery}".`
                     : "Every great story starts with a blank page. Create a new script to begin."}
                 </p>
-
                 {!searchQuery && (
                   <Link href="/dashboard/scripts/new">
                     <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all">
@@ -187,4 +196,3 @@ export default function Scripts() {
     </motion.div>
   )
 }
-
