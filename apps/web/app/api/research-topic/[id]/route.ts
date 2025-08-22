@@ -19,9 +19,9 @@ interface ResearchTopicRecord {
 }
 
 // GET: Fetch a single research topic by ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request,  context: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const researchId = params.id;
+  const researchId = (await context.params).id;
 
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -48,9 +48,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE: Delete a research topic by ID
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request,  context: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const researchId = params.id;
+  const researchId = (await context.params).id;
 
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();

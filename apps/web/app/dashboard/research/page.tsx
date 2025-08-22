@@ -79,7 +79,7 @@ export default function Topics() {
     if (!topicToDelete) return;
 
     try {
-      const response = await fetch(`/api/research-topic/${topicToDelete}`, {
+      const response = await fetch(`/api/research-topic/${topicToDelete}/export`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -107,6 +107,35 @@ export default function Topics() {
   const filteredTopics = topics.filter((topic) =>
     topic.topic.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleExport = async (id: string) => {
+    try {
+      const response = await fetch(`/api/research-topic/${id}/export`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to export topic");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `research_topic_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error: any) {
+      toast.error("Error exporting topic", {
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <div className="container py-8 md:py-12">
@@ -148,14 +177,14 @@ export default function Topics() {
         <div className="flex flex-col gap-3">
           {filteredTopics.map((topic) => (
             <motion.div
-              key="script-list"
+              key={topic.id}
               className="grid grid-cols-1 gap-4"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
 
-              <ContentCard key={topic.id} id={topic.id} title={topic.topic} created_at={topic.created_at} onDelete={handleDeleteTopic} setToDelete={setTopicToDelete} type="research" />
+              <ContentCard key={topic.id} id={topic.id} title={topic.topic} created_at={topic.created_at} onDelete={handleDeleteTopic} setToDelete={setTopicToDelete} type="research" onExport={handleExport} />
             </motion.div>
           ))}
         </div>
