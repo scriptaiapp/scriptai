@@ -176,7 +176,6 @@ export async function GET(
     if (error || !script) {
       return new NextResponse('Script not found', { status: 404 });
     }
-    console.log(script);
 
 
     const pdfBytes = await generateResearchPdf({

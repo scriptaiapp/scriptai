@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { ContentCard } from "@/components/dashboard/common/ContentCard"
 import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton"
 import { EmptySvg } from "@/components/dashboard/common/EmptySvg"
+import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 
 interface Script {
   id: string
@@ -39,13 +40,12 @@ const emptyStateVariants = {
 }
 
 export default function Scripts() {
-  const { supabase, user } = useSupabase()
+  const { supabase, user, profile, profileLoading } = useSupabase()
   const { toast } = useToast()
   const [scripts, setScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [scriptToDelete, setScriptToDelete] = useState<string | null>(null)
-  const [exportLoading, setExportLoading] = useState(false)
 
   useEffect(() => {
     const fetchScripts = async () => {
@@ -79,7 +79,6 @@ export default function Scripts() {
     if (!scriptToDelete) return
 
     try {
-      setExportLoading(true);
       const { error } = await supabase.from("scripts").delete().eq("id", scriptToDelete)
 
       if (error) throw error
@@ -97,7 +96,6 @@ export default function Scripts() {
         variant: "destructive",
       })
     } finally {
-      setExportLoading(false);
       setScriptToDelete(null)
     }
   }
@@ -131,6 +129,19 @@ export default function Scripts() {
         variant: "destructive",
       })
     }
+  }
+
+  if (profileLoading || loading) {
+    return (
+
+      <ContentCardSkeleton />
+    )
+  }
+
+  if (!profile?.ai_trained && !profile?.youtube_connected && !loading) {
+    return (
+      <AITrainingRequired />
+    )
   }
 
   const filteredScripts = scripts.filter((script) => script.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -167,16 +178,7 @@ export default function Scripts() {
         </div>
       </div>
       <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loading-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <ContentCardSkeleton />
-          </motion.div>
-        ) : filteredScripts.length > 0 ? (
+        {filteredScripts.length > 0 ? (
           <motion.div
             key="script-list"
             className="grid grid-cols-1 gap-4"

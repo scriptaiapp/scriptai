@@ -17,6 +17,7 @@ type SupabaseContext = {
   profile: UserProfile | null;
   setProfile: Dispatch<SetStateAction<UserProfile | null>>;
   fetchUserProfile: (userId: string) => Promise<void>;
+  profileLoading: boolean;
 };
 
 const Context = createContext<SupabaseContext | undefined>(undefined);
@@ -27,11 +28,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(null);
   const [providerToken, setProviderToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const supabase = createClient();
 
   // Fetch user profile only when user is available
   const fetchUserProfile = async (userId: string) => {
+    setProfileLoading(true);
     try {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -48,6 +51,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       console.error("Error fetching profile:", error.message);
       setProfile(null);
       return;
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -103,7 +108,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <Context.Provider
-      value={{ supabase, user, profile, setProfile, session, setSession, providerToken, setProviderToken, loading, fetchUserProfile }}
+      value={{ supabase, user, profile, setProfile, session, setSession, providerToken, setProviderToken, loading, fetchUserProfile, profileLoading }}
     >
       {children}
     </Context.Provider>

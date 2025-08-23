@@ -129,6 +129,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   try {
+
     const body: ResearchRequest = await request.json();
     const { topic, context, autoResearch } = body;
 
@@ -144,12 +145,16 @@ export async function POST(request: Request) {
     // Check credits
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('credits, ai_trained')
+      .select('credits, ai_trained, youtube_connected')
       .eq('user_id', user.id)
       .single();
 
     if (profileError || !profileData) {
       return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+    }
+
+    if (!profileData.ai_trained && !profileData.youtube_connected) {
+      return NextResponse.json({ message: 'AI training and YouTube connection are required' }, { status: 403 });
     }
 
     const typedProfileData: ProfileData = profileData as ProfileData;
