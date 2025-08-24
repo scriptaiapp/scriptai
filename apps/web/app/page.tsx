@@ -15,7 +15,10 @@ import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Lenis from 'lenis'
+import 'lenis/dist/lenis.css'
+
 // DYNAMIC IMPORT
 const LandingPageSVG = dynamic(
   () => import('@/components/landingPage/LandingPageSVG'),
@@ -23,7 +26,19 @@ const LandingPageSVG = dynamic(
 )
 
 export default function Home() {
-  const [isEarlyAccessModalOpen, setIsEarlyAccessModalOpen] = useState(false)
+  const [isEarlyAccessModalOpen, setIsEarlyAccessModalOpen] = useState(false);
+
+
+  useEffect(() => {
+
+    const lenis = new Lenis({
+      autoRaf: true,
+    });
+
+    lenis.on('scroll', (e) => {
+      console.log(e);
+    });
+  }, [])
 
   const containerVariants = {
     hidden: { opacity: 0 },

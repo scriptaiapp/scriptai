@@ -79,7 +79,7 @@ export default function Topics() {
     if (!topicToDelete) return;
 
     try {
-      const response = await fetch(`/api/research-topic/${topicToDelete}/export`, {
+      const response = await fetch(`/api/research-topic/${topicToDelete}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

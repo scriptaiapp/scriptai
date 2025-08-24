@@ -76,10 +76,16 @@ export function ContentCard({
         const exportPromise = onExport(id);
         const contentTypeName = type === 'scripts' ? 'script' : 'research';
 
+        setIsExporting(true);
+
         toast.promise(exportPromise, {
             loading: `Exporting your ${contentTypeName}...`,
             success: `Your ${contentTypeName} has been exported successfully!`,
             error: (err) => `Failed to export: ${err.message || 'An unknown error occurred'}`,
+        });
+
+        exportPromise.finally(() => {
+            setIsExporting(false);
         });
     };
 
