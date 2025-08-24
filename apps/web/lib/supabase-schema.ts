@@ -57,9 +57,21 @@ export const schema = {
     CREATE TABLE referrals (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       referrer_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-      referred_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-      credits_awarded INTEGER DEFAULT 5,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      referred_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+      referral_code VARCHAR(10) NOT NULL,
+      status VARCHAR(20) DEFAULT 'pending',
+      credits_awarded INTEGER DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      completed_at TIMESTAMP WITH TIME ZONE,
+      UNIQUE(referrer_id, referred_user_id)
     );
+  `,
+
+  // Add referral fields to profiles table
+  profiles_referral_fields: `
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_code VARCHAR(10) UNIQUE;
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referred_by VARCHAR(10) REFERENCES profiles(referral_code);
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS total_referrals INTEGER DEFAULT 0;
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_credits INTEGER DEFAULT 0;
   `,
 }

@@ -22,6 +22,7 @@ import MessageSquareIcon from "./icons/MessageSquareIcon"
 import BookOpenIcon from "./icons/BookopenIcon"
 import MicIcon from "./icons/MicIcon"
 import ScriptAiIcon from "./ScriptAiIcon"
+import { Users } from "lucide-react"
 
 interface NavLink {
   label: string
@@ -130,7 +131,8 @@ export function DashboardSidebar({
     { label: "Thumbnails", icon: <ImageIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/thumbnails" },
     { label: "Subtitles", icon: <MessageSquareIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
     { label: "Course Modules", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },
-    { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" }
+    { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" },
+    { label: "Referrals", icon: <Users className="h-4 w-4" />, variant: "ghost", href: "/dashboard/referrals" }
   ]
 
   if (isMobile) {

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { parseGeminiResponse } from '@/lib/parseResponse';
+import { manageAccessToken, validateOAuthEnvironment } from '@/lib/token-manager';
+import { createErrorResponse, logError, shouldRetry, calculateRetryDelay } from '@/lib/error-handler';
 
 export interface StyleAnalysis {
   style_analysis: string;
@@ -23,17 +25,35 @@ export interface StyleAnalysis {
   };
 }
 
-
-
 export async function POST(request: Request) {
   const supabase = await createClient();
-  const { userId, videoUrls } = await request.json();
-
-  if (!userId || !videoUrls || !Array.isArray(videoUrls) || videoUrls.length < 3) {
-    return NextResponse.json({ error: 'Invalid input: userId and at least 3 video URLs are required' }, { status: 400 });
-  }
-
+  
   try {
+    const { userId, videoUrls, isRetraining = false } = await request.json();
+
+    // Input validation
+    if (!userId || !videoUrls || !Array.isArray(videoUrls) || videoUrls.length < 3) {
+      return NextResponse.json({ 
+        error: 'Invalid input: userId and at least 3 video URLs are required' 
+      }, { status: 400 });
+    }
+
+    // Environment variable validation
+    const envValidation = validateOAuthEnvironment();
+    if (!envValidation.isValid) {
+      logError('train-ai', new Error(`Missing environment variables: ${envValidation.missing.join(', ')}`));
+      return NextResponse.json({ 
+        error: 'Server configuration error: Missing Google OAuth credentials' 
+      }, { status: 500 });
+    }
+
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      logError('train-ai', new Error('Missing Google Generative AI API key'));
+      return NextResponse.json({ 
+        error: 'Server configuration error: Missing AI API key' 
+      }, { status: 500 });
+    }
+
     // Fetch channel details from youtube_channels
     const { data: channelData, error: channelError } = await supabase
       .from('youtube_channels')
@@ -42,75 +62,134 @@ export async function POST(request: Request) {
       .single();
 
     if (channelError || !channelData) {
-      return NextResponse.json({ error: 'Channel data not found' }, { status: 404 });
+      return NextResponse.json({ 
+        error: 'YouTube channel not found. Please connect your YouTube channel first.' 
+      }, { status: 404 });
     }
 
-    // Validate provider_token
+    if (!channelData.provider_token) {
+      return NextResponse.json({ 
+        error: 'YouTube channel not properly connected. Please reconnect your YouTube channel.' 
+      }, { status: 400 });
+    }
+
+    // Enhanced token management with automatic refresh
     let accessToken = channelData.provider_token;
+    let tokenRefreshed = false;
+
     try {
-      await axios.get('https://oauth2.googleapis.com/tokeninfo', {
-        params: { access_token: accessToken },
-      });
-    } catch (error: any) {
-      if (error.response?.status === 400 || error.response?.data?.error === 'invalid_token') {
-        // Token expired, refresh it
-        if (!channelData.refresh_token) {
-          return NextResponse.json({ error: 'No refresh token available, please reconnect YouTube' }, { status: 401 });
+      const tokenResult = await manageAccessToken(
+        channelData.provider_token,
+        channelData.refresh_token || '',
+        process.env.GOOGLE_CLIENT_ID!,
+        process.env.GOOGLE_CLIENT_SECRET!
+      );
+
+      if (!tokenResult.isValid) {
+        if (tokenResult.error === 'No refresh token available') {
+          return NextResponse.json({ 
+            error: 'Your YouTube connection has expired. Please reconnect your YouTube channel in the dashboard.' 
+          }, { status: 401 });
         }
+        
+        return NextResponse.json({ 
+          error: 'Your YouTube connection has expired and could not be refreshed. Please reconnect your YouTube channel in the dashboard.' 
+        }, { status: 401 });
+      }
 
-        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
-          client_id: process.env.GOOGLE_CLIENT_ID,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-          refresh_token: channelData.refresh_token,
-          grant_type: 'refresh_token',
-        });
+      accessToken = tokenResult.accessToken!;
+      tokenRefreshed = tokenResult.tokenRefreshed;
 
-        accessToken = tokenResponse.data.access_token;
-
-        // Update provider_token in youtube_channels
+      // Update the token in the database if it was refreshed
+      if (tokenRefreshed) {
         const { error: updateError } = await supabase
           .from('youtube_channels')
-          .update({ provider_token: accessToken, updated_at: new Date().toISOString() })
+          .update({ 
+            provider_token: accessToken, 
+            updated_at: new Date().toISOString() 
+          })
           .eq('user_id', userId)
           .eq('channel_id', channelData.channel_id);
 
         if (updateError) {
           console.error('Error updating provider_token:', updateError);
-          return NextResponse.json({ error: 'Failed to update access token' }, { status: 500 });
+          // Continue with the new token even if update fails
         }
-      } else {
-        throw error;
       }
+    } catch (error: any) {
+      logError('train-ai-token-management', error, { userId, channelId: channelData.channel_id });
+      return NextResponse.json({ 
+        error: 'Unable to validate YouTube connection. Please try again or reconnect your channel.' 
+      }, { status: 500 });
     }
 
-    // Extract video IDs from URLs
+    // Extract video IDs from URLs with better error handling
     const videoIds = videoUrls
       .map((url: string) => {
-        const urlObj = new URL(url);
-        return urlObj.searchParams.get('v') || url.split('/').pop();
+        try {
+          const urlObj = new URL(url);
+          return urlObj.searchParams.get('v') || url.split('/').pop();
+        } catch (error) {
+          console.error('Invalid URL format:', url);
+          return null;
+        }
       })
       .filter((id): id is string => Boolean(id));
 
+    if (videoIds.length < 3) {
+      return NextResponse.json({ 
+        error: 'At least 3 valid YouTube video URLs are required' 
+      }, { status: 400 });
+    }
 
-    // Fetch video details from YouTube API
-    const videoResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
-      params: {
-        part: 'snippet,contentDetails,statistics,topicDetails',
-        id: videoIds.join(','),
-        mine: true
-      },
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    // Fetch video details from YouTube API with retry logic
+    let videoResponse;
+    let retryCount = 0;
+    const maxRetries = 3;
 
+    while (retryCount < maxRetries) {
+      try {
+        videoResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+          params: {
+            part: 'snippet,contentDetails,statistics,topicDetails',
+            id: videoIds.join(','),
+            mine: true
+          },
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            'User-Agent': 'ScriptAI/1.0'
+          },
+          timeout: 30000, // 30 second timeout
+        });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        retryCount++;
+        
+        if (retryCount >= maxRetries || !shouldRetry(error, retryCount, maxRetries)) {
+          logError('train-ai-youtube-api', error, { userId, videoIds, retryCount });
+          return NextResponse.json({ 
+            error: 'Failed to fetch video data from YouTube. Please check your video URLs and try again.' 
+          }, { status: 500 });
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, calculateRetryDelay(retryCount)));
+      }
+    }
 
-    // Validate video ownership
-    const videos = videoResponse.data.items;
+    // Validate video ownership and existence
+    const videos = videoResponse!.data.items;
+    if (!videos || videos.length < 3) {
+      return NextResponse.json({ 
+        error: 'Could not find at least 3 videos from your channel. Please check the video URLs and ensure they belong to your connected YouTube channel.' 
+      }, { status: 400 });
+    }
+
     for (const video of videos) {
       if (video.snippet.channelId !== channelData.channel_id) {
-        return NextResponse.json(
-          { error: `Video ${video.snippet.title} does not belong to your channel` },
-          { status: 403 }
-        );
+        return NextResponse.json({
+          error: `Video "${video.snippet.title}" does not belong to your connected YouTube channel. Please only use videos from your own channel.`
+        }, { status: 403 });
       }
     }
 
@@ -120,9 +199,9 @@ export async function POST(request: Request) {
       description: item.snippet.description,
       tags: item.snippet.tags || [],
       duration: item.contentDetails.duration,
-      viewCount: parseInt(item.statistics.viewCount, 10),
-      likeCount: parseInt(item.statistics.likeCount, 10),
-      commentCount: parseInt(item.statistics.commentCount, 10),
+      viewCount: parseInt(item.statistics.viewCount, 10) || 0,
+      likeCount: parseInt(item.statistics.likeCount, 10) || 0,
+      commentCount: parseInt(item.statistics.commentCount, 10) || 0,
       publishedAt: item.snippet.publishedAt,
       categoryId: item.snippet.categoryId,
       topicDetails: item.topicDetails || {},
@@ -131,7 +210,7 @@ export async function POST(request: Request) {
     // Initialize Gemini API
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
 
-    // Craft prompt for style analysis
+    // Enhanced prompt for style analysis
     const prompt = `
 Analyze the following YouTube channel and video data to extract the creator's content style, which will be used for generating scripts, research topics, thumbnails, subtitles, and audio conversions. Provide a detailed analysis of the following aspects: tone (e.g., conversational, formal), vocabulary level (e.g., simple, technical), pacing (e.g., fast, slow), themes (e.g., educational, entertainment), humor style (e.g., witty, sarcastic), narrative structure (e.g., storytelling, listicle), visual style (based on thumbnails and descriptions), and audience engagement techniques (e.g., calls to action, audience questions). Additionally, include a comprehensive narrative overview of the creator's overall content style in the style_analysis field, synthesizing all aspects into a cohesive summary. The analysis should be structured as a JSON object for easy reuse.
 
@@ -141,10 +220,10 @@ Channel Data:
 - Custom URL: ${channelData.custom_url || 'None'}
 - Country: ${channelData.country || 'Unknown'}
 - Default Language: ${channelData.default_language || 'Unknown'}
-- View Count: ${channelData.view_count}
-- Subscriber Count: ${channelData.subscriber_count}
-- Video Count: ${channelData.video_count}
-- Topic Details: ${JSON.stringify(channelData.topic_details)}
+- View Count: ${channelData.view_count || 0}
+- Subscriber Count: ${channelData.subscriber_count || 0}
+- Video Count: ${channelData.video_count || 0}
+- Topic Details: ${JSON.stringify(channelData.topic_details || {})}
 
 Video Data:
 ${videoData.map((video: any, index: number) => `
@@ -164,38 +243,59 @@ Video ${index + 1}:
 
 Provide the analysis in the following JSON format:
 {
-  "style_analysis": string,
-  "tone": string,
-  "vocabulary_level": string,
-  "pacing": string,
-  "themes": string[],
-  "humor_style": string,
-  "narrative_structure": string,
-  "visual_style": string,
-  "audience_engagement": string[],
+  "style_analysis": "A comprehensive narrative overview of the creator's overall content style",
+  "tone": "string describing the tone",
+  "vocabulary_level": "string describing vocabulary complexity",
+  "pacing": "string describing content pacing",
+  "themes": ["array", "of", "content", "themes"],
+  "humor_style": "string describing humor approach",
+  "narrative_structure": "string describing storytelling structure",
+  "visual_style": "string describing visual presentation",
+  "audience_engagement": ["array", "of", "engagement", "techniques"],
   "recommendations": {
-    "script_generation": string,
-    "research_topics": string,
-    "thumbnails": string,
-    "subtitles": string,
-    "audio_conversion": string
+    "script_generation": "string with script generation recommendations",
+    "research_topics": "string with research topic recommendations",
+    "thumbnails": "string with thumbnail recommendations",
+    "subtitles": "string with subtitle recommendations",
+    "audio_conversion": "string with audio conversion recommendations"
   }
 }
 `;
 
+    // Call Gemini API with retry logic
+    let styleAnalysis: StyleAnalysis | null = null;
+    retryCount = 0;
 
-    // Call Gemini API
-    const result: any = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    })
+    while (retryCount < maxRetries && !styleAnalysis) {
+      try {
+        const result: any = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt || '',
+        });
 
-    const styleAnalysis = parseGeminiResponse(result.text);
-    if (!styleAnalysis) {
-      return NextResponse.json({ error: 'Failed to parse or validate Gemini API response' }, { status: 500 });
+        styleAnalysis = parseGeminiResponse(result.text);
+        
+        if (!styleAnalysis) {
+          console.error('Failed to parse Gemini response, attempt:', retryCount + 1);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+          }
+        }
+      } catch (error: any) {
+        logError('train-ai-gemini-api', error, { userId, retryCount });
+        retryCount++;
+        if (retryCount < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
     }
-    console.log(styleAnalysis)
 
+    if (!styleAnalysis) {
+      return NextResponse.json({ 
+        error: 'Failed to analyze your content style. Please try again with different videos.' 
+      }, { status: 500 });
+    }
 
     // Update profiles table to mark AI as trained
     const { error: profileError } = await supabase
@@ -204,35 +304,53 @@ Provide the analysis in the following JSON format:
       .eq('user_id', userId);
 
     if (profileError) {
-      console.error('Error updating profiles:', profileError);
-      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+      logError('train-ai-profile-update', profileError, { userId });
+      return NextResponse.json({ 
+        error: 'Failed to update training status' 
+      }, { status: 500 });
     }
 
-    // Save style analysis and video URLs to user_style table
+    // Save or update style analysis in user_style table
+    const styleData = {
+      user_id: userId,
+      tone: styleAnalysis.tone,
+      vocabulary_level: styleAnalysis.vocabulary_level,
+      pacing: styleAnalysis.pacing,
+      themes: Array.isArray(styleAnalysis.themes) ? styleAnalysis.themes.join(', ') : styleAnalysis.themes,
+      humor_style: styleAnalysis.humor_style,
+      structure: styleAnalysis.narrative_structure,
+      visual_style: styleAnalysis.visual_style,
+      audience_engagement: Array.isArray(styleAnalysis.audience_engagement) ? styleAnalysis.audience_engagement : [styleAnalysis.audience_engagement],
+      video_urls: videoUrls,
+      style_analysis: styleAnalysis.style_analysis,
+      recommendations: styleAnalysis.recommendations,
+      updated_at: new Date().toISOString(),
+    };
+
     const { error: styleError } = await supabase
       .from('user_style')
-      .upsert({
-        user_id: userId,
-        tone: styleAnalysis.tone,
-        vocabulary_level: styleAnalysis.vocabulary_level,
-        pacing: styleAnalysis.pacing,
-        themes: styleAnalysis.themes.join(', '),
-        humor_style: styleAnalysis.humor_style,
-        structure: styleAnalysis.narrative_structure,
-        video_urls: videoUrls,
-        style_analysis: styleAnalysis.style_analysis,
-        recommendations: styleAnalysis.recommendations,
-        updated_at: new Date().toISOString(),
+      .upsert(styleData, {
+        onConflict: 'user_id',
+        ignoreDuplicates: false
       });
 
     if (styleError) {
-      console.error('Error saving to user_style:', styleError);
-      return NextResponse.json({ error: 'Failed to save style data' }, { status: 500 });
+      logError('train-ai-style-save', styleError, { userId });
+      return NextResponse.json({ 
+        error: 'Failed to save your content style analysis' 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ message: 'AI training completed successfully' });
+    return NextResponse.json({ 
+      message: isRetraining ? 'AI re-training completed successfully' : 'AI training completed successfully',
+      tokenRefreshed,
+      videosAnalyzed: videos.length
+    });
+
   } catch (error: any) {
-    console.error('Error in train-ai:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logError('train-ai', error);
+    
+    const errorResponse = createErrorResponse(error);
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

@@ -22,11 +22,67 @@ export async function GET(request: NextRequest) {
 
   if (token_hash && type) {
 
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       type,
       token_hash,
     })
-    if (!error) {
+    
+    if (!error && data.user) {
+      // User email verified! Complete any pending referrals
+      console.log('✅ User email verified:', data.user.email);
+      
+      try {
+        // Complete pending referrals directly in the auth callback
+        console.log('🔍 Looking for pending referrals for:', data.user.email);
+        
+        // Find pending referrals for this user's email
+        const { data: pendingReferrals, error: pendingError } = await supabase
+          .from('referrals')
+          .select('*')
+          .eq('status', 'pending')
+          .eq('referred_email', data.user.email);
+
+        if (pendingError) {
+          console.log('❌ Error finding pending referrals:', pendingError);
+        } else if (pendingReferrals && pendingReferrals.length > 0) {
+          console.log('🔍 Found pending referrals:', pendingReferrals.length);
+          
+          let completedCount = 0;
+          
+          // Complete each pending referral
+          for (const referral of pendingReferrals) {
+            console.log('🔍 Completing referral:', referral.id);
+            
+            // Update referral status
+            const { error: updateError } = await supabase
+              .from('referrals')
+              .update({ 
+                referred_user_id: data.user.id,
+                status: 'completed',
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', referral.id);
+
+            if (!updateError) {
+              completedCount++;
+              console.log('✅ Referral completed:', referral.id);
+              
+              // Credits will be awarded automatically by database trigger
+              // Just update the referral status and the trigger handles the rest
+              console.log('✅ Referral completed - credits will be awarded automatically by trigger');
+            } else {
+              console.log('❌ Error completing referral:', updateError);
+            }
+          }
+          
+          console.log('🎯 Completed referrals:', completedCount);
+        } else {
+          console.log('ℹ️ No pending referrals found for:', data.user.email);
+        }
+      } catch (referralError) {
+        console.log('❌ Error in referral completion:', referralError);
+      }
+      
       redirect(next)
     }
   }
