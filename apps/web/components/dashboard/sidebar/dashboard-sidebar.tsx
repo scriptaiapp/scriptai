@@ -127,12 +127,11 @@ export function DashboardSidebar({
     { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
     { label: "Train AI", icon: <SparklesIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
     { label: "Scripts", icon: <FileTextIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
-    { label: "Topic Research", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
+    { label: "Idea Research", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
     { label: "Thumbnails", icon: <ImageIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/thumbnails" },
     { label: "Subtitles", icon: <MessageSquareIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
     { label: "Course Modules", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },
-    { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" },
-    { label: "Referrals", icon: <Users className="h-4 w-4" />, variant: "ghost", href: "/dashboard/referrals" }
+    { label: "Audio Track", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing" }
   ]
 
   if (isMobile) {
