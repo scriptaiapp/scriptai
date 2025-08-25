@@ -14,8 +14,11 @@ export default function ScriptGenerationStepper({
     return (
         <div className="flex items-center justify-between px-2">
             {steps.map((s, index) => (
-                <>
-                    <div key={s.id} className="flex flex-col items-center text-center">
+                <motion.div
+                    key={s.id}
+                    className="flex items-center"
+                >
+                    <div className="flex flex-col items-center text-center">
                         <motion.div
                             animate={currentStep >= s.id ? { scale: 1.1 } : { scale: 1 }}
                             transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -47,7 +50,7 @@ export default function ScriptGenerationStepper({
                             transition={{ duration: 0.3 }}
                         />
                     )}
-                </>
+                </motion.div>
             ))}
         </div>
     )

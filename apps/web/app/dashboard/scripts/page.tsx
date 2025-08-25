@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
 import { Plus, Search, FileText, Trash2, ExternalLink } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
@@ -41,7 +41,6 @@ const emptyStateVariants = {
 
 export default function Scripts() {
   const { supabase, user, profile, profileLoading } = useSupabase()
-  const { toast } = useToast()
   const [scripts, setScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -62,10 +61,8 @@ export default function Scripts() {
 
         setScripts(data || [])
       } catch (error: any) {
-        toast({
-          title: "Error fetching scripts",
+        toast.error("Error fetching scripts", {
           description: error.message,
-          variant: "destructive",
         })
       } finally {
         setLoading(false)
@@ -73,27 +70,32 @@ export default function Scripts() {
     }
 
     fetchScripts()
-  }, [supabase, user, toast])
+  }, [supabase, user])
 
   const handleDeleteScript = async () => {
     if (!scriptToDelete) return
 
     try {
-      const { error } = await supabase.from("scripts").delete().eq("id", scriptToDelete)
+      const response = await fetch(`/api/scripts/${scriptToDelete}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to delete script")
+      }
 
       setScripts(scripts.filter((script) => script.id !== scriptToDelete))
 
-      toast({
-        title: "Script deleted",
+      toast.success("Script deleted", {
         description: "Your script has been deleted successfully.",
       })
     } catch (error: any) {
-      toast({
-        title: "Error deleting script",
+      toast.error("Error deleting script", {
         description: error.message,
-        variant: "destructive",
       })
     } finally {
       setScriptToDelete(null)
@@ -123,26 +125,25 @@ export default function Scripts() {
       a.click()
       document.body.removeChild(a)
     } catch (error: any) {
-      toast({
-        title: "Error exporting script",
+      toast.error("Error exporting script", {
         description: error.message,
-        variant: "destructive",
       })
     }
   }
 
   if (profileLoading || loading) {
     return (
-
       <ContentCardSkeleton />
     )
   }
 
-  if (!profile?.ai_trained && !profile?.youtube_connected && !loading) {
+  if (!profile?.ai_trained || !profile?.youtube_connected && !loading) {
     return (
       <AITrainingRequired />
     )
   }
+
+  console.log(profile?.ai_trained)
 
   const filteredScripts = scripts.filter((script) => script.title.toLowerCase().includes(searchQuery.toLowerCase()))
 
