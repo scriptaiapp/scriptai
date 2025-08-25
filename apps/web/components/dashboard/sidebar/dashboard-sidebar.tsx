@@ -22,6 +22,7 @@ import MessageSquareIcon from "./icons/MessageSquareIcon"
 import BookOpenIcon from "./icons/BookopenIcon"
 import MicIcon from "./icons/MicIcon"
 import ScriptAiIcon from "./ScriptAiIcon"
+import { Users } from "lucide-react"
 
 interface NavLink {
   label: string

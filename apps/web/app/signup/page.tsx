@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion, AnimatePresence } from "motion/react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -34,8 +34,9 @@ function isZodError(error: unknown): error is z.ZodError {
 }
 
 
-export default function MultiStepSignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { supabase, user } = useSupabase();
 
   const [step, setStep] = useState(1);
@@ -43,6 +44,8 @@ export default function MultiStepSignupPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [showReferralBanner, setShowReferralBanner] = useState(false);
 
   const totalSteps = 2;
   const progress = (step / totalSteps) * 100;
@@ -52,6 +55,15 @@ export default function MultiStepSignupPage() {
       router.replace("/dashboard");
     }
   }, [user, router]);
+
+  // Handle referral code from URL
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+      setShowReferralBanner(true);
+    }
+  }, [searchParams]);
 
   const handleNext = async () => {
     setErrors({});
@@ -111,6 +123,31 @@ export default function MultiStepSignupPage() {
       if (error) throw new Error(error.message);
 
       if (data.user) {
+        // Track referral if referral code exists
+        if (referralCode && details.email) {
+          try {
+            const response = await fetch("/api/track-referral", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                referralCode,
+                userEmail: details.email,
+              }),
+            });
+
+            if (response.ok) {
+              toast.success("Referral tracked!", {
+                description: "You've been referred to Script AI! Welcome!",
+              });
+            }
+          } catch (referralError) {
+            console.error("Error tracking referral:", referralError);
+            // Don't fail the signup if referral tracking fails
+          }
+        }
+
         toast.success("Account created!", { description: "Please check your email to verify your account." });
         router.push("/login");
       }
@@ -178,6 +215,16 @@ export default function MultiStepSignupPage() {
             <CardHeader className="space-y-4 pt-8">
               <div className="flex justify-center md:hidden"><Image src={logo} alt="Script AI" width={60} height={60} /></div>
               <CardTitle className="text-2xl text-center text-slate-900 dark:text-white">Create an account</CardTitle>
+              
+              {/* Referral Banner */}
+              {showReferralBanner && referralCode && (
+                <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
+                  <p className="text-sm text-center text-purple-700 dark:text-purple-300">
+                    🎉 You've been invited by a friend! Referral code: <span className="font-mono font-bold">{referralCode}</span>
+                  </p>
+                </div>
+              )}
+              
               {/* ## CHANGE: Progress bar is now only shown for the multi-step form ## */}
               {step > 0 && (
                 <div className="px-6">
@@ -256,5 +303,17 @@ export default function MultiStepSignupPage() {
 
       </div>
     </AuroraBackground>
+  );
+}
+
+export default function MultiStepSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

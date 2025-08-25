@@ -35,12 +35,32 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language")
+        .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code")
         .eq("user_id", userId)
         .single();
 
       if (profileError) {
         throw new Error(profileError.message);
+      }
+
+      // Generate referral code if user doesn't have one
+      if (!profileData.referral_code) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ referral_code: generateReferralCode() })
+          .eq("user_id", userId);
+        
+        if (!updateError) {
+          // Refresh profile data
+          const { data: updatedProfile } = await supabase
+            .from("profiles")
+            .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code")
+            .eq("user_id", userId)
+            .single();
+          
+          setProfile(updatedProfile as UserProfile);
+          return;
+        }
       }
 
       setProfile(profileData as UserProfile);
@@ -50,6 +70,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       return;
     }
   };
+
+  function generateReferralCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
 
   // Fetch user and session
   useEffect(() => {
@@ -80,10 +109,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setSession(session);
-      setProviderToken(session?.provider_token ?? null);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        // Use getUser() for authenticated data instead of session.user
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (!error && user) {
+          setUser(user);
+          setSession(session);
+          setProviderToken(session?.provider_token ?? null);
+        }
+      } else {
+        setUser(null);
+        setSession(null);
+        setProviderToken(null);
+      }
       setLoading(false);
     });
 

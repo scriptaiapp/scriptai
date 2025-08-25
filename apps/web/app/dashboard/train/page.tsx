@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useSupabase } from "@/components/supabase-provider"
-import { Upload, X, AlertCircle, Loader2, PenTool, Search, Volume2 } from "lucide-react"
+import { Upload, X, AlertCircle, Loader2, PenTool, Search, Volume2, RefreshCw } from "lucide-react"
 import { SuccessDialog } from "@/components/success-dialog"
 import { toast } from "sonner";
 
@@ -16,6 +16,8 @@ export default function TrainAI() {
   const [uploading, setUploading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [youtubeConnected, setYoutubeConnected] = useState(false)
+  const [aiTrained, setAiTrained] = useState(false)
+  const [trainingData, setTrainingData] = useState<any>(null)
 
   const nextSteps = [
     {
@@ -39,27 +41,43 @@ export default function TrainAI() {
   ]
 
   useEffect(() => {
-    console.log("user", user);
-    console.log("session", session)
-    const checkYoutubeConnected = async () => {
+    const checkUserStatus = async () => {
       if (!user) return
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('youtube_connected')
-        .eq('user_id', user.id)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('youtube_connected, ai_trained')
+          .eq('user_id', user.id)
+          .single()
 
-      if (error) {
-        toast.error("Error checking YouTube connection")
-        return
+        if (error) {
+          toast.error("Error checking user status")
+          return
+        }
+
+        setYoutubeConnected(data.youtube_connected)
+        setAiTrained(data.ai_trained)
+
+        // If AI is trained, fetch existing training data
+        if (data.ai_trained) {
+          const { data: styleData, error: styleError } = await supabase
+            .from('user_style')
+            .select('*')
+            .eq('user_id', user.id)
+            .single()
+
+          if (!styleError && styleData) {
+            setTrainingData(styleData)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user status:', error)
       }
-
-      setYoutubeConnected(data.youtube_connected)
     }
 
-    checkYoutubeConnected()
-  }, [supabase, user, toast])
+    checkUserStatus()
+  }, [supabase, user])
 
   const handleAddVideoUrl = () => {
     setVideoUrls([...videoUrls, ""])
@@ -101,7 +119,7 @@ export default function TrainAI() {
     return true
   }
 
-  const handleStartTraining = async () => {
+  const handleStartTraining = async (isRetraining = false) => {
     if (!validateYouTubeUrls()) return
 
     setUploading(true)
@@ -113,23 +131,46 @@ export default function TrainAI() {
       const response = await fetch("/api/train-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id, videoUrls: validUrls }),
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          videoUrls: validUrls,
+          isRetraining 
+        }),
       })
 
       if (!response.ok) {
         const errorData = await response.json();
-        toast.error("Error training AI")
-        throw new Error(errorData.error || "Failed to train AI");
+        toast.error(errorData.error || "Failed to train AI");
+        return;
       }
 
-      toast.success("AI Training Complete! Your AI has been successfully trained on your content style")
+      const result = await response.json();
+      
+      toast.success(
+        isRetraining 
+          ? "AI Re-training Complete! Your AI has been successfully updated with your new content style"
+          : "AI Training Complete! Your AI has been successfully trained on your content style",
+        {
+          description: `Analyzed ${result.videosAnalyzed} videos${result.tokenRefreshed ? ' (refreshed YouTube connection)' : ''}`
+        }
+      )
 
+      // Update local state
+      setAiTrained(true)
       setShowModal(true)
     } catch (error: any) {
-      toast.error("Error training AI")
+      toast.error("Error training AI", {
+        description: error.message || "An unexpected error occurred"
+      })
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleRetrain = () => {
+    // Clear existing video URLs and start fresh
+    setVideoUrls(["", "", ""])
+    setTrainingData(null)
   }
 
   return (
@@ -137,112 +178,138 @@ export default function TrainAI() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Train Your AI</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Upload your videos to train the AI on your unique style
+          Upload 3-5 videos from your YouTube channel to train AI on your unique content style
         </p>
       </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>How AI Training Works</CardTitle>
-          <CardDescription>Train your AI to generate scripts that match your unique style and tone</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 mb-4">
-                1
-              </div>
-              <h3 className="font-semibold mb-2">Provide YouTube Videos</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Add links to 3-5 of your YouTube videos that best represent your style
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 mb-4">
-                2
-              </div>
-              <h3 className="font-semibold mb-2">AI Analyzes Your Content</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Our AI extracts transcripts and analyzes your tone, vocabulary, and style
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 mb-4">
-                3
-              </div>
-              <h3 className="font-semibold mb-2">Personalized Script Generation</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Generate scripts that match your unique style, tone, and content preferences
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${youtubeConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              YouTube Connection
+            </CardTitle>
+            <CardDescription>
+              {youtubeConnected 
+                ? "Your YouTube channel is connected and ready for training"
+                : "Connect your YouTube channel to start training"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!youtubeConnected && (
+              <Button 
+                onClick={() => window.location.href = '/dashboard'}
+                className="w-full"
+              >
+                Connect YouTube Channel
+              </Button>
+            )}
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${aiTrained ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              AI Training Status
+            </CardTitle>
+            <CardDescription>
+              {aiTrained 
+                ? "Your AI has been trained on your content style"
+                : "Train your AI to understand your unique style"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {aiTrained && trainingData && (
+              <div className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                <p><strong>Last trained:</strong> {new Date(trainingData.updated_at).toLocaleDateString()}</p>
+                <p><strong>Videos analyzed:</strong> {trainingData.video_urls?.length || 0}</p>
+              </div>
+            )}
+            {aiTrained && (
+              <Button 
+                onClick={handleRetrain}
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Re-train AI
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Training Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Add Your YouTube Videos</CardTitle>
+          <CardTitle>Video URLs</CardTitle>
           <CardDescription>
-            Provide links to 3-5 of your YouTube videos that best represent your content style
+            Add 3-5 YouTube video URLs from your channel. These videos will be analyzed to understand your content style.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {videoUrls.map((url, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex gap-2">
               <Input
                 placeholder="https://www.youtube.com/watch?v=..."
                 value={url}
                 onChange={(e) => handleVideoUrlChange(index, e.target.value)}
-                disabled={uploading}
+                className="flex-1"
               />
               {videoUrls.length > 3 && (
-                <Button variant="ghost" size="icon" onClick={() => handleRemoveVideoUrl(index)} disabled={uploading}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleRemoveVideoUrl(index)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
           ))}
-
+          
           {videoUrls.length < 5 && (
-            <Button variant="outline" size="sm" onClick={handleAddVideoUrl} disabled={uploading} className="mt-2">
+            <Button
+              variant="outline"
+              onClick={handleAddVideoUrl}
+              className="w-full"
+            >
+              <Upload className="w-4 h-4 mr-2" />
               Add Another Video
             </Button>
           )}
-
-          <div className="flex items-center gap-2 mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-md">
-            <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
-            <p className="text-sm text-amber-800 dark:text-amber-400">
-              For best results, choose videos that showcase your typical content style, tone, and delivery.
-            </p>
-          </div>
         </CardContent>
-
-        <CardFooter className="flex justify-end">
+        <CardFooter>
           <Button
-            onClick={handleStartTraining}
-            className="bg-slate-950 hover:bg-slate-900 text-white"
-            disabled={uploading}
+            onClick={() => handleStartTraining(aiTrained)}
+            disabled={uploading || !youtubeConnected}
+            className="w-full"
           >
             {uploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Training AI...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {aiTrained ? "Re-training AI..." : "Training AI..."}
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" />
-                Start Training
+                {aiTrained ? <RefreshCw className="w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                {aiTrained ? "Re-train AI" : "Start Training"}
               </>
             )}
           </Button>
         </CardFooter>
       </Card>
 
+      {/* Success Modal */}
       <SuccessDialog
         open={showModal}
         onOpenChange={setShowModal}
-        title="Congratulations!"
-        description="Your AI has been successfully trained on your unique content style."
+        title="AI Training Complete!"
+        description="Your AI has been successfully trained on your content style. You can now generate personalized scripts, research topics, and more."
         nextSteps={nextSteps}
       />
     </div>
