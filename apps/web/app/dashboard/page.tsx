@@ -8,9 +8,9 @@ import { YoutubePermissionDialog } from "@/components/YoutubePermissionDialog"
 import { NewUserOnboarding } from "@/components/dashboard/main/NewUserOnboarding"
 import { ReturningUserHub } from "@/components/dashboard/main/ReturningUserHub"
 import { DashboardSkeleton } from "@/components/dashboard/main/skeleton/DashboardSkeleton"
+import { connectYoutubeChannel } from "@/lib/connectYT"
 
 export default function Dashboard() {
-
   const { supabase, user, profile, fetchUserProfile } = useSupabase()
   const [recentScripts, setRecentScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,10 +18,8 @@ export default function Dashboard() {
   // Separate, specific loading states for user actions provide better UX
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
   const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false)
-
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false)
   const [youtubeAccessRequested, setYoutubeAccessRequested] = useState(false)
-
 
   // Effect to fetch data specific to this component (recent scripts)
   useEffect(() => {
@@ -49,57 +47,15 @@ export default function Dashboard() {
     fetchRecentScripts()
   }, [supabase, user])
 
-
-  const connectYoutubeChannel = async () => {
-    setIsConnectingYoutube(true)
-    try {
-      if (!user?.id) throw new Error("User not authenticated.")
-
-      // Check if the user has been granted access to use the YouTube feature
-      const response = await fetch("/api/grant-youtube-access")
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to check YouTube access status.")
-      }
-
-      const { granted, requested } = await response.json()
-      setYoutubeAccessRequested(requested)
-
-      if (granted) {
-        // If access is granted, proceed with Supabase OAuth
-        const { data: oauthData, error: oauthError } =
-          await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: {
-              redirectTo: `${window.location.origin}/api/youtube/callback`,
-              scopes:
-                "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly",
-              queryParams: {
-                access_type: "offline",
-                prompt: "consent",
-              },
-            },
-          })
-
-        if (oauthError) throw oauthError
-        if (oauthData?.url) {
-          window.location.href = oauthData.url
-          return
-        }
-        throw new Error("Failed to retrieve Google authentication URL.")
-      } else {
-        setPermissionDialogOpen(true)
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred."
-      console.error("YouTube Connection Error:", errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setIsConnectingYoutube(false)
-    }
+  const handleConnectYoutube = () => {
+    connectYoutubeChannel({
+      supabase,
+      user,
+      setIsConnectingYoutube,
+      setPermissionDialogOpen,
+      setYoutubeAccessRequested,
+    })
   }
-
 
   const handleDisconnectYoutube = async () => {
     if (!user) return
@@ -149,7 +105,7 @@ export default function Dashboard() {
       ) : (
         <NewUserOnboarding
           profile={profile}
-          connectYoutubeChannel={connectYoutubeChannel}
+          connectYoutubeChannel={handleConnectYoutube}
           connectingYoutube={isConnectingYoutube}
         />
       )}

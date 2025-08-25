@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, LogOut, Settings, UserPlus, Gem } from "lucide-react";
-import { useMobile } from "@/hooks/use-mobile";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -22,11 +21,12 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
   const { supabase, user, profile: initialProfile } = useSupabase();
   const [pageTitle, setPageTitle] = useState("");
   const [profile, setProfile] = useState(initialProfile);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setProfile(initialProfile);
   }, [initialProfile]);
-
 
   useEffect(() => {
     const path = pathname.split("/").filter(Boolean);
@@ -36,15 +36,15 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
       const title = path[1] ? path[1].charAt(0).toUpperCase() + path[1].slice(1) : "";
       setPageTitle(title);
     }
+    // Close the popover when the pathname changes
+    setIsPopoverOpen(false);
   }, [pathname]);
-
-  // console.log("profile data: ", profile);
-  // console.log("user data: ", user);
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
+      router.push("/");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error("Error logging out: " + error.message);
@@ -76,7 +76,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
           <span className="font-semibold">{profile?.credits || "0"}</span>
         </div>
 
-        <Popover>
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" className="p-0 w-9 h-9 rounded-full">
               <Avatar className="h-9 w-9">
@@ -110,8 +110,6 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
               </div>
 
               <Separator className="bg-border/50" />
-
-
 
               {/* Links Section */}
               <div className="p-2">
@@ -149,5 +147,3 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
     </header>
   );
 }
-
-
