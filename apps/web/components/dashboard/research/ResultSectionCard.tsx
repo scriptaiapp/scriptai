@@ -1,8 +1,10 @@
+// app/dashboard/research/ResultSectionCard.tsx
+
 "use client";
 
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResultSection } from "@repo/validation/src/types/researchTopicTypes";
+import { ChevronRight } from "lucide-react";
 
 interface ResultSectionCardProps {
     section: ResultSection;
@@ -14,23 +16,60 @@ export default function ResultSectionCard({ section, index }: ResultSectionCardP
 
     if (!data || data.length === 0) return null;
 
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.4,
+                delay: 0.1 * index
+            }
+        }
+    };
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 * index }}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-sm"
         >
-            <Card className="flex flex-col h-full">
-                <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
-                    <div className="p-2 bg-muted rounded-md"><Icon className="h-5 w-5 text-muted-foreground" /></div>
-                    <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-2 flex-grow">
-                    <ul className="space-y-2 list-disc pl-5 text-sm text-muted-foreground">
-                        {data.map((item, idx) => <li key={idx}>{item}</li>)}
-                    </ul>
-                </CardContent>
-            </Card>
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/40 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">{title}</h3>
+            </div>
+
+            {/* Content List */}
+            <ul className="space-y-3">
+                {data.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                        <ChevronRight className="w-4 h-4 mt-1 flex-shrink-0 text-purple-500" />
+
+                        {/* --- MODIFICATION START --- */}
+                        {/* Conditionally render an anchor tag for sources, otherwise render a span */}
+                        {section.id === 'sources' ? (
+                            <a
+                                href={item}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 hover:underline transition-colors"
+                            >
+                                {item}
+                            </a>
+                        ) : (
+                            <span className="break-words text-justify text-sm text-slate-600 dark:text-slate-400">
+                                {item}
+                            </span>
+                        )}
+                        {/* --- MODIFICATION END --- */}
+
+                    </li>
+                ))}
+            </ul>
         </motion.div>
     );
 }

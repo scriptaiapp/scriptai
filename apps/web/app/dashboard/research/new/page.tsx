@@ -7,8 +7,11 @@ import RecentTopicsList from "@/components/dashboard/research/RecentTopicsList";
 import ResearchForm from "@/components/dashboard/research/ResearchForm";
 import ResearchResults from "@/components/dashboard/research/ResearchResults";
 import { ResearchTopic } from "@repo/validation/src/types/researchTopicTypes";
+import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired";
+import { useSupabase } from "@/components/supabase-provider";
 
 export default function NewTopicPage() {
+  const { profile } = useSupabase();
   const [isResearching, setIsResearching] = useState(false);
   const [researchResult, setResearchResult] = useState<ResearchTopic | null>(null);
   const [activeTab, setActiveTab] = useState("research");
@@ -57,6 +60,12 @@ export default function NewTopicPage() {
     setActiveTab("research");
   };
 
+  if (!profile?.ai_trained && !profile?.youtube_connected) {
+    return (
+      <AITrainingRequired />
+    )
+  }
+
   return (
     <div className="container py-8 max-w-6xl mx-auto">
       <div className="mb-8">
@@ -65,7 +74,7 @@ export default function NewTopicPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="sticky top-1 z-20 grid w-full grid-cols-2 bg-background shadow-sm">
           <TabsTrigger value="research">Research Topic</TabsTrigger>
           <TabsTrigger value="results" disabled={!researchResult}>Research Results</TabsTrigger>
         </TabsList>

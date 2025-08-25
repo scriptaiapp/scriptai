@@ -8,10 +8,11 @@ import ScriptGenerationForm, {
   type ScriptFormData,
 } from "@/components/dashboard/scripts/ScriptGenerationForm"
 import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
+import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 
 export default function NewScriptPage() {
   const router = useRouter()
-  const { supabase, user } = useSupabase()
+  const { supabase, user, profile } = useSupabase()
   const [loading, setLoading] = useState(false)
   const [generatedScript, setGeneratedScript] = useState("")
   const [scriptTitle, setScriptTitle] = useState("")
@@ -35,20 +36,13 @@ export default function NewScriptPage() {
     setLatestFormData(formData) // Save for regeneration
 
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("ai_trained")
-        .eq("user_id", user?.id)
-        .single()
-
-      if (profileError) throw profileError
 
       const response = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData, // Pass all form data to the API
-          personalized: profileData.ai_trained,
+          personalized: profile?.ai_trained,
         }),
       })
 
@@ -118,6 +112,12 @@ export default function NewScriptPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!profile?.ai_trained && !profile?.youtube_connected) {
+    return (
+      <AITrainingRequired />
+    )
   }
 
   return (

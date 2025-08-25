@@ -11,6 +11,8 @@ import { ContentCard } from "@/components/dashboard/common/ContentCard";
 import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton";
 import { EmptySvg } from "@/components/dashboard/common/EmptySvg";
 import { motion } from "motion/react";
+import { useSupabase } from "@/components/supabase-provider";
+import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired";
 
 interface ResearchTopic {
   id: string;
@@ -40,6 +42,7 @@ const containerVariants = {
 
 export default function Topics() {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
+  const { profile, profileLoading } = useSupabase();
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [topicToDelete, setTopicToDelete] = useState<string | null>(null);
@@ -137,6 +140,18 @@ export default function Topics() {
     }
   };
 
+  if (profileLoading || loading) {
+    return (
+      <ContentCardSkeleton />
+    )
+  }
+
+  if (!profile?.ai_trained && !profile?.youtube_connected) {
+    return (
+      <AITrainingRequired />
+    )
+  }
+
   return (
     <div className="container py-8 md:py-12">
       {/* SECTION: Page Header */}
@@ -171,9 +186,7 @@ export default function Topics() {
       </div>
 
       {/* SECTION: Content Area */}
-      {loading ? (
-        <ContentCardSkeleton />
-      ) : filteredTopics.length > 0 ? (
+      {filteredTopics.length > 0 ? (
         <div className="flex flex-col gap-3">
           {filteredTopics.map((topic) => (
             <motion.div
