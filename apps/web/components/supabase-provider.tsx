@@ -1,163 +1,180 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
-import { type SupabaseClient, type User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
-import { UserProfile } from "@repo/validation";
+import type React from "react"
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
+import { type SupabaseClient, type User, type Session } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
+import { UserProfile } from "@repo/validation"
 
 type SupabaseContext = {
-  supabase: SupabaseClient;
-  user: User | null;
-  providerToken: string | null;
-  setProviderToken: (token: string | null) => void;
-  session: any;
-  setSession: (session: any) => void;
-  loading: boolean;
-  profile: UserProfile | null;
-  setProfile: Dispatch<SetStateAction<UserProfile | null>>;
-  fetchUserProfile: (userId: string) => Promise<void>;
-  profileLoading: boolean;
-};
+  supabase: SupabaseClient
+  user: User | null
+  session: Session | null
+  providerToken: string | null
+  loading: boolean
+  setSession: Dispatch<SetStateAction<Session | null>>
+  setProviderToken: Dispatch<SetStateAction<string | null>>
+  profile: UserProfile | null
+  setProfile: Dispatch<SetStateAction<UserProfile | null>>
+  profileLoading: boolean
+  fetchUserProfile: (userId: string) => Promise<void>
+}
 
-const Context = createContext<SupabaseContext | undefined>(undefined);
+// Suspense boundary helpers
+let sessionPromise: Promise<Session | null> | null = null
+const profilePromises = new Map<string, Promise<UserProfile | null>>() // keyed by userId
+
+const Context = createContext<SupabaseContext | undefined>(undefined)
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [session, setSession] = useState<any>(null);
-  const [providerToken, setProviderToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const supabase = useMemo(() => createClient(), [])
 
-  const supabase = createClient();
+  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [providerToken, setProviderToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Fetch user profile only when user is available
-  const fetchUserProfile = async (userId: string) => {
-    setProfileLoading(true);
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code")
-        .eq("user_id", userId)
-        .single();
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
-      if (profileError) {
-        throw new Error(profileError.message);
-      }
-
-      // Generate referral code if user doesn't have one
-      if (!profileData.referral_code) {
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ referral_code: generateReferralCode() })
-          .eq("user_id", userId);
-        
-        if (!updateError) {
-          // Refresh profile data
-          const { data: updatedProfile } = await supabase
-            .from("profiles")
-            .select("avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code")
-            .eq("user_id", userId)
-            .single();
-          
-          setProfile(updatedProfile as UserProfile);
-          return;
-        }
-      }
-
-      setProfile(profileData as UserProfile);
-    } catch (error: any) {
-      console.error("Error fetching profile:", error.message);
-      setProfile(null);
-      return;
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
+  // Generate referral code
   function generateReferralCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")
   }
 
-  // Fetch user and session
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+  // Profile fetch with suspense support
+  const fetchUserProfile = async (userId: string): Promise<void> => {
+    setProfileLoading(true)
+    try {
+      let profilePromise = profilePromises.get(userId)
+      if (!profilePromise) {
+        profilePromise = (async () => {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select(
+              "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
+            )
+            .eq("user_id", userId)
+            .single()
 
-        if (error) {
-          console.error("Error fetching session:", error.message);
-          return;
-        }
+          if (error) {
+            console.error("Profile fetch error:", error.message)
+            return null
+          }
 
-        setUser(session?.user ?? null);
-        setSession(session);
-        setProviderToken(session?.provider_token ?? null);
-      } catch (error) {
-        console.error("Unexpected error during auth:", error);
-      } finally {
-        setLoading(false);
+          // Ensure referral_code exists
+          if (!data.referral_code) {
+            const referral = generateReferralCode()
+            const { data: updated, error: updateError } = await supabase
+              .from("profiles")
+              .update({ referral_code: referral })
+              .eq("user_id", userId)
+              .select(
+                "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
+              )
+              .single()
+
+            if (!updateError && updated) {
+              return updated as UserProfile
+            }
+          }
+
+          return data as UserProfile
+        })()
+        profilePromises.set(userId, profilePromise)
       }
-    };
 
-    getUser();
+      const result = await profilePromise
+      setProfile(result)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  // Initial session loader
+  const getInitialSession = async (): Promise<Session | null> => {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error("Error fetching session:", error.message)
+      return null
+    }
+    return data.session
+  }
+
+  useEffect(() => {
+    let mounted = true
+
+    if (!sessionPromise) {
+      sessionPromise = getInitialSession()
+    }
+
+    sessionPromise
+      .then((sess) => {
+        if (!mounted) return
+        setSession(sess)
+        setUser(sess?.user ?? null)
+        setProviderToken((sess as any)?.provider_token ?? null)
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
 
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        // Use getUser() for authenticated data instead of session.user
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (!error && user) {
-          setUser(user);
-          setSession(session);
-          setProviderToken(session?.provider_token ?? null);
-        }
-      } else {
-        setUser(null);
-        setSession(null);
-        setProviderToken(null);
-      }
-      setLoading(false);
-    });
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setUser(newSession?.user ?? null)
+      setProviderToken((newSession as any)?.provider_token ?? null)
+      setLoading(false)
+    })
 
     return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [supabase])
 
   // Fetch profile when user changes
   useEffect(() => {
     if (user) {
-      fetchUserProfile(user.id);
+      fetchUserProfile(user.id)
     } else {
-      setProfile(null); // Clear profile if no user
+      setProfile(null)
+      setProfileLoading(false)
     }
-  }, [user]);
+  }, [user])
 
-  return (
-    <Context.Provider
-      value={{ supabase, user, profile, setProfile, session, setSession, providerToken, setProviderToken, loading, fetchUserProfile, profileLoading }}
-    >
-      {children}
-    </Context.Provider>
-  );
+  const value: SupabaseContext = {
+    supabase,
+    user,
+    session,
+    providerToken,
+    loading,
+    setSession,
+    setProviderToken,
+    profile,
+    setProfile,
+    profileLoading,
+    fetchUserProfile,
+  }
+
+  return <Context.Provider value={value}>{children}</Context.Provider>
 }
 
 export const useSupabase = () => {
-  const context = useContext(Context);
+  const context = useContext(Context)
   if (context === undefined) {
-    throw new Error("useSupabase must be used inside SupabaseProvider");
+    throw new Error("useSupabase must be used inside SupabaseProvider")
   }
-  return context;
-};
+  return context
+}

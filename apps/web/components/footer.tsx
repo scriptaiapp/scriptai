@@ -16,6 +16,7 @@ const Footer = () => {
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Personalized AI assistant for YouTubers, simplifying the content creation process.
             </p>
+            <p>support@tryscriptai.com</p>
           </div>
           {(Object.keys(footerItems) as Array<keyof typeof footerItems>).map((value, key) => {
             const options = footerItems[value]
