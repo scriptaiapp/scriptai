@@ -7,7 +7,9 @@ export async function middleware(request: NextRequest) {
 
   if (request.nextUrl.pathname === "/api/auth/callback" ||
     request.nextUrl.pathname === "/api/early-access" ||
-    request.nextUrl.pathname === "/api/grant-access"
+    request.nextUrl.pathname === "/api/grant-access" ||
+    request.nextUrl.pathname === "/api/track-referral" ||
+    request.nextUrl.pathname === "/api/complete-pending-referral"
   ) {
     return response
   }
