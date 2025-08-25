@@ -76,16 +76,39 @@ export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
 // Function to parse Gemini response into a typed object
 export function parseScriptResponse(text: string): ScriptResponse | null {
   try {
-    // Remove any markdown code fences if present
+    // Log raw response for debugging
+    console.log('Raw Gemini response:', text);
+
+    // Clean the response
     let cleanedText = text.trim();
+
+    // Remove markdown code fences if present
     if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
       cleanedText = cleanedText.slice(7, -3).trim();
     } else if (cleanedText.startsWith('```') && cleanedText.endsWith('```')) {
       cleanedText = cleanedText.slice(3, -3).trim();
     }
-    const parsed = JSON.parse(jsonrepair(cleanedText));
 
-    console.log(parsed)
+    // Additional cleaning: remove leading/trailing newlines, tabs, or whitespace
+    cleanedText = cleanedText.replace(/^\s+|\s+$/g, '');
+
+    // Log cleaned text for debugging
+    console.log('Cleaned Gemini response:', cleanedText);
+
+    let parsed: ScriptResponse;
+    try {
+      // Attempt to repair and parse JSON
+      parsed = JSON.parse(jsonrepair(cleanedText));
+    } catch (repairError) {
+      console.error('JSON repair failed:', repairError);
+      // Fallback: try parsing without jsonrepair
+      try {
+        parsed = JSON.parse(cleanedText);
+      } catch (fallbackError) {
+        console.error('Fallback JSON parse failed:', fallbackError);
+        return null;
+      }
+    }
 
     // Validate the parsed response
     if (
@@ -101,9 +124,11 @@ export function parseScriptResponse(text: string): ScriptResponse | null {
         script: parsed.script
       };
     }
+
+    console.error('Parsed JSON missing required fields:', parsed);
     return null;
   } catch (error) {
-    console.error('Error parsing Gemini response:', error);
+    console.error('Error parsing Gemini response:', error, { inputText: text });
     return null;
   }
 }

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-interface ScriptRecord {
+export interface ScriptRecord {
   id: string;
   user_id: string;
   title: string;
