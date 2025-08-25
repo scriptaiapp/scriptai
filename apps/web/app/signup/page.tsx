@@ -1,8 +1,6 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion, AnimatePresence } from "motion/react";
 
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,24 +13,24 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useSupabase } from "@/components/supabase-provider";
 import { registerUserSchema } from "@repo/validation";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { motion, AnimatePresence } from "motion/react";
 import logo from "@/public/dark-logo.png";
 import * as z from "zod";
 
 type FormData = z.infer<typeof registerUserSchema> & { confirmPassword?: string };
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
-
 function isZodError(error: unknown): error is z.ZodError {
   return Boolean(
     error &&
-    typeof error === 'object' &&
-    'name' in error &&
-    error.name === 'ZodError' &&
-    'errors' in error &&
+    typeof error === "object" &&
+    "name" in error &&
+    error.name === "ZodError" &&
+    "errors" in error &&
     Array.isArray((error as any).errors)
   );
 }
-
 
 function SignupForm() {
   const router = useRouter();
@@ -58,7 +56,7 @@ function SignupForm() {
 
   // Handle referral code from URL
   useEffect(() => {
-    const ref = searchParams.get('ref');
+    const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref);
       setShowReferralBanner(true);
@@ -71,7 +69,6 @@ function SignupForm() {
     if (step === 1) {
       schemaToValidate = (registerUserSchema._def.schema as z.ZodObject<any>).pick({ name: true, email: true });
     } else {
-      // No validation needed to move from step 2 to 3 in this setup
       setStep(step + 1);
       return;
     }
@@ -115,9 +112,9 @@ function SignupForm() {
         password: details.password!,
         options: {
           data: {
-            full_name: details.name, // Using a single name field
+            full_name: details.name,
           },
-        }
+        },
       });
 
       if (error) throw new Error(error.message);
@@ -144,7 +141,6 @@ function SignupForm() {
             }
           } catch (referralError) {
             console.error("Error tracking referral:", referralError);
-            // Don't fail the signup if referral tracking fails
           }
         }
 
@@ -154,7 +150,7 @@ function SignupForm() {
     } catch (error: any) {
       if (isZodError(error)) {
         const fieldErrors: FormErrors = {};
-        error.errors.forEach(err => {
+        error.errors.forEach((err) => {
           const path = err.path[0] as keyof FormData;
           if (path) {
             fieldErrors[path] = err.message;
@@ -172,23 +168,32 @@ function SignupForm() {
   };
 
   const handleGoogleSignup = async () => {
-
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
+          scopes: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
         },
-      })
-      if (error) {
-        throw error
+      });
+
+      if (error) throw error;
+
+      // After successful OAuth, the callback will handle the user session
+      if (data.url) {
+        window.location.href = data.url; // Redirect to Google OAuth
       }
+
+      // Note: Profile update is handled in the auth callback
     } catch (error: any) {
       toast.error("Google Signup Failed", {
         description: error.message || "Could not sign up with Google. Please try again.",
-      })
+      });
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const stepVariants = {
     hidden: { opacity: 0, x: 50 },
@@ -201,8 +206,12 @@ function SignupForm() {
   return (
     <AuroraBackground>
       <div className="relative grid min-h-screen w-full grid-cols-1 items-start justify-center gap-8 px-4 pt-16 md:grid-cols-2 md:items-center md:px-8 md:pt-0 lg:px-16">
-
-        <motion.div initial={{ opacity: 0.0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }} className="hidden flex-col justify-center gap-4 md:flex">
+        <motion.div
+          initial={{ opacity: 0.0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
+          className="hidden flex-col justify-center gap-4 md:flex"
+        >
           <Link href="/">
             <Image src={logo} alt="Script AI" width={80} height={80} className="mb-4" />
           </Link>
@@ -210,12 +219,19 @@ function SignupForm() {
           <p className="max-w-md text-lg text-slate-600">Join the revolution in automated scripting. Create your free account to get started.</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0.0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }} className="flex w-full justify-center md:justify-end">
+        <motion.div
+          initial={{ opacity: 0.0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+          className="flex w-full justify-center md:justify-end"
+        >
           <Card className="w-full max-w-md bg-white/30 dark:bg-black/20 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl h-full bg-clip-padding backdrop-filter bg-opacity-20">
             <CardHeader className="space-y-4 pt-8">
-              <div className="flex justify-center md:hidden"><Image src={logo} alt="Script AI" width={60} height={60} /></div>
+              <div className="flex justify-center md:hidden">
+                <Image src={logo} alt="Script AI" width={60} height={60} />
+              </div>
               <CardTitle className="text-2xl text-center text-slate-900 dark:text-white">Create an account</CardTitle>
-              
+
               {/* Referral Banner */}
               {showReferralBanner && referralCode && (
                 <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
@@ -224,8 +240,8 @@ function SignupForm() {
                   </p>
                 </div>
               )}
-              
-              {/* ## CHANGE: Progress bar is now only shown for the multi-step form ## */}
+
+              {/* Progress bar is now only shown for the multi-step form */}
               {step > 0 && (
                 <div className="px-6">
                   <Progress value={progress} className="w-full" />
@@ -234,9 +250,14 @@ function SignupForm() {
               )}
             </CardHeader>
             <CardContent className="overflow-hidden min-h-[280px]">
-              {/* ## CHANGE: Added Google Sign-in button and divider ## */}
               <div className="space-y-4">
-                <Button variant="outline" className="w-full bg-white/50 hover:bg-white/70" onClick={handleGoogleSignup} type="button">
+                <Button
+                  variant="outline"
+                  className="w-full bg-white/50 hover:bg-white/70"
+                  onClick={handleGoogleSignup}
+                  type="button"
+                  disabled={loading}
+                >
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -250,18 +271,41 @@ function SignupForm() {
                 </div>
               </div>
               <AnimatePresence mode="wait">
-                <motion.div key={step} variants={stepVariants} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }} className="space-y-6">
+                <motion.div
+                  key={step}
+                  variants={stepVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
                   <form onSubmit={handleSignup} className="space-y-4">
                     {step === 1 && (
                       <>
                         <div className="space-y-2">
                           <Label htmlFor="name" className="dark:text-slate-200">Name</Label>
-                          <Input id="name" placeholder="Enter your name" value={details.name || ""} onChange={(e) => setDetails({ ...details, name: e.target.value })} required className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400" />
+                          <Input
+                            id="name"
+                            placeholder="Enter your name"
+                            value={details.name || ""}
+                            onChange={(e) => setDetails({ ...details, name: e.target.value })}
+                            required
+                            className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                          />
                           {errors.name && <p className="text-sm text-red-400 mt-1">{errors.name}</p>}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="email" className="dark:text-slate-200">Email</Label>
-                          <Input id="email" type="email" placeholder="name@company.com" value={details.email || ""} onChange={(e) => setDetails({ ...details, email: e.target.value })} required className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="name@company.com"
+                            value={details.email || ""}
+                            onChange={(e) => setDetails({ ...details, email: e.target.value })}
+                            required
+                            className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                          />
                           {errors.email && <p className="text-sm text-red-400 mt-1">{errors.email}</p>}
                         </div>
                       </>
@@ -272,35 +316,78 @@ function SignupForm() {
                         <div className="space-y-2">
                           <Label htmlFor="password">Password</Label>
                           <div className="relative">
-                            <Input id="password" type={visible ? "text" : "password"} placeholder="••••••••" value={details.password || ""} onChange={(e) => setDetails({ ...details, password: e.target.value })} required className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400" />
-                            <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setVisible(!visible)}>{visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
+                            <Input
+                              id="password"
+                              type={visible ? "text" : "password"}
+                              placeholder="••••••••"
+                              value={details.password || ""}
+                              onChange={(e) => setDetails({ ...details, password: e.target.value })}
+                              required
+                              className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setVisible(!visible)}
+                            >
+                              {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
                           </div>
                           {errors.password && <p className="text-sm text-red-400 mt-1">{errors.password}</p>}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="confirmPassword">Confirm Password</Label>
-                          <Input id="confirmPassword" type={visible ? "text" : "password"} placeholder="••••••••" value={details.confirmPassword || ""} onChange={(e) => setDetails({ ...details, confirmPassword: e.target.value })} required className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400" />
+                          <Input
+                            id="confirmPassword"
+                            type={visible ? "text" : "password"}
+                            placeholder="••••••••"
+                            value={details.confirmPassword || ""}
+                            onChange={(e) => setDetails({ ...details, confirmPassword: e.target.value })}
+                            required
+                            className="bg-white/30 dark:bg-black/30 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                          />
                           {errors.confirmPassword && <p className="text-sm text-red-400 mt-1">{errors.confirmPassword}</p>}
                         </div>
                       </>
                     )}
 
                     <div className="flex justify-between gap-4 pt-4">
-                      {step > 1 && (<Button type="button" variant="outline" onClick={handleBack} className="w-full bg-white/50 hover:bg-white/70">Back</Button>)}
-                      {step < totalSteps && (<Button type="button" onClick={handleNext} className="w-full  bg-slate-900 text-white hover:bg-slate-800 shadow-md">Next</Button>)}
-                      {step === totalSteps && (<Button type="submit" className="w-full bg-slate-900 text-white hover:bg-slate-800 shadow-md" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</Button>)}
+                      {step > 1 && (
+                        <Button type="button" variant="outline" onClick={handleBack} className="w-full bg-white/50 hover:bg-white/70">
+                          Back
+                        </Button>
+                      )}
+                      {step < totalSteps && (
+                        <Button type="button" onClick={handleNext} className="w-full bg-slate-900 text-white hover:bg-slate-800 shadow-md">
+                          Next
+                        </Button>
+                      )}
+                      {step === totalSteps && (
+                        <Button
+                          type="submit"
+                          className="w-full bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                          disabled={loading}
+                        >
+                          {loading ? "Creating account..." : "Create Account"}
+                        </Button>
+                      )}
                     </div>
                   </form>
                 </motion.div>
               </AnimatePresence>
             </CardContent>
             <CardFooter className="flex flex-col space-y-2 pb-8">
-              <div className="text-sm text-center dark:text-slate-300">Already have an account?{" "}<Link href="/login" className="font-medium text-purple-600 hover:underline dark:text-purple-400">Sign In</Link></div>
+              <div className="text-sm text-center dark:text-slate-300">
+                Already have an account?{" "}
+                <Link href="/login" className="font-medium text-purple-600 hover:underline dark:text-purple-400">
+                  Sign In
+                </Link>
+              </div>
             </CardFooter>
           </Card>
         </motion.div>
-
-
       </div>
     </AuroraBackground>
   );
@@ -308,11 +395,13 @@ function SignupForm() {
 
 export default function MultiStepSignupPage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
+        </div>
+      }
+    >
       <SignupForm />
     </Suspense>
   );

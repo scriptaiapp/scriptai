@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useState } from "react"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -10,55 +9,25 @@ import { useSupabase } from "@/components/supabase-provider"
 import { Upload, X, AlertCircle, Loader2, PenTool, Search, Volume2, Youtube, Bot, RefreshCw } from "lucide-react"
 import { SuccessDialog } from "@/components/success-dialog"
 import { toast } from "sonner"
+import { connectYoutubeChannel } from "@/lib/connectYT"
+import { YoutubePermissionDialog } from "@/components/YoutubePermissionDialog"
 
 export default function TrainAI() {
-  const { supabase, user } = useSupabase()
+  const { profile, user, supabase } = useSupabase()
 
   const [videoUrls, setVideoUrls] = useState<string[]>(["", "", ""])
   const [uploading, setUploading] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [youtubeConnected, setYoutubeConnected] = useState(false)
-  const [aiTrained, setAiTrained] = useState(false)
   const [trainingData, setTrainingData] = useState<any>(null)
+  const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false)
+  const [youtubeAccessRequested, setYoutubeAccessRequested] = useState(false)
 
   const nextSteps = [
     { title: "Create Scripts", description: "Generate scripts tailored to your style", icon: PenTool, href: "/dashboard/scripts" },
     { title: "Research Topics", description: "Explore topics aligned with your content", icon: Search, href: "/dashboard/research" },
     { title: "Audio Dubbing", description: "Create dubbed audio in multiple languages", icon: Volume2, href: "/dashboard/audio-dubbing" },
   ]
-
-  useEffect(() => {
-    const checkUserStatus = async () => {
-      if (!user) return
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("youtube_connected, ai_trained")
-          .eq("user_id", user.id)
-          .single()
-
-        if (error) {
-          toast.error("Error checking user status")
-          return
-        }
-
-        setYoutubeConnected(data.youtube_connected)
-        setAiTrained(data.ai_trained)
-
-        if (data.ai_trained) {
-          const { data: styleData, error: styleError } = await supabase
-            .from("user_style")
-            .select("*")
-            .eq("user_id", user.id)
-            .single()
-          if (!styleError && styleData) setTrainingData(styleData)
-        }
-      } catch (error) {
-        console.error("Error checking user status:", error)
-      }
-    }
-    checkUserStatus()
-  }, [supabase, user])
 
   const handleAddVideoUrl = () => {
     if (videoUrls.length < 5) setVideoUrls([...videoUrls, ""])
@@ -77,7 +46,7 @@ export default function TrainAI() {
   }
 
   const validateYouTubeUrls = () => {
-    if (!youtubeConnected) {
+    if (!profile?.youtube_connected) {
       toast.error("YouTube not connected! Please connect your YouTube channel in the dashboard before training.")
       return false
     }
@@ -120,7 +89,6 @@ export default function TrainAI() {
         }
       )
 
-      setAiTrained(true)
       setShowModal(true)
     } catch (error: any) {
       toast.error("Error training AI", { description: error.message || "Unexpected error" })
@@ -132,6 +100,16 @@ export default function TrainAI() {
   const handleRetrain = () => {
     setVideoUrls(["", "", ""])
     setTrainingData(null)
+  }
+
+  const handleConnectYoutube = () => {
+    connectYoutubeChannel({
+      supabase,
+      user,
+      setIsConnectingYoutube,
+      setPermissionDialogOpen,
+      setYoutubeAccessRequested,
+    })
   }
 
   const containerVariants = {
@@ -200,19 +178,30 @@ export default function TrainAI() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${youtubeConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${profile?.youtube_connected ? "bg-green-500" : "bg-red-500"}`}></div>
                     YouTube Connection
                   </CardTitle>
                   <CardDescription>
-                    {youtubeConnected
+                    {profile?.youtube_connected
                       ? "Your YouTube channel is connected and ready for training"
                       : "Connect your YouTube channel to start training"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {!youtubeConnected && (
-                    <Button onClick={() => (window.location.href = "/dashboard")} className="w-full">
-                      Connect YouTube Channel
+                  {!profile?.youtube_connected && (
+                    <Button
+                      onClick={handleConnectYoutube}
+                      className="w-full"
+                      disabled={isConnectingYoutube}
+                    >
+                      {isConnectingYoutube ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        "Connect YouTube Channel"
+                      )}
                     </Button>
                   )}
                 </CardContent>
@@ -221,23 +210,23 @@ export default function TrainAI() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${aiTrained ? "bg-green-500" : "bg-yellow-500"}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${profile?.ai_trained ? "bg-green-500" : "bg-yellow-500"}`}></div>
                     AI Training Status
                   </CardTitle>
                   <CardDescription>
-                    {aiTrained
+                    {profile?.ai_trained
                       ? "Your AI has been trained on your content style"
                       : "Train your AI to understand your unique style"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {aiTrained && trainingData && (
+                  {profile?.ai_trained && trainingData && (
                     <div className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                       <p><strong>Last trained:</strong> {new Date(trainingData.updated_at).toLocaleDateString()}</p>
                       <p><strong>Videos analyzed:</strong> {trainingData.video_urls?.length || 0}</p>
                     </div>
                   )}
-                  {aiTrained && (
+                  {profile?.ai_trained && (
                     <Button onClick={handleRetrain} variant="outline" className="w-full">
                       <RefreshCw className="w-4 h-4 mr-2" /> Re-train AI
                     </Button>
@@ -283,20 +272,20 @@ export default function TrainAI() {
               </CardContent>
               <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-900/50 p-4 border-t">
                 <Button
-                  onClick={() => handleStartTraining(aiTrained)}
+                  onClick={() => handleStartTraining(profile?.ai_trained)}
                   size="lg"
                   className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900"
-                  disabled={uploading || !youtubeConnected}
+                  disabled={uploading || !profile?.youtube_connected}
                 >
                   {uploading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {aiTrained ? "Re-training AI..." : "Training AI..."}
+                      {profile?.ai_trained ? "Re-training AI..." : "Training AI..."}
                     </>
                   ) : (
                     <>
-                      {aiTrained ? <RefreshCw className="mr-2 h-4 w-4" /> : <Upload className="mr-2 h-4 w-4" />}
-                      {aiTrained ? "Re-train AI" : "Start Training"}
+                      {profile?.ai_trained ? <RefreshCw className="mr-2 h-4 w-4" /> : <Upload className="mr-2 h-4 w-4" />}
+                      {profile?.ai_trained ? "Re-train AI" : "Start Training"}
                     </>
                   )}
                 </Button>
@@ -313,6 +302,13 @@ export default function TrainAI() {
         title="AI Training Complete!"
         description="Your AI has been successfully trained on your content style. You can now generate personalized scripts, research topics, and more."
         nextSteps={nextSteps}
+      />
+
+      {/* YouTube Permission Dialog */}
+      <YoutubePermissionDialog
+        open={permissionDialogOpen}
+        onClose={() => setPermissionDialogOpen(false)}
+        isRequested={youtubeAccessRequested}
       />
     </div>
   )
