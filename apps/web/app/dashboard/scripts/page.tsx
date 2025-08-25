@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { ContentCard } from "@/components/dashboard/common/ContentCard"
 import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton"
 import { EmptySvg } from "@/components/dashboard/common/EmptySvg"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
+import { useScripts } from "@/hooks/use-script"
 
 interface Script {
   id: string
@@ -19,6 +20,7 @@ interface Script {
   tone: string
   language: string
 }
+interface FilteredScript extends Script { }
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -40,56 +42,16 @@ const emptyStateVariants = {
 }
 
 export default function Scripts() {
-  const { supabase, user, profile, profileLoading } = useSupabase()
-  const [scripts, setScripts] = useState<Script[]>([])
-  const [loading, setLoading] = useState(true)
+  const { profile, profileLoading } = useSupabase()
+  const { scripts, loading: scriptsLoading, removeScript } = useScripts()
   const [searchQuery, setSearchQuery] = useState("")
   const [scriptToDelete, setScriptToDelete] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchScripts = async () => {
-      if (!user) return
-
-      try {
-        const { data, error } = await supabase
-          .from("scripts")
-          .select("id, title, created_at, tone, language")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-
-        setScripts(data || [])
-      } catch (error: any) {
-        toast.error("Error fetching scripts", {
-          description: error.message,
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchScripts()
-  }, [supabase, user])
 
   const handleDeleteScript = async () => {
     if (!scriptToDelete) return
 
     try {
-      const response = await fetch(`/api/scripts/${scriptToDelete}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to delete script")
-      }
-
-      setScripts(scripts.filter((script) => script.id !== scriptToDelete))
-
+      await removeScript(scriptToDelete)
       toast.success("Script deleted", {
         description: "Your script has been deleted successfully.",
       })
@@ -131,21 +93,23 @@ export default function Scripts() {
     }
   }
 
-  if (profileLoading || loading) {
+  if (profileLoading || scriptsLoading) {
     return (
       <ContentCardSkeleton />
     )
   }
 
-  if (!profile?.ai_trained || !profile?.youtube_connected && !loading) {
+  if (!profile?.ai_trained || !profile?.youtube_connected && !scriptsLoading) {
     return (
       <AITrainingRequired />
     )
   }
 
-  console.log(profile?.ai_trained)
 
-  const filteredScripts = scripts.filter((script) => script.title.toLowerCase().includes(searchQuery.toLowerCase()))
+
+  const filteredScripts: FilteredScript[] = scripts.filter((script: Script) =>
+    script.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <motion.div
@@ -220,7 +184,7 @@ export default function Scripts() {
                 </p>
                 {!searchQuery && (
                   <Link href="/dashboard/scripts/new">
-                    <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                    <Button className="bg-gray-950 hover:bg-gray-900 text-white transition-all">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Script
                     </Button>
