@@ -95,27 +95,35 @@ export function ReturningUserHub({
                     {recentScripts.length > 0 ? (
                         <Card>
                             <Table>
-                                <TableHeader>
+                                {/* Hide the traditional header on mobile */}
+                                <TableHeader className="hidden md:table-header-group">
                                     <TableRow>
                                         <TableHead>Title</TableHead>
                                         <TableHead className="w-[150px] text-right">Created</TableHead>
                                         <TableHead className="w-[100px] text-right">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
+
                                 <TableBody>
                                     {recentScripts.map((script, i) => (
                                         <motion.tr
                                             key={script.id}
                                             custom={i}
-                                            className="border-b last:border-0"
+                                            className="block border-b p-4 md:table-row md:border-b md:p-0"
                                         >
-                                            <TableCell className="font-medium">{script.title}</TableCell>
-                                            <TableCell className="text-right text-slate-500 dark:text-slate-400">
+                                            <TableCell className="block font-medium md:table-cell">
+                                                <span className=" inline-block font-bold md:hidden">Title: </span>
+                                                {script.title}
+                                            </TableCell>
+
+                                            <TableCell className="block text-right text-slate-500 dark:text-slate-400 md:table-cell">
+                                                <span className="float-left mb-1 font-bold text-foreground md:hidden">Created: </span>
                                                 {new Date(script.created_at).toLocaleDateString()}
                                             </TableCell>
-                                            <TableCell className="text-right">
+
+                                            <TableCell className="block text-right md:table-cell">
                                                 <Link href={`/dashboard/scripts/${script.id}`}>
-                                                    <Button size="sm" variant="outline">
+                                                    <Button size="sm" variant="outline" className="mt-4 w-full md:mt-0 md:w-auto">
                                                         View
                                                     </Button>
                                                 </Link>
@@ -125,6 +133,7 @@ export function ReturningUserHub({
                                 </TableBody>
                             </Table>
                         </Card>
+
                     ) : (
                         <Link href="/dashboard/scripts/new">
                             <Card className="border-2 border-dashed hover:border-slate-400 dark:hover:border-slate-600 transition-colors">

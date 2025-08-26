@@ -71,6 +71,20 @@ export async function GET(request: Request) {
       updated_at: new Date().toISOString(),
     };
 
+
+    // Save channel details to youtube_channels table
+    const { error: channelError } = await supabase
+      .from('youtube_channels')
+      .upsert(channelDetails, {
+    onConflict: "user_id, channel_id",
+  });
+
+    if (channelError) {
+      console.log(channelDetails)
+      console.error('Error saving to youtube_channels:', channelError);
+      return NextResponse.json({ error: 'Failed to save channel data' }, { status: 500 });
+    }
+
     // Update profiles table to set youtube_connected to true
     const { error: profileError } = await supabase
       .from('profiles')
@@ -80,16 +94,6 @@ export async function GET(request: Request) {
     if (profileError) {
       console.error('Error updating profiles:', profileError);
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
-    }
-
-    // Save channel details to youtube_channels table
-    const { error: channelError } = await supabase
-      .from('youtube_channels')
-      .upsert(channelDetails);
-
-    if (channelError) {
-      console.error('Error saving to youtube_channels:', channelError);
-      return NextResponse.json({ error: 'Failed to save channel data' }, { status: 500 });
     }
 
     // Redirect to dashboard

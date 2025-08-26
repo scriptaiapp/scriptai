@@ -9,32 +9,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSupabase } from "@/components/supabase-provider"
 import { Copy, Gift, Share2, Users, Clock, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
+import { ReferralPageSkeleton } from "@/components/dashboard/referrals/ReferralSkeleton"
 
 // Helper function for better time formatting
 const formatTime = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-  
+
   if (diffInHours < 1) {
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     return `${diffInMinutes} minutes ago`;
   } else if (diffInHours < 24) {
     return `${diffInHours} hours ago`;
   } else if (diffInHours < 48) {
-    return `Yesterday at ${date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    return `Yesterday at ${date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     })}`;
   } else {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
-      month: 'short', 
+      month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
   }
 };
@@ -113,9 +114,9 @@ export default function Referrals() {
 
   const copyReferralLink = async () => {
     if (!referralData?.referralCode) return;
-    
+
     const referralLink = `${window.location.origin}/signup?ref=${referralData.referralCode}`;
-    
+
     try {
       await navigator.clipboard.writeText(referralLink);
       toast.success("Referral link copied!", { description: "Share this link with friends" });
@@ -133,9 +134,9 @@ export default function Referrals() {
 
   const handleShareReferral = async () => {
     if (!referralData?.referralCode) return;
-    
+
     const referralLink = `${window.location.origin}/signup?ref=${referralData.referralCode}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -151,6 +152,10 @@ export default function Referrals() {
     }
   };
 
+  if (loading) {
+    return <ReferralPageSkeleton />;
+  }
+
   return (
     <div className="container py-8">
       <div className="mb-8">
@@ -165,8 +170,8 @@ export default function Referrals() {
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
                 {referralData.userProfile.avatar_url ? (
-                  <img 
-                    src={referralData.userProfile.avatar_url} 
+                  <img
+                    src={referralData.userProfile.avatar_url}
                     alt={referralData.userProfile.full_name}
                     className="w-16 h-16 rounded-full object-cover"
                   />
@@ -245,8 +250,8 @@ export default function Referrals() {
               <p className="text-slate-600 dark:text-slate-400 mb-4">
                 You don't have a referral code yet
               </p>
-              <Button 
-                onClick={generateReferralCode} 
+              <Button
+                onClick={generateReferralCode}
                 disabled={generatingCode}
                 className="flex items-center gap-2"
               >

@@ -96,7 +96,7 @@ export default function ScriptEditor({
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Enter a title for your script"
-                        className="focus-visible:ring-purple-500"
+                        className="focus-visible:ring-purple-500 pr-10"
                     />
                     <Button
                         variant="ghost"

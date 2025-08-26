@@ -183,7 +183,7 @@ export default function Home() {
               <p className="max-w-[700px] text-slate-300 md:text-lg">
                 Join thousands of YouTubers who are saving time and creating better content with Script AI.
               </p>
-              <Link href="/signup">
+              <Link href="/signup" className="z-50">
                 <MButton
                   size="lg"
                   className="bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:brightness-110 text-white shadow-md transition-all"
@@ -193,7 +193,7 @@ export default function Home() {
                 </MButton>
               </Link>
             </div>
-            <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg">
+            <svg className="absolute bottom-0 left-0 w-full " viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg">
               <path fill="#fff" fillOpacity="0.05" d="M0,0 C480,120 960,0 1440,120 L1440,0 L0,0 Z" />
             </svg>
           </div>
