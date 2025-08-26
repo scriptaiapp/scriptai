@@ -29,8 +29,19 @@ export default function ResearchResults({ result, onResearchNew }: ResearchResul
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-6 flex flex-col">
             {/* Page Header */}
-            <header className="lg:sticky lg:top-20 mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">{result.topic}</h1>
+            <header className="lg:sticky lg:top-12 mb-8">
+                {/* glassmorphism heading  */}
+                <h1
+                    className="
+        text-3xl font-bold tracking-tight 
+        text-slate-900 dark:text-slate-50
+        bg-white/20 dark:bg-slate-700/30
+        backdrop-blur-sm rounded-xl pt-5
+"
+                >
+                    {result.topic}
+                </h1>
+
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Research generated on {new Date(result.created_at).toLocaleString()}
                 </p>
