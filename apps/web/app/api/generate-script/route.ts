@@ -1,11 +1,9 @@
+
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
-import { parseScriptResponse } from "@/lib/parseResponse"
+import { parseScriptResponse } from "@/lib/parseResponse";
 
-
-
-// Define interfaces for type safety
 interface ScriptRequest {
   prompt: string;
   context?: string;
@@ -19,6 +17,7 @@ interface ScriptRequest {
 interface ProfileData {
   credits: number;
   ai_trained: boolean;
+  youtube_connected: boolean;
 }
 
 interface ChannelData {
@@ -39,7 +38,6 @@ interface StyleData {
   recommendations: Record<string, string>;
 }
 
-
 interface ScriptRecord {
   id: string;
   user_id: string;
@@ -54,8 +52,6 @@ interface ScriptRecord {
   created_at: string;
   updated_at: string;
 }
-
-
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -137,7 +133,12 @@ export async function POST(request: Request) {
     }
 
     // Initialize Gemini API
-    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) {
+      console.error('Google Generative AI API key is missing');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    const ai = new GoogleGenAI({ apiKey });
 
     // Craft prompt for script generation
     const geminiPrompt = `
@@ -148,7 +149,7 @@ Generate a unique YouTube video script based on the following details:
 - Language: ${language || channelData?.default_language || 'English'}
 - Include Storytelling: ${includeStorytelling}
 - References: ${references || 'None'}
-- Include timestamps: Include timestamps on the script
+- Include timestamps: Include timestamps in the script
 
 ${personalized && styleData ? `
 Creator's Style Profile:
@@ -164,22 +165,30 @@ Creator's Style Profile:
 - Recommendations: ${JSON.stringify(styleData.recommendations)}
 ` : ''}
 
-Output should be valid json format:
+Return the output as valid JSON with no additional text, comments, markdown or formatting. The JSON should have the following structure:
 {
   "title": "Suggested script title",
-  "script": "Full script text here"
+  "script": "Full script as a string text here"
 }
 `;
 
     // Generate script with Gemini
-    const result: any = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: geminiPrompt,
-    });
+    let result: any;
+    try {
+      result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: geminiPrompt,
+      });
+    } catch (geminiError) {
+      console.error('Gemini API error:', geminiError);
+      return NextResponse.json({ error: 'Failed to generate script from Gemini API' }, { status: 500 });
+    }
 
+    // Parse the response
     const response = parseScriptResponse(result.text);
     if (!response) {
-      return NextResponse.json({ error: 'Failed to generate valid script' }, { status: 500 });
+      console.error('Invalid Gemini response format:', result.text);
+      return NextResponse.json({ error: 'Failed to parse Gemini response' }, { status: 500 });
     }
 
     // Update credits
@@ -222,7 +231,6 @@ Output should be valid json format:
       title: response.title,
       script: response.script
     });
-
   } catch (error: unknown) {
     console.error('Error in generate-script:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -141,7 +141,7 @@ export function ContentCard({
                                     e.stopPropagation();
                                 }}
                             >
-                                <DropdownMenuItem onClick={() => (window.location.href = linkHref)}>
+                                <DropdownMenuItem className="cursor-pointer" onClick={() => (window.location.href = linkHref)}>
                                     <ExternalLink className="mr-2 h-4 w-4" />
                                     <span>View</span>
                                 </DropdownMenuItem>
@@ -152,7 +152,7 @@ export function ContentCard({
                                             <span>Exporting...</span>
                                         </DropdownMenuItem>
                                     ) : (
-                                        <DropdownMenuItem onClick={handleExport}>
+                                        <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
                                             <Download className="mr-2 h-4 w-4" />
                                             <span>Export</span>
                                         </DropdownMenuItem>
@@ -160,7 +160,7 @@ export function ContentCard({
 
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem
-                                        className="text-red-500 focus:text-red-500"
+                                        className="text-red-500 focus:text-red-500 cursor-pointer"
                                         onSelect={(e) => e.preventDefault()}
                                         onClick={() => setToDelete(id)}
                                     >

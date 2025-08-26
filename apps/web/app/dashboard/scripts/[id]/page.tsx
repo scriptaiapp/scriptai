@@ -145,9 +145,18 @@ export default function ScriptPage() {
 
   return (
     <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Script Details</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">View and edit your YouTube video script</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Script Details</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">View and edit your YouTube video script</p>
+        </div>
+        {/* <Button
+          variant="outline"
+          onClick={() => router.push("/dashboard/scripts")}
+          className="flex items-center gap-2"
+        >
+          ← Back to Scripts
+        </Button> */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">

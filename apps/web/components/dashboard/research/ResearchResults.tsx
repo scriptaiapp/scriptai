@@ -3,7 +3,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react"; // Note: I'm using framer-motion here, it's the successor to motion/react and often used with modern Next.js apps. The API is very similar.
+import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, TrendingUp, HelpCircle, Lightbulb, LinkIcon } from "lucide-react";
