@@ -43,8 +43,8 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logged out successfully");
       router.push("/");
+      toast.success("Logged out successfully");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error("Error logging out: " + error.message);

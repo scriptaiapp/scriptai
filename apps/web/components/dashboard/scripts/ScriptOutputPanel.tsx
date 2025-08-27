@@ -15,6 +15,7 @@ import { Loader2 } from "lucide-react"
 
 interface ScriptOutputPanelProps {
     loading: boolean
+    loadingGenerate: boolean
     generatedScript: string
     setGeneratedScript: (script: string) => void
     scriptTitle: string
@@ -31,6 +32,7 @@ export default function ScriptOutputPanel({
     setScriptTitle,
     onSave,
     onRegenerate,
+    loadingGenerate
 }: ScriptOutputPanelProps) {
     return (
         <Card className="lg:sticky lg:top-8 min-h-[600px]">
@@ -51,7 +53,7 @@ export default function ScriptOutputPanel({
                         animation={true}
                     />
                 ) : (
-                    <ScriptOutputPlaceholder loading={loading} />
+                    <ScriptOutputPlaceholder loading={loadingGenerate} />
                 )}
             </CardContent>
             {generatedScript && (
@@ -64,7 +66,7 @@ export default function ScriptOutputPanel({
                         <Button
                             variant="outline"
                             onClick={onRegenerate}
-                            disabled={loading}
+                            disabled={loadingGenerate}
                             className="flex-1 sm:flex-none"
                         >
                             Regenerate
@@ -72,7 +74,7 @@ export default function ScriptOutputPanel({
                         <Button
                             onClick={onSave}
                             className="bg-slate-900 hover:bg-slate-800 text-white flex-1 sm:flex-none"
-                            disabled={loading}
+                            disabled={loadingGenerate}
                         >
                             {loading ? (
                                 <>

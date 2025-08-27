@@ -246,6 +246,11 @@ const config: Config = {
         	  },
         	},
 
+			'shimmer': {
+          		"0%": { backgroundPosition: "-200% 0" },
+          		"100%": { backgroundPosition: "200% 0" },
+        	},
+
 		
   		},
   		animation: {
@@ -271,6 +276,7 @@ const config: Config = {
 			'mic-fill': 'mic-fill 1.5s infinite ease-in-out',
 			'logo-flow': 'logo-flow 1.5s infinite ease-in-out',
 			'glitch': 'glitch 1.5s linear infinite',
+			shimmer: "shimmer 2s linear infinite",
 			
   		}
   	}

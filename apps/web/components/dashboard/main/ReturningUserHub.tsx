@@ -105,7 +105,7 @@ export function ReturningUserHub({
                                 </TableHeader>
 
                                 <TableBody>
-                                    {recentScripts.map((script, i) => (
+                                    {recentScripts.slice(0, 5).map((script, i) => (
                                         <motion.tr
                                             key={script.id}
                                             custom={i}
