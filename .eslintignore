@@ -1,0 +1,29 @@
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.d.ts
+*.js.map
+
+# Config files
+*.config.js
+*.setup.js
+
+# Turbo cache
+.turbo/
+
+# Coverage
+coverage/
+
+# Husky
+.husky/
+
+# Environment files
+.env*
+!.env.example
