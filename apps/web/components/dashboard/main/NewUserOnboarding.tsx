@@ -1,13 +1,13 @@
 "use client"; // Required for Framer Motion
 
 import Link from "next/link";
-import { motion } from "motion/react"; // Import motion
+import { motion } from "motion/react"; // Corrected import
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowRight, Check, PenTool, Search } from "lucide-react";
+import { ArrowRight, Check, PenTool, Search, Unlink } from "lucide-react";
 
 interface NewUserOnboardingProps {
     profile: {
@@ -16,12 +16,16 @@ interface NewUserOnboardingProps {
     } | null;
     connectYoutubeChannel: () => void;
     connectingYoutube: boolean;
+    disconnectYoutubeChannel: () => void;
+    disconnectingYoutube: boolean;
 }
 
 export function NewUserOnboarding({
     profile,
     connectYoutubeChannel,
     connectingYoutube,
+    disconnectYoutubeChannel,
+    disconnectingYoutube,
 }: NewUserOnboardingProps) {
     const isYoutubeConnected = profile?.youtube_connected === true;
     const isAiTrained = profile?.ai_trained === true;
@@ -76,7 +80,24 @@ export function NewUserOnboarding({
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Why? To let our AI learn your unique voice and style.</p>
                                 </div>
                             </div>
-                            {!isYoutubeConnected && (<Button onClick={connectYoutubeChannel} disabled={connectingYoutube}>{connectingYoutube ? "Connecting..." : "Connect"}</Button>)}
+                            {isYoutubeConnected ? (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={disconnectYoutubeChannel}
+                                    disabled={disconnectingYoutube}
+                                >
+                                    <Unlink className="h-4 w-4 mr-2" />
+                                    {disconnectingYoutube ? "Disconnecting..." : "Disconnect"}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={connectYoutubeChannel}
+                                    disabled={connectingYoutube}
+                                >
+                                    {connectingYoutube ? "Connecting..." : "Connect"}
+                                </Button>
+                            )}
                         </div>
                         <Separator />
                         <TooltipProvider delayDuration={0}>

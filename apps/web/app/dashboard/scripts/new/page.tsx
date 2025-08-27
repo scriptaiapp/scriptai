@@ -114,7 +114,7 @@ export default function NewScriptPage() {
     }
   }
 
-  if (!profile?.ai_trained && !profile?.youtube_connected) {
+  if (!profile?.ai_trained || !profile?.youtube_connected && !loading) {
     return (
       <AITrainingRequired />
     )

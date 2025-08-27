@@ -81,6 +81,8 @@ export default function Dashboard() {
           profile={profile}
           connectYoutubeChannel={handleConnectYoutube}
           connectingYoutube={isConnectingYoutube}
+          disconnectYoutubeChannel={handleDisconnectYoutube}
+          disconnectingYoutube={isDisconnectingYoutube}
         />
       )}
 

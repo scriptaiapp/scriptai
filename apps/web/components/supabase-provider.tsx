@@ -56,42 +56,42 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setProfileLoading(true)
     try {
       let profilePromise = profilePromises.get(userId)
-      if (!profilePromise) {
-        profilePromise = (async () => {
-          const { data, error } = await supabase
+      // if (!profilePromise) {
+      profilePromise = (async () => {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(
+            "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
+          )
+          .eq("user_id", userId)
+          .single()
+
+        if (error) {
+          console.error("Profile fetch error:", error.message)
+          return null
+        }
+
+        // Ensure referral_code exists
+        if (!data.referral_code) {
+          const referral = generateReferralCode()
+          const { data: updated, error: updateError } = await supabase
             .from("profiles")
+            .update({ referral_code: referral })
+            .eq("user_id", userId)
             .select(
               "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
             )
-            .eq("user_id", userId)
             .single()
 
-          if (error) {
-            console.error("Profile fetch error:", error.message)
-            return null
+          if (!updateError && updated) {
+            return updated as UserProfile
           }
+        }
 
-          // Ensure referral_code exists
-          if (!data.referral_code) {
-            const referral = generateReferralCode()
-            const { data: updated, error: updateError } = await supabase
-              .from("profiles")
-              .update({ referral_code: referral })
-              .eq("user_id", userId)
-              .select(
-                "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
-              )
-              .single()
-
-            if (!updateError && updated) {
-              return updated as UserProfile
-            }
-          }
-
-          return data as UserProfile
-        })()
-        profilePromises.set(userId, profilePromise)
-      }
+        return data as UserProfile
+      })()
+      profilePromises.set(userId, profilePromise)
+      // }
 
       const result = await profilePromise
       setProfile(result)

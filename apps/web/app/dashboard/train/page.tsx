@@ -122,6 +122,7 @@ export default function TrainAI() {
     visible: { y: 0, opacity: 1 },
   }
 
+
   return (
     <div className="container py-8">
       <motion.div variants={containerVariants} initial="hidden" animate="visible">

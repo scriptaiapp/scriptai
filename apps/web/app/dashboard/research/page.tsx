@@ -146,11 +146,7 @@ export default function Topics() {
     )
   }
 
-  if (!profile?.ai_trained && !profile?.youtube_connected) {
-    return (
-      <AITrainingRequired />
-    )
-  }
+  const showTrainingOverlay = !profile?.ai_trained || !profile?.youtube_connected && !loading;
 
   return (
     <div className="container py-8 md:py-12">
@@ -164,12 +160,15 @@ export default function Topics() {
             Manage and explore all your researched topics in one place.
           </p>
         </div>
-        <Link href="/dashboard/research/new">
-          <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
-            <Plus className="mr-2 h-4 w-4" />
-            New Topic
-          </Button>
-        </Link>
+        {!showTrainingOverlay && (
+
+          <Link href="/dashboard/research/new">
+            <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
+              <Plus className="mr-2 h-4 w-4" />
+              New Topic
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* SECTION: Search and Filters */}
@@ -186,7 +185,17 @@ export default function Topics() {
       </div>
 
       {/* SECTION: Content Area */}
-      {filteredTopics.length > 0 ? (
+
+      {showTrainingOverlay ? (
+        <motion.div
+          key="training-required"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <AITrainingRequired />
+        </motion.div>
+      ) : filteredTopics.length > 0 ? (
         <div className="flex flex-col gap-3">
           {filteredTopics.map((topic) => (
             <motion.div
@@ -196,7 +205,6 @@ export default function Topics() {
               initial="hidden"
               animate="visible"
             >
-
               <ContentCard key={topic.id} id={topic.id} title={topic.topic} created_at={topic.created_at} onDelete={handleDeleteTopic} setToDelete={setTopicToDelete} type="research" onExport={handleExport} />
             </motion.div>
           ))}

@@ -60,7 +60,7 @@ export default function NewTopicPage() {
     setActiveTab("research");
   };
 
-  if (!profile?.ai_trained && !profile?.youtube_connected) {
+  if (!profile?.ai_trained || !profile?.youtube_connected) {
     return (
       <AITrainingRequired />
     )
