@@ -1,17 +1,26 @@
 /** @type {import("eslint").Linter.Config} */
-const turboConfig = require("eslint-config-turbo").default;
-
 module.exports = {
   root: true,
-  ...turboConfig,
   extends: [
-    ...turboConfig.extends,
-    "plugin:@typescript-eslint/recommended",
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "prettier",
   ],
-  plugins: [...(turboConfig.plugins || []), "@typescript-eslint/eslint-plugin"],
+  plugins: ["@typescript-eslint"],
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: "module",
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
+  },
   ignorePatterns: [
     ".*.js",
     "*.setup.js",
@@ -22,4 +31,10 @@ module.exports = {
     "node_modules/",
     ".husky/",
   ],
+  rules: {
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "prefer-const": "error",
+    "no-var": "error",
+  },
 };
