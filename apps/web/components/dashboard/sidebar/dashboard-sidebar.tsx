@@ -51,8 +51,9 @@ export const Logo = ({
       src={logo}
       alt="Script AI Logo"
       width={28}
-      height={24}
+      height={28}
       className="shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm"
+      priority={true}
     />
 
     {/* <ScriptAiIcon

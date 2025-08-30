@@ -18,6 +18,12 @@ export type ScriptFormData = {
     includeStorytelling: boolean
     references: string
     language: string
+    duration: string
+    customDuration?: string
+    includeTimestamps: boolean
+    personalized?: boolean
+    files: File[]
+
 }
 
 interface ScriptGenerationFormProps {
@@ -36,13 +42,16 @@ export default function ScriptGenerationForm({
     loading,
     onGenerate,
 }: ScriptGenerationFormProps) {
-    // State for form inputs
     const [prompt, setPrompt] = useState("")
     const [context, setContext] = useState("")
     const [tone, setTone] = useState("conversational")
     const [includeStorytelling, setIncludeStorytelling] = useState(false)
     const [references, setReferences] = useState("")
     const [language, setLanguage] = useState("english")
+    const [duration, setDuration] = useState("3min");
+    const [customDuration, setCustomDuration] = useState("");
+    const [includeTimestamps, setIncludeTimestamps] = useState(false);
+    const [files, setFiles] = useState<File[]>([]);
 
     // State for UI flow
     const [step, setStep] = useState(1)
@@ -70,6 +79,10 @@ export default function ScriptGenerationForm({
             includeStorytelling,
             references,
             language,
+            duration,
+            customDuration,
+            includeTimestamps,
+            files
         })
     }
 
@@ -91,7 +104,7 @@ export default function ScriptGenerationForm({
                 </p>
             </div>
 
-            <div className="relative h-[450px] overflow-hidden">
+            <div className="relative h-[450px] overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -118,13 +131,14 @@ export default function ScriptGenerationForm({
                                 language={language}
                                 setLanguage={setLanguage}
                                 includeStorytelling={includeStorytelling}
-                                setIncludeStorytelling={setIncludeStorytelling}
-                            />
+                                setIncludeStorytelling={setIncludeStorytelling} customDuration={customDuration} setCustomDuration={setCustomDuration} duration={duration} setDuration={setDuration} includeTimestamps={includeTimestamps} setIncludeTimestamps={setIncludeTimestamps} />
                         )}
                         {step === 3 && (
                             <FormStep3
                                 references={references}
                                 setReferences={setReferences}
+                                files={files}
+                                setFiles={setFiles}
                             />
                         )}
                     </motion.div>

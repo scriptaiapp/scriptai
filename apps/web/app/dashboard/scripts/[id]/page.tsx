@@ -5,10 +5,13 @@ import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { BookText, Hash, Languages, LinkIcon, Loader2, Smile, Sparkles } from "lucide-react"
+import { ArrowLeft, BookText, CheckCircle, Clock, Hash, Languages, LinkIcon, Loader2, Smile, Sparkles, XCircle } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog"
 import ScriptEditor from "@/components/dashboard/scripts/ScriptEditor"
 import { ScriptLoaderSkeleton } from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton"
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import Script from "next/script"
+import { ScriptMetadata } from "@/components/dashboard/scripts/ScriptMetadata"
 
 interface Script {
   id: string
@@ -22,6 +25,8 @@ interface Script {
   language: string
   created_at: string
   updated_at: string
+  include_timestamps: boolean
+  duration: string
 }
 
 export default function ScriptPage() {
@@ -32,6 +37,13 @@ export default function ScriptPage() {
   const [content, setContent] = useState("")
   const [loading, setLoading] = useState(false)
   const [isLoadingScript, setIsLoadingScript] = useState(true)
+
+  const limit = 90; // character limit before truncation
+
+  const [expandedContext, setExpandedContext] = useState(false);
+  const [expandedPrompt, setExpandedPrompt] = useState(false);
+
+
 
   const scriptId = params.id as string
 
@@ -150,13 +162,14 @@ export default function ScriptPage() {
           <h1 className="text-3xl font-bold tracking-tight">Script Details</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">View and edit your YouTube video script</p>
         </div>
-        {/* <Button
+        <Button
           variant="outline"
           onClick={() => router.push("/dashboard/scripts")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm hover:bg-muted hover:text-foreground transition"
         >
-          ← Back to Scripts
-        </Button> */}
+          <ArrowLeft className="h-4 w-4" />
+          Back to Scripts
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
@@ -216,43 +229,8 @@ export default function ScriptPage() {
           </Card>
         </div>
 
-        {/* Metadata column */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generation Details</CardTitle>
-              <CardDescription>The parameters used to generate this script.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
-                <li className="flex items-start gap-3">
-                  <Hash className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Prompt:</strong> {script.prompt || "N/A"}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <BookText className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Context:</strong> {script.context || "N/A"}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Smile className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Tone:</strong> {script.tone || "N/A"}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Sparkles className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Storytelling:</strong> {script.include_storytelling ? "Yes" : "No"}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <LinkIcon className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>References:</strong> {script.reference_links || "N/A"}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Languages className="h-4 w-4 mt-0.5 text-slate-400" />
-                  <span><strong>Language:</strong> {script.language}</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+
+        <ScriptMetadata script={script} />
       </div>
     </div>
   )

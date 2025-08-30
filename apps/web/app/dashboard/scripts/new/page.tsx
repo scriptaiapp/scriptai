@@ -11,6 +11,28 @@ import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 import { useScripts } from "@/hooks/use-script"
 
+const calculateDurationInSeconds = (duration: string, customDuration: string) => {
+  switch (duration) {
+    case '1min':
+      return "60";
+    case '3min':
+      return "180";
+    case '5min':
+      return "300";
+    case 'custom':
+
+      if (!customDuration || !customDuration.includes(':')) {
+        return 0;
+      }
+      const parts = customDuration.split(':');
+      const minutes = parseInt(parts[0] ?? '0', 10) || 0;
+      const seconds = parseInt(parts[1] ?? '0', 10) || 0;
+      return ((minutes * 60) + seconds).toString();
+    default:
+      return 0;
+  }
+};
+
 export default function NewScriptPage() {
   const router = useRouter()
   const { supabase, user, profile, profileLoading } = useSupabase()
@@ -20,6 +42,7 @@ export default function NewScriptPage() {
   const [scriptTitle, setScriptTitle] = useState("")
   const [scriptId, setScriptId] = useState<string | null>(null)
   const { fetchScripts } = useScripts()
+
 
   // Store the last submitted form data to allow for regeneration
   const [latestFormData, setLatestFormData] = useState<ScriptFormData | null>(
@@ -33,6 +56,24 @@ export default function NewScriptPage() {
       })
       return
     }
+    const duration = calculateDurationInSeconds(formData.duration, formData.customDuration || "")
+    formData.duration = duration || "300"
+    delete formData.customDuration
+    formData.personalized = profile?.ai_trained
+
+    console.log(formData)
+    const multipartData = new FormData();
+    for (const [key, value] of Object.entries(formData)) {
+      if (key === "files" && Array.isArray(value)) {
+        for (const file of value) {
+          multipartData.append("files", file, file.name);
+        }
+      } else if (typeof value === "boolean") {
+        multipartData.append(key, String(value));
+      } else if (value !== undefined && value !== null) {
+        multipartData.append(key, value as string);
+      }
+    }
 
     setLoadingGenerate(true)
     setGeneratedScript("") // Clear previous script
@@ -42,11 +83,12 @@ export default function NewScriptPage() {
 
       const response = await fetch("/api/generate-script", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData, // Pass all form data to the API
-          personalized: profile?.ai_trained,
-        }),
+        body: multipartData,
+        // headers: { "Content-Type": "multipart/form-data" },
+        // body: JSON.stringify({
+        //   ...formData, // Pass all form data to the API
+        //   personalized: profile?.ai_trained,
+        // }),
       })
 
       if (!response.ok) {
