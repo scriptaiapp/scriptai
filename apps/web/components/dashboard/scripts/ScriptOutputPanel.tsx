@@ -35,7 +35,7 @@ export default function ScriptOutputPanel({
     loadingGenerate
 }: ScriptOutputPanelProps) {
     return (
-        <Card className="lg:sticky lg:top-8 min-h-[600px]">
+        <Card className="lg:sticky lg:top-8 lg:min-h-[600px]">
             <CardHeader>
                 <CardTitle>Your Script</CardTitle>
                 <CardDescription>

@@ -157,7 +157,7 @@ export default function ScriptPage() {
 
   return (
     <div className="container py-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Script Details</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">View and edit your YouTube video script</p>
@@ -172,9 +172,8 @@ export default function ScriptPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* Main content column */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
@@ -191,10 +190,14 @@ export default function ScriptPage() {
                 animation={false}
               />
             </CardContent>
-            <CardFooter className="flex justify-between items-center">
+            <CardFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50 transition-all focus-visible:ring-2 focus-visible:ring-red-500" disabled={loading}>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50 transition-all focus-visible:ring-2 focus-visible:ring-red-500"
+                    disabled={loading}
+                  >
                     Delete Script
                   </Button>
                 </AlertDialogTrigger>
@@ -213,7 +216,7 @@ export default function ScriptPage() {
               </AlertDialog>
               <Button
                 onClick={handleUpdateScript}
-                className="w-full max-w-[200px] bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
+                className="w-full sm:w-auto sm:max-w-[200px] bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
                 disabled={loading}
               >
                 {loading ? (
@@ -229,8 +232,10 @@ export default function ScriptPage() {
           </Card>
         </div>
 
+        <div className="lg:col-span-1">
+          <ScriptMetadata script={script} />
+        </div>
 
-        <ScriptMetadata script={script} />
       </div>
     </div>
   )
