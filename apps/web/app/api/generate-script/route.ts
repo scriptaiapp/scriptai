@@ -4,14 +4,23 @@ import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { parseScriptResponse } from "@/lib/parseResponse";
 
+import fs from 'fs/promises';
+import path from 'path';    
+import os from 'os';   
+
+type Part = { text: string } | { fileData: { fileUri: string; mimeType: string } };
+
 interface ScriptRequest {
   prompt: string;
   context?: string;
   tone?: string;
   includeStorytelling: boolean;
+  includeTimestamps:boolean;
+  duration:string;
   references?: string;
   language: string;
   personalized: boolean;
+  files: { path: string; relativePath?: string }[];
 }
 
 interface ProfileData {
@@ -47,26 +56,37 @@ interface ScriptRecord {
   context?: string;
   tone?: string;
   include_storytelling: boolean;
+  duration:string
+  include_timestamps:boolean
   reference_links?: string;
   language: string;
   created_at: string;
   updated_at: string;
 }
 
+
 export async function POST(request: Request) {
   const supabase = await createClient();
 
   try {
-    const body: ScriptRequest = await request.json();
-    const {
-      prompt,
-      context,
-      tone,
-      includeStorytelling,
-      references,
-      language,
-      personalized
-    } = body;
+
+     const formData = await request.formData();
+
+    // Strings
+    const prompt = formData.get("prompt") as string;
+    const context = formData.get("context") as string;
+    const tone = formData.get("tone") as string;
+    const includeStorytelling = formData.get("includeStorytelling") === "true";
+    const references = formData.get("references") as string;
+    const language = formData.get("language") as string;
+    const duration = formData.get("duration") as string;
+    const includeTimestamps = formData.get("includeTimestamps") === "true";
+    const personalized = formData.get("personalized") === "true";
+
+    // Files
+    const files = formData.getAll("files") as File[];
+
+    // console.log("Received files:", files);
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -140,16 +160,18 @@ export async function POST(request: Request) {
     }
     const ai = new GoogleGenAI({ apiKey });
 
-    // Craft prompt for script generation
-    const geminiPrompt = `
+
+    let geminiPrompt = `
 Generate a unique YouTube video script based on the following details:
 - Prompt: ${prompt}
 - Context: ${context || 'None'}
 - Desired Tone: ${tone || styleData?.tone || 'conversational'}
 - Language: ${language || channelData?.default_language || 'English'}
 - Include Storytelling: ${includeStorytelling}
+- Include Timestamps: ${includeTimestamps}
+- Duration: ${duration}
 - References: ${references || 'None'}
-- Include timestamps: Include timestamps in the script
+
 
 ${personalized && styleData ? `
 Creator's Style Profile:
@@ -172,12 +194,46 @@ Return the output as valid JSON with no additional text, comments, markdown or f
 }
 `;
 
+    const uploadedFiles: any[] = [];
+    for (const file of files) {
+      // Convert File → Buffer
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      // Pick a safe path inside OS temp directory
+      const tempFilePath = path.join(os.tmpdir(), file.name);
+
+      // Write file to disk
+      await fs.writeFile(tempFilePath, buffer);
+
+      // Upload to Google AI
+      const myfile = await ai.files.upload({
+        file: tempFilePath,
+        config: { mimeType: file.type },
+      });
+
+      uploadedFiles.push(myfile);
+    }
+
+    const parts: Part[] = [{ text: geminiPrompt }];
+
+    for (const uploaded of uploadedFiles) {
+      parts.push({ text: `Consider this file as a reference: ${uploaded.name ?? ''}` });
+      parts.push({
+        fileData: {
+          fileUri: uploaded.uri,
+          mimeType: uploaded.mimeType,
+        },
+      });
+    }
+    // console.log(parts);
+
     // Generate script with Gemini
     let result: any;
     try {
       result = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: geminiPrompt,
+        // contents: geminiPrompt,
+        contents: [{ role: "user", parts }],
       });
     } catch (geminiError) {
       console.error('Gemini API error:', geminiError);
@@ -192,6 +248,7 @@ Return the output as valid JSON with no additional text, comments, markdown or f
     }
 
     // Update credits
+
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ credits: typedProfileData.credits - 1 })
@@ -203,6 +260,7 @@ Return the output as valid JSON with no additional text, comments, markdown or f
     }
 
     // Save script to database
+  
     const { data, error: insertError } = await supabase
       .from('scripts')
       .insert({
@@ -213,6 +271,8 @@ Return the output as valid JSON with no additional text, comments, markdown or f
         context,
         tone,
         include_storytelling: includeStorytelling,
+        include_timestamps: includeTimestamps,
+        duration: duration,
         reference_links: references,
         language,
         created_at: new Date().toISOString(),
@@ -220,17 +280,18 @@ Return the output as valid JSON with no additional text, comments, markdown or f
       } as ScriptRecord)
       .select()
       .single();
+      
+      if (insertError) {
+        console.error('Error saving script:', insertError);
+        return NextResponse.json({ error: 'Failed to save script' }, { status: 500 });
+      }
 
-    if (insertError) {
-      console.error('Error saving script:', insertError);
-      return NextResponse.json({ error: 'Failed to save script' }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      id: (data as ScriptRecord).id,
-      title: response.title,
-      script: response.script
-    });
+      // Return the generated script
+      return NextResponse.json({
+        id: (data as ScriptRecord).id,
+        title: response.title,
+        script: response.script
+      });
   } catch (error: unknown) {
     console.error('Error in generate-script:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

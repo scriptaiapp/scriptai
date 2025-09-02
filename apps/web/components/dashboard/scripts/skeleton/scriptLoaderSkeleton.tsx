@@ -55,7 +55,7 @@ export function ScriptLoaderSkeleton() {
               <Skeleton className="h-4 w-full" />
             </CardHeader>
             <CardContent className="space-y-4">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <Skeleton className="h-6 w-6 rounded-sm" />
                   <Skeleton className="h-4 w-4/5" />
