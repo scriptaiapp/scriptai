@@ -5,21 +5,20 @@ export const navItem = [
 ]
 
 export const footerItems = {
-  Product: [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Testimonials", href: "#" },
-    { name: "FAQ", href: "#" },
+  "Product": [
+    { name: "Features", href: "./#features" },
+    { name: "Pricing", href: "./#pricing" },
+    // { name: "Docs", href: "/docs" },
   ],
-  Company: [
-    { name: "About", href: "#" },
-    { name: "Blog", href: "#" },
-    { name: "Careers", href: "#" },
-    { name: "Contact", href: "#" },
+  "Account": [
+    { name: "Login", href: "/login" },
+    { name: "Sign Up", href: "/signup" },
+    // { name: "Forgot Password", href: "/forgot-password" },
   ],
-  Legal: [
-    { name: "Terms", href: "/privacy" },
-    { name: "Privacy", href: "/privacy" },
-    { name: "Cookies", href: "#" },
+  "Legal": [
+    { name: "Privacy Policy", href: "/privacy" },
+    // { name: "Terms of Service", href: "/terms-of-service" },
   ],
-}
+};
+
+

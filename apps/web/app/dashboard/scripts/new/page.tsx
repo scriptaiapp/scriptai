@@ -9,14 +9,17 @@ import ScriptGenerationForm, {
 } from "@/components/dashboard/scripts/ScriptGenerationForm"
 import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
+import { useScripts } from "@/hooks/use-script"
 
 export default function NewScriptPage() {
   const router = useRouter()
-  const { supabase, user, profile } = useSupabase()
-  const [loading, setLoading] = useState(false)
+  const { supabase, user, profile, profileLoading } = useSupabase()
+  const [loadingSave, setLoadingSave] = useState(false)
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [generatedScript, setGeneratedScript] = useState("")
   const [scriptTitle, setScriptTitle] = useState("")
   const [scriptId, setScriptId] = useState<string | null>(null)
+  const { fetchScripts } = useScripts()
 
   // Store the last submitted form data to allow for regeneration
   const [latestFormData, setLatestFormData] = useState<ScriptFormData | null>(
@@ -31,7 +34,7 @@ export default function NewScriptPage() {
       return
     }
 
-    setLoading(true)
+    setLoadingGenerate(true)
     setGeneratedScript("") // Clear previous script
     setLatestFormData(formData) // Save for regeneration
 
@@ -63,7 +66,7 @@ export default function NewScriptPage() {
     } catch (error: any) {
       toast.error("Error generating script", { description: error.message })
     } finally {
-      setLoading(false)
+      setLoadingGenerate(false)
     }
   }
 
@@ -86,7 +89,7 @@ export default function NewScriptPage() {
       return
     }
 
-    setLoading(true)
+    setLoadingSave(true)
 
     try {
       const { error } = await supabase
@@ -100,21 +103,21 @@ export default function NewScriptPage() {
         .eq("user_id", user?.id)
 
       if (error) throw error
+      await fetchScripts() // Refresh the scripts list after saving
 
       toast.success("Script updated!", {
         description: "Your script changes have been saved successfully.",
       })
 
       router.push(`/dashboard/scripts`)
-      router.refresh() // Ensures the scripts list is up-to-date
     } catch (error: any) {
       toast.error("Error saving script", { description: error.message })
     } finally {
-      setLoading(false)
+      setLoadingSave(false)
     }
   }
 
-  if (!profile?.ai_trained || !profile?.youtube_connected && !loading) {
+  if (!profile?.ai_trained || !profile?.youtube_connected && !profileLoading) {
     return (
       <AITrainingRequired />
     )
@@ -129,16 +132,17 @@ export default function NewScriptPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8  items-start">
         {/* The form component manages its own internal state and calls `onGenerate` when ready. */}
         <ScriptGenerationForm
-          loading={loading}
+          loading={loadingGenerate}
           onGenerate={handleGenerateScript}
         />
 
         {/* The output panel displays the results and calls back to the page for actions. */}
         <ScriptOutputPanel
-          loading={loading}
+          loading={loadingSave}
+          loadingGenerate={loadingGenerate}
           generatedScript={generatedScript}
           setGeneratedScript={setGeneratedScript}
           scriptTitle={scriptTitle}

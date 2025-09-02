@@ -99,7 +99,7 @@ export default function Scripts() {
     )
   }
 
-  const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained && scriptsLoading;
+  const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained && !scriptsLoading;
 
 
   // if (!profile?.ai_trained && !profile?.youtube_connected && !loading) {

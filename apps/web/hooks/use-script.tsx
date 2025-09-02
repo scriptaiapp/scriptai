@@ -14,6 +14,7 @@ interface ScriptsContextType {
   scripts: Script[];
   loading: boolean;
   removeScript: (id: string) => Promise<void>;
+  fetchScripts: () => Promise<void>;
 }
 
 const ScriptsContext = createContext<ScriptsContextType | undefined>(undefined);
@@ -22,35 +23,33 @@ export function ScriptsProvider({ children }: { children: ReactNode }) {
   const { user } = useSupabase();
   const [scripts, setScripts] = useState<Script[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchScripts = async () => {
+    try {
+      const response = await fetch("/api/scripts", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch scripts");
+      }
+
+      const data = await response.json();
+      setScripts(data || []);
+    } catch (error: any) {
+      toast.error("Error fetching scripts", {
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
-
-    const fetchScripts = async () => {
-      try {
-        const response = await fetch("/api/scripts", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch scripts");
-        }
-
-        const data = await response.json();
-        setScripts(data || []);
-      } catch (error: any) {
-        toast.error("Error fetching scripts", {
-          description: error.message,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchScripts();
   }, [user]);
 
@@ -75,7 +74,7 @@ export function ScriptsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ScriptsContext.Provider value={{ scripts, loading, removeScript }}>
+    <ScriptsContext.Provider value={{ scripts, loading, removeScript, fetchScripts }}>
       {children}
     </ScriptsContext.Provider>
   );

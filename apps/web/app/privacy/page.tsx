@@ -1,157 +1,229 @@
 "use client"
 
-import React from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import Lenis from 'lenis'
+import { cn } from "@/lib/utils"; // Make sure you have this utility
+import Footer from "@/components/footer";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from 'next/navigation'
+
+// Define sections for the Table of Contents
+const sections = [
+  { id: "overview", title: "1. Overview" },
+  { id: "data-collection", title: "2. Data We Collect" },
+  { id: "data-usage", title: "3. How We Use Your Data" },
+  { id: "human-access", title: "4. Human Access to Data" },
+  { id: "storage-security", title: "5. Data Storage & Security" },
+  { id: "user-responsibilities", title: "6. User Responsibilities" },
+  { id: "limited-use", title: "7. Limited Use & Consent" },
+  { id: "ai-model-usage", title: "8. AI Model Usage" },
+  { id: "google-api-disclosure", title: "9. Google API Disclosure" },
+  { id: "policy-changes", title: "10. Changes to Policy" },
+  { id: "contact", title: "11. Contact" },
+];
 
 const PrivacyAndTerms = () => {
+  const router = useRouter();
+  const [activeSection, setActiveSection] = useState<string>("overview");
+
+  // Lenis Smooth Scroll Effect with proper cleanup
   useEffect(() => {
+    const lenis = new Lenis();
 
-    const lenis = new Lenis({
-      autoRaf: true,
-    });
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
 
-    lenis.on('scroll', (e) => {
-      console.log(e);
-    });
-  }, [])
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    }
+  }, []);
+
+  // Effect for tracking active section for the ToC
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      let currentSection = "";
+
+      sections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element && element.offsetTop <= scrollPosition) {
+          currentSection = section.id;
+        }
+      });
+
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
-      <h1 className="text-3xl font-bold">Privacy Policy & Terms of Use</h1>
 
-      <Card>
-        <CardContent className="space-y-4 pt-6">
+    <div className="bg-gradient-to-b from-purple-50 to-white text-slate-800 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors font-medium mb-8 group"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          Back
+        </button>
 
-          <section>
-            <h2 className="text-xl font-semibold">1. Overview</h2>
-            <p>
-              Script AI is an AI-powered assistant that helps content creators generate high-quality
-              YouTube scripts, titles, thumbnails, and course modules. By using our service, you agree
-              to the following privacy and usage terms, which are designed to align with Google’s API Services User Data Policy.
-            </p>
-          </section>
 
-          <section>
-            <h2 className="text-xl font-semibold">2. Data We Collect</h2>
-            <p>
-              When you connect your YouTube account, we only request the minimum permissions necessary
-              to deliver Script AI’s core features. Specifically, we may access:
-            </p>
-            <ul className="list-disc ml-6 space-y-1">
-              <li>Your email address and basic profile information (via YouTube OAuth)</li>
-              <li>Channel information and video metadata (e.g., titles, descriptions, tags)</li>
-              <li>Uploaded videos or video links you provide for training purposes</li>
-              <li>Topics, scripts, and thumbnails you generate with Script AI</li>
-              <li>Basic analytics and usage metrics to improve our service</li>
-            </ul>
-            <p className="mt-2">
-              We do not request access to unnecessary data, and we will never request future access
-              to data unrelated to Script AI’s features.
-            </p>
-          </section>
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-16 text-slate-900">
+          Privacy Policy & Terms of Use
+        </h1>
 
-          <section>
-            <h2 className="text-xl font-semibold">3. How We Use Your Data</h2>
-            <p>We use your data to:</p>
-            <ul className="list-disc ml-6 space-y-1">
-              <li>Train and personalize your AI assistant experience</li>
-              <li>Improve the accuracy and quality of generated scripts</li>
-              <li>Provide research, references, and visuals relevant to your content</li>
-              <li>Maintain your account access and session control</li>
-            </ul>
-            <p className="mt-2">
-              We will not use your YouTube data for advertising, resale, credit checks, or any other
-              unauthorized purpose. Your data is never sold or transferred to third parties.
-            </p>
-          </section>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-12">
+          {/* Table of Contents - Sticky */}
+          <aside className="hidden lg:block">
+            <nav className="sticky top-24">
+              <ul className="space-y-3">
+                {sections.map(section => (
+                  <li key={section.id}>
+                    <a
+                      href={`#${section.id}`}
+                      className={cn(
+                        "block text-sm transition-colors duration-300",
+                        activeSection === section.id
+                          ? "text-purple-600 font-semibold"
+                          : "text-slate-500 hover:text-slate-900"
+                      )}
+                    >
+                      {section.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
 
-          <section>
-            <h2 className="text-xl font-semibold">4. Human Access to Data</h2>
-            <p>
-              Script AI’s systems are automated. No human at Script AI can access your YouTube data
-              unless you explicitly request support that requires it, or when required by law, security
-              investigations, or bug fixing. Otherwise, your data remains private and machine-processed only.
-            </p>
-          </section>
+          {/* Main Content */}
+          <main className="lg:col-span-3 space-y-12">
+            <PolicySection id="overview" title="1. Overview">
+              <p>
+                Script AI is an AI-powered assistant that helps content creators generate high-quality
+                YouTube scripts, titles, thumbnails, and course modules. By using our service, you agree
+                to the following privacy and usage terms.
+              </p>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">5. Data Storage & Security</h2>
-            <p>
-              Your data is encrypted in transit and at rest using industry best practices. We take
-              reasonable and appropriate measures to protect against unauthorized access, loss, or misuse.
-              You may request deletion of your data at any time by contacting support.
-            </p>
-          </section>
+            <PolicySection id="data-collection" title="2. Data We Collect">
+              <p>We may access the following to deliver core features:</p>
+              <ul className="list-disc pl-5 space-y-2 mt-4 marker:text-purple-500">
+                <li>Your email and basic YouTube profile information.</li>
+                <li>Channel and video metadata (titles, descriptions, tags).</li>
+                <li>Videos or links you provide for training.</li>
+                <li>Content you generate with Script AI.</li>
+                <li>Basic usage metrics to improve our service.</li>
+              </ul>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">6. User Responsibilities</h2>
-            <ul className="list-disc ml-6 space-y-1">
-              <li>Do not upload copyrighted content you don’t own</li>
-              <li>Do not use generated scripts to mislead or spread misinformation</li>
-              <li>Ensure your use of Script AI complies with YouTube’s and OpenAI’s terms</li>
-              <li>This app is not directed at children under 13, and should not be used by them</li>
-            </ul>
-          </section>
+            <PolicySection id="data-usage" title="3. How We Use Your Data">
+              <p>We use your data strictly to:</p>
+              <ul className="list-disc pl-5 space-y-2 mt-4 marker:text-purple-500">
+                <li>Personalize your AI assistant.</li>
+                <li>Improve the quality of generated content.</li>
+                <li>Provide relevant research and references.</li>
+                <li>Maintain your account and session.</li>
+              </ul>
+              <p className="mt-4">
+                Your data is never sold, transferred, or used for advertising.
+              </p>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">7. Limited Use & Consent</h2>
-            <p>
-              Script AI’s use of data obtained from Google APIs adheres to Google API Services User Data Policy,
-              including the Limited Use requirements. If we ever change how we use your data, we will
-              notify you and request your consent before applying the new terms.
-            </p>
-          </section>
+            <PolicySection id="human-access" title="4. Human Access to Data">
+              <p>
+                Our systems are automated. No human will access your data unless you request support, or it's required for security or legal compliance.
+              </p>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">8. AI Model Usage</h2>
-            <p>
-              Generated content is AI-assisted and should be reviewed before publishing. Script AI
-              does not guarantee the accuracy or legal compliance of generated output.
-            </p>
-          </section>
+            <PolicySection id="storage-security" title="5. Data Storage & Security">
+              <p>
+                Your data is encrypted in transit and at rest. We take all reasonable measures to protect it, and you can request data deletion at any time.
+              </p>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">9. Google API Disclosure</h2>
-            <p>
-              Script AI’s use and transfer of information received from Google APIs will adhere
-              to the{" "}
-              <a
-                href="https://developers.google.com/terms/api-services-user-data-policy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline text-blue-600"
-              >
-                Google API Services User Data Policy
-              </a>
-              , including the Limited Use requirements.
-            </p>
-          </section>
+            <PolicySection id="user-responsibilities" title="6. User Responsibilities">
+              <ul className="list-disc pl-5 space-y-2 marker:text-purple-500">
+                <li>Do not upload copyrighted content you don’t own.</li>
+                <li>Do not use our service to spread misinformation.</li>
+                <li>Comply with YouTube’s and OpenAI’s terms of service.</li>
+                <li>Our service is not for children under 13.</li>
+              </ul>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">10. Changes to Policy</h2>
-            <p>
-              We may update this privacy policy and terms of service as the product evolves.
-              We will notify you of major changes via email or in-app notifications and
-              request your consent when required.
-            </p>
-          </section>
+            <PolicySection id="limited-use" title="7. Limited Use & Consent">
+              <p>
+                Script AI’s use of data from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.
+              </p>
+            </PolicySection>
 
-          <section>
-            <h2 className="text-xl font-semibold">11. Contact</h2>
-            <p>
-              For questions, concerns, or data requests, please reach out to us at{" "}
-              <a href="mailto:support@tryscriptai.com" className="underline text-blue-600">
-                support@tryscriptai.com
-              </a>.
-            </p>
-          </section>
+            <PolicySection id="ai-model-usage" title="8. AI Model Usage">
+              <p>
+                AI-generated content should always be reviewed before publishing. We do not guarantee the accuracy of any output.
+              </p>
+            </PolicySection>
 
-        </CardContent>
-      </Card>
+            <PolicySection id="google-api-disclosure" title="9. Google API Disclosure">
+              <p>
+                Script AI’s use and transfer of information received from Google APIs will adhere to the{" "}
+                <PolicyLink href="https://developers.google.com/terms/api-services-user-data-policy">
+                  Google API Services User Data Policy
+                </PolicyLink>, including the Limited Use requirements.
+              </p>
+            </PolicySection>
+
+            <PolicySection id="policy-changes" title="10. Changes to Policy">
+              <p>
+                We may update this policy as our service evolves. Major changes will be communicated via email or in-app notifications.
+              </p>
+            </PolicySection>
+
+            <PolicySection id="contact" title="11. Contact">
+              <p>
+                For questions or data requests, please contact us at{" "}
+                <PolicyLink href="mailto:support@tryscriptai.com">
+                  support@tryscriptai.com
+                </PolicyLink>.
+              </p>
+            </PolicySection>
+          </main>
+        </div>
+      </div>
+      <Footer />
     </div>
   )
 }
 
-export default PrivacyAndTerms
+// Helper component for consistent section styling
+const PolicySection = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => (
+  <section id={id} className="scroll-mt-20">
+    <h2 className="text-2xl font-bold text-slate-900 mb-4">{title}</h2>
+    <div className="text-slate-600 leading-relaxed space-y-4">
+      {children}
+    </div>
+  </section>
+);
+
+// Helper component for consistent link styling
+const PolicyLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-medium text-purple-600 hover:text-purple-800 underline underline-offset-4 transition-colors"
+  >
+    {children}
+  </a>
+);
+
+export default PrivacyAndTerms;
