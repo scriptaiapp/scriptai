@@ -19,6 +19,7 @@
       ]
     },
     "lint": {},
+    "type-check": {},
     "test": {},
     "test:e2e": {}
   }

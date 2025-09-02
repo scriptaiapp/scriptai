@@ -2,6 +2,7 @@
   "name": "scriptai",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "",
   "author": "",
   "license": "UNLICENSED",
@@ -15,12 +16,15 @@
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
     "@repo/config": "workspace:*",
      "@repo/typescript-config": "workspace:*",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5"
   },
