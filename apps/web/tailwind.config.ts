@@ -250,9 +250,16 @@ const config: Config = {
           		"0%": { backgroundPosition: "-200% 0" },
           		"100%": { backgroundPosition: "200% 0" },
         	},
+			'slow-pan': {
+          		'0%': { transform: 'scale(1.05) translate(-2%, 2%)' },
+          		'100%': { transform: 'scale(1.05) translate(2%, -2%)' },
+        	},
+        	'twinkle': {
+          		'0%, 100%': { opacity: '0.5' },
+          		'50%': { opacity: '1' },
+        	},
 
-		
-  		},
+		},
   		animation: {
 			'wobble': 'wobble 0.8s infinite',
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -276,7 +283,9 @@ const config: Config = {
 			'mic-fill': 'mic-fill 1.5s infinite ease-in-out',
 			'logo-flow': 'logo-flow 1.5s infinite ease-in-out',
 			'glitch': 'glitch 1.5s linear infinite',
-			shimmer: "shimmer 2s linear infinite",
+			'shimmer': 'shimmer 2s linear infinite',
+			'slow-pan': 'slow-pan 25s ease-in-out infinite alternate',
+        	'twinkle': 'twinkle 4s ease-in-out infinite',
 			
   		}
   	}
