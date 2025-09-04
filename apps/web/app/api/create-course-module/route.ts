@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
+import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
@@ -83,14 +82,13 @@ export async function POST(req: Request) {
         ]
       }
     `
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
 
-    // Create OpenAI model - the API key is automatically read from process.env.OPENAI_API_KEY
-    const model = openai("gpt-4o")
+    const courseModuleJson: any = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt || '',
+    });
 
-    const { text: courseModuleJson } = await generateText({
-      model,
-      prompt,
-    })
 
     // Parse the JSON response
     let courseModule

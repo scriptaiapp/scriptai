@@ -48,9 +48,62 @@ function SignupForm() {
   const totalSteps = 2;
   const progress = (step / totalSteps) * 100;
 
+  const trackReferral = async (userEmail: string | undefined) => {
+    if (referralCode && userEmail) {
+      try {
+        const response = await fetch("/api/track-referral", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            referralCode,
+            userEmail
+          }),
+        });
+
+        if (response.ok) {
+          toast.success("Referral tracked!", {
+            description: "You've been referred to Script AI! Welcome!",
+          });
+          setShowReferralBanner(false);
+        }
+      } catch (err) {
+        console.error("Error tracking referral:", err);
+      }
+    }
+  };
+
+  // useEffect(() => {
+  //   const trackReferral = async () => {
+  //     if (referralCode && user?.email) {
+  //       console.log("inside useEffect")
+  //       try {
+  //         const response = await fetch("/api/track-referral", {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({
+  //             referralCode,
+  //             userEmail: user.email,
+  //           }),
+  //         });
+
+  //         if (response.ok) {
+  //           toast.success("Referral tracked!", {
+  //             description: "You've been referred to Script AI! Welcome!",
+  //           });
+  //           setShowReferralBanner(false);
+  //         }
+  //       } catch (err) {
+  //         console.error("Error tracking referral:", err);
+  //       }
+  //     }
+  //   };
+
+  //   trackReferral();
+  // }, [user, referralCode]);
+
   useEffect(() => {
     if (user) {
-      router.replace("/dashboard");
+      router.push("/dashboard");
     }
   }, [user, router]);
 
@@ -102,8 +155,8 @@ function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-
     setLoading(true);
+
     try {
       registerUserSchema.parse(details);
 
@@ -120,31 +173,8 @@ function SignupForm() {
       if (error) throw new Error(error.message);
 
       if (data.user) {
-        // Track referral if referral code exists
-        if (referralCode && details.email) {
-          try {
-            const response = await fetch("/api/track-referral", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                referralCode,
-                userEmail: details.email,
-              }),
-            });
-
-            if (response.ok) {
-              toast.success("Referral tracked!", {
-                description: "You've been referred to Script AI! Welcome!",
-              });
-            }
-          } catch (referralError) {
-            console.error("Error tracking referral:", referralError);
-          }
-        }
-
         toast.success("Account created!", { description: "Please check your email to verify your account." });
+        trackReferral(data?.user?.email);
         router.push("/login");
       }
     } catch (error: any) {
@@ -167,6 +197,7 @@ function SignupForm() {
     }
   };
 
+
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
@@ -180,12 +211,10 @@ function SignupForm() {
 
       if (error) throw error;
 
-      // After successful OAuth, the callback will handle the user session
       if (data.url) {
-        window.location.href = data.url; // Redirect to Google OAuth
+        console.log(data);
+        // window.location.href = data.url;
       }
-
-      // Note: Profile update is handled in the auth callback
     } catch (error: any) {
       toast.error("Google Signup Failed", {
         description: error.message || "Could not sign up with Google. Please try again.",
@@ -194,6 +223,7 @@ function SignupForm() {
       setLoading(false);
     }
   };
+
 
   const stepVariants = {
     hidden: { opacity: 0, x: 50 },
@@ -236,7 +266,7 @@ function SignupForm() {
               {showReferralBanner && referralCode && (
                 <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
                   <p className="text-sm text-center text-purple-700 dark:text-purple-300">
-                    🎉 You've been invited by a friend! Referral code: <span className="font-mono font-bold">{referralCode}</span>
+                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 5 credits.
                   </p>
                 </div>
               )}

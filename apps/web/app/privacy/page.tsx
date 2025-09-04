@@ -16,10 +16,12 @@ const sections = [
   { id: "storage-security", title: "5. Data Storage & Security" },
   { id: "user-responsibilities", title: "6. User Responsibilities" },
   { id: "limited-use", title: "7. Limited Use & Consent" },
-  { id: "ai-model-usage", title: "8. AI Model Usage" },
-  { id: "google-api-disclosure", title: "9. Google API Disclosure" },
-  { id: "policy-changes", title: "10. Changes to Policy" },
-  { id: "contact", title: "11. Contact" },
+  { id: "third-party-ai", title: "8. Third-Party AI/ML Integrations" },
+  { id: "ai-model-usage", title: "9. AI Model Usage" },
+  { id: "google-api-disclosure", title: "10. Google API Disclosure" },
+  { id: "user-rights", title: "11. User Rights & Controls" },
+  { id: "policy-changes", title: "12. Changes to Policy" },
+  { id: "contact", title: "13. Contact" },
 ];
 
 const PrivacyAndTerms = () => {
@@ -64,19 +66,16 @@ const PrivacyAndTerms = () => {
     };
   }, []);
 
-
   return (
-
     <div className="bg-gradient-to-b from-purple-50 to-white text-slate-800 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
           className="inline-flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors font-medium mb-8 group"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back
         </button>
-
 
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-16 text-slate-900">
           Privacy Policy & Terms of Use
@@ -156,39 +155,65 @@ const PrivacyAndTerms = () => {
               <ul className="list-disc pl-5 space-y-2 marker:text-purple-500">
                 <li>Do not upload copyrighted content you don’t own.</li>
                 <li>Do not use our service to spread misinformation.</li>
-                <li>Comply with YouTube’s and OpenAI’s terms of service.</li>
                 <li>Our service is not for children under 13.</li>
               </ul>
             </PolicySection>
 
             <PolicySection id="limited-use" title="7. Limited Use & Consent">
               <p>
-                Script AI’s use of data from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.
+                We affirm that the use and transfer of raw or derived user data received from Google Workspace APIs strictly adhere to the Google User Data Policy, including the Limited Use requirements.
+              </p>
+              <p>
+                We do not use this data to train or improve generalized AI or machine learning models beyond the personalized user's context.
               </p>
             </PolicySection>
 
-            <PolicySection id="ai-model-usage" title="8. AI Model Usage">
+            <PolicySection id="third-party-ai" title="8. Third-Party AI/ML Integrations">
+              <p>
+                We do not share user data obtained from Google APIs with any third-party AI/ML services for generalized training or model improvement.
+              </p>
+              <p>
+                Any AI/ML processing by third parties occurs only with your explicit consent and solely for your personalized use case.
+              </p>
+              <p>
+                Our app does not currently feature integrations that use user data to train generalized AI or machine learning models.
+              </p>
+            </PolicySection>
+
+            <PolicySection id="ai-model-usage" title="9. AI Model Usage">
               <p>
                 AI-generated content should always be reviewed before publishing. We do not guarantee the accuracy of any output.
               </p>
             </PolicySection>
 
-            <PolicySection id="google-api-disclosure" title="9. Google API Disclosure">
+            <PolicySection id="google-api-disclosure" title="10. Google API Disclosure">
               <p>
                 Script AI’s use and transfer of information received from Google APIs will adhere to the{" "}
                 <PolicyLink href="https://developers.google.com/terms/api-services-user-data-policy">
                   Google API Services User Data Policy
                 </PolicyLink>, including the Limited Use requirements.
               </p>
+              <p>
+                We request only the minimum necessary scopes required for app functionality.
+              </p>
             </PolicySection>
 
-            <PolicySection id="policy-changes" title="10. Changes to Policy">
+            <PolicySection id="user-rights" title="11. User Rights & Controls">
+              <p>
+                You can revoke access to your Google account at any time through your Google Account settings.
+              </p>
+              <p>
+                You may request deletion of your data by contacting us at the email below; we will promptly process such requests in compliance with applicable policies.
+              </p>
+            </PolicySection>
+
+            <PolicySection id="policy-changes" title="12. Changes to Policy">
               <p>
                 We may update this policy as our service evolves. Major changes will be communicated via email or in-app notifications.
               </p>
             </PolicySection>
 
-            <PolicySection id="contact" title="11. Contact">
+            <PolicySection id="contact" title="13. Contact">
               <p>
                 For questions or data requests, please contact us at{" "}
                 <PolicyLink href="mailto:support@tryscriptai.com">
