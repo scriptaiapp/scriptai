@@ -6,7 +6,7 @@ export async function POST(request: Request) {
 
   try {
     const { referralCode, userEmail } = await request.json();
-    
+
     // This API can be called during signup, so we don't require authentication
     // The user might not be logged in yet when this is called
 
@@ -14,20 +14,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    // Debug: Check what the API can see in the database
-    console.log('🔍 API Debug: Checking database connection...');
-    
     const { data: allProfiles, error: debugError } = await supabase
       .from('profiles')
       .select('email, referral_code')
       .limit(5);
-    
+
     console.log('🔍 API Debug: First 5 profiles:', allProfiles);
     console.log('🔍 API Debug: Debug error:', debugError);
 
     // Find referrer by referral code
     console.log('🔍 Looking for referral code:', referralCode);
-    
+
     const { data: referrer, error: referrerError } = await supabase
       .from('profiles')
       .select('id, user_id, referral_code, total_referrals')
@@ -44,7 +41,7 @@ export async function POST(request: Request) {
 
     // Find referred user by email - they might not have a profile yet (during signup)
     let referredUserId = null;
-    
+
     // First try to find existing profile
     const { data: referredUser, error: userError } = await supabase
       .from('profiles')

@@ -155,7 +155,6 @@ const PrivacyAndTerms = () => {
               <ul className="list-disc pl-5 space-y-2 marker:text-purple-500">
                 <li>Do not upload copyrighted content you don’t own.</li>
                 <li>Do not use our service to spread misinformation.</li>
-                <li>Comply with YouTube’s and OpenAI’s terms of service.</li>
                 <li>Our service is not for children under 13.</li>
               </ul>
             </PolicySection>
