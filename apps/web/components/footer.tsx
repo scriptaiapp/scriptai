@@ -2,16 +2,17 @@ import React from 'react';
 import Image from "next/image";
 import Link from 'next/link';
 import logo from "@/public/dark-logo.png";
-import { Github, Instagram, Linkedin, Twitter, Facebook } from 'lucide-react';
+import { IconBrandDiscordFilled as Discord, IconBrandInstagram as Instagram, IconBrandLinkedin as Linkedin, IconBrandX as Twitter, IconBrandGithub as Github, IconBrandFacebook as Facebook } from '@tabler/icons-react';
 import { footerItems } from '@repo/ui';
 import { Dock, DockIcon } from './magicui/Dock';
 
 
 const socialLinks = [
   { name: 'Twitter', href: 'https://twitter.com/your-profile', icon: Twitter },
-  { name: 'Instagram', href: 'https://instagram.com/your-profile', icon: Instagram },
+  { name: 'Discord', href: 'https://discord.gg/k9sZcq2gNG', icon: Discord },
+  { name: 'GitHub', href: 'https://github.com/scriptaiapp/scriptai', icon: Github },
   { name: 'LinkedIn', href: 'https://linkedin.com/in/your-profile', icon: Linkedin },
-  { name: 'GitHub', href: 'https://github.com/your-profile', icon: Github },
+  { name: 'Instagram', href: 'https://instagram.com/your-profile', icon: Instagram },
   { name: 'Facebook', href: 'https://facebook.com/your-profile', icon: Facebook },
 ];
 
@@ -39,6 +40,7 @@ const Footer = () => {
               <Link
                 key={item.name}
                 href={item.href}
+                target='_blank'
                 className="text-sm text-slate-600 dark:text-slate-400 dark:hover:text-slate-100 transition-colors hover:text-purple-500"
               >
                 {item.name}

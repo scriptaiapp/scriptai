@@ -20,13 +20,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@repo/config": "workspace:*",
-     "@repo/typescript-config": "workspace:*",
     "@eslint/js": "^9.0.0",
+    "@repo/config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
     "prettier": "^3.6.2",
-    "turbo": "^2.5.5"
+    "turbo": "^2.5.6"
   },
   "packageManager": "pnpm@8.15.5",
   "engines": {

@@ -23,15 +23,17 @@ export const AcernityTabs = ({
     tabClassName?: string;
     contentClassName?: string;
 }) => {
-    const [active, setActive] = useState<Tab>(propTabs[0]);
+    const [active, setActive] = useState<Tab>(propTabs[0] ?? { title: "", value: "", content: "" });
     const [tabs, setTabs] = useState<Tab[]>(propTabs);
 
     const moveSelectedTabToTop = (idx: number) => {
         const newTabs = [...propTabs];
         const selectedTab = newTabs.splice(idx, 1);
-        newTabs.unshift(selectedTab[0]);
-        setTabs(newTabs);
-        setActive(newTabs[0]);
+        if (selectedTab[0]) {
+            newTabs.unshift(selectedTab[0]);
+            setTabs(newTabs);
+            setActive(newTabs[0] ?? { title: "", value: "", content: "" });
+        }
     };
 
     const [hovering, setHovering] = useState(false);
@@ -97,7 +99,7 @@ export const FadeInDiv = ({
     hovering?: boolean;
 }) => {
     const isActive = (tab: Tab) => {
-        return tab.value === tabs[0].value;
+        return tab.value === tabs[0]?.value;
     };
     return (
         <div className="relative w-full h-full">
