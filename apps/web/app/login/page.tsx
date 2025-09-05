@@ -147,7 +147,7 @@ export default function LoginPage() {
               <Image src={logo} alt="Script AI" width={80} height={80} className="mb-4" />
             </Link>
             <h1 className="text-4xl lg:text-5xl font-bold text-slate-900">
-              The Future of Intelligent Scripting is Here.
+              The Future of Content Creation is Here.
             </h1>
             <p className="max-w-md text-lg text-slate-600">
               Building the next generation of automated solutions. Sign in to be part of the journey.

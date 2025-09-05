@@ -10,7 +10,7 @@ export const schema = {
       user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
       name TEXT,
       email TEXT,
-      credits INTEGER DEFAULT 3,
+      credits INTEGER DEFAULT 10,
       ai_trained BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

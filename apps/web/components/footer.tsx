@@ -40,7 +40,6 @@ const Footer = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                target='_blank'
                 className="text-sm text-slate-600 dark:text-slate-400 dark:hover:text-slate-100 transition-colors hover:text-purple-500"
               >
                 {item.name}
