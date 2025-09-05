@@ -246,7 +246,7 @@ function SignupForm() {
             <Image src={logo} alt="Script AI" width={80} height={80} className="mb-4" />
           </Link>
           <h1 className="text-4xl lg:text-5xl font-bold text-slate-900">Start Building Smarter, Faster.</h1>
-          <p className="max-w-md text-lg text-slate-600">Join the revolution in automated scripting. Create your free account to get started.</p>
+          <p className="max-w-md text-lg text-slate-600">Join the revolution in automated content creation. Create your free account to get started.</p>
         </motion.div>
 
         <motion.div

@@ -2,7 +2,7 @@
 
 > **Transform your YouTube content creation with AI that learns your style and voice.** ScriptAI is a personalized AI assistant that helps YouTubers generate scripts, thumbnails, subtitles, and more - all tailored to their unique content style and audience.
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/f6AG7kt7)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?style=for-the-badge&logo=discord)](https://discord.com/invite/k9sZcq2gNG)
 [![GitHub Stars](https://img.shields.io/github/stars/scriptaiapp/scriptai?style=for-the-badge)](https://github.com/scriptaiapp/scriptai/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -169,7 +169,7 @@ See our [Contributing Guide](./CONTRIBUTING.md) for detailed information about o
 
 ## 🌟 Community
 
-- **Discord** - [Join our community](https://discord.gg/f6AG7kt7)
+- **Discord** - [Join our community](https://discord.com/invite/k9sZcq2gNG)
 - **Twitter/X** - [@ScriptAI](https://twitter.com/ScriptAI)
 - **GitHub** - [Star us on GitHub](https://github.com/scriptaiapp/scriptai)
 - **Issues** - [Report bugs or request features](https://github.com/scriptaiapp/scriptai/issues)
@@ -177,14 +177,6 @@ See our [Contributing Guide](./CONTRIBUTING.md) for detailed information about o
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-Thanks to all our contributors who help make ScriptAI better every day!
-
----
-
-**Made with ❤️ by the ScriptAI community**
 
 ---
 
