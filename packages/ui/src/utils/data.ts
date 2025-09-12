@@ -8,6 +8,7 @@ export const footerItems = {
   "Product": [
     { name: "Features", href: "./#features" },
     { name: "Pricing", href: "./#pricing" },
+    { name: "Book a Call", href: "https://cal.com/afrin/30min" },
     // { name: "Docs", href: "/docs" },
   ],
   "Account": [
