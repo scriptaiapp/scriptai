@@ -26,7 +26,6 @@ const LandingPageSVG = dynamic(
 )
 
 export default function Home() {
-  const [isEarlyAccessModalOpen, setIsEarlyAccessModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -68,12 +67,9 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <LandingPageNavbar
-        isEarlyAccessModalOpen={isEarlyAccessModalOpen}
-        setIsEarlyAccessModalOpen={setIsEarlyAccessModalOpen}
-      />
+      <LandingPageNavbar />
       <main className="flex-1">
-        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden pt-12 md:pt-0">
           <div aria-hidden="true" className="absolute inset-0 -z-0">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-purple-100/40 rounded-full blur-3xl" />
             <SparklesCore
@@ -103,12 +99,13 @@ export default function Home() {
 
               <motion.h1
                 variants={itemVariants}
-                className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight"
+                className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight"
               >
-                Script AI: Your AI<br />
+                Personalized
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-                  Content Assistant
+                  {" "} Creator Tool {" "}
                 </span>
+                for Youtubers
               </motion.h1>
 
               <motion.div

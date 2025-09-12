@@ -16,12 +16,8 @@ import {
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar"
 import { ShimmerButton } from "@/components/magicui/shimmer-button"
-import EarlyAccessModal from "./EarlyAccessModal"
+import { useRouter } from "next/navigation"
 
-interface LandingPageNavbarProps {
-  isEarlyAccessModalOpen: boolean
-  setIsEarlyAccessModalOpen: (open: boolean) => void
-}
 
 const Logo = () => (
   <Link
@@ -32,8 +28,9 @@ const Logo = () => (
   </Link>
 )
 
-const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModalOpen, setIsEarlyAccessModalOpen }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+const LandingPageNavbar = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="relative w-full">
@@ -48,15 +45,10 @@ const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModa
           </Link>
           <NavItems items={navItem} />
           <div className="flex items-center gap-4">
-            <ShimmerButton className="text-sm h-9" onClick={() => setIsEarlyAccessModalOpen(!isEarlyAccessModalOpen)}>
-              Get Early Access
+            <ShimmerButton className="text-sm h-9" onClick={() => router.push("https://cal.com/afrin/30min")}>
+              Book a Demo
             </ShimmerButton>
           </div>
-          {/* <Link href={"/login"} className="flex items-center gap-4">
-            <ShimmerButton className="text-sm h-9">
-              Get Started
-            </ShimmerButton>
-          </Link> */}
         </NavBody>
 
         <MobileNav>
@@ -84,22 +76,18 @@ const LandingPageNavbar: React.FC<LandingPageNavbarProps> = ({ isEarlyAccessModa
             ))}
             <div className="flex flex-col gap-4 mt-4">
               <NavbarButton
-                onClick={() => setIsMobileMenuOpen(false)}
                 variant="secondary"
                 className="w-full"
               >
-                <ShimmerButton className="w-full" onClick={() => setIsEarlyAccessModalOpen(!isEarlyAccessModalOpen)}>Get Early Access</ShimmerButton>
+                <ShimmerButton className="text-sm h-9" onClick={() => router.push("https://cal.com/afrin/30min")}>
+                  Book a Demo
+                </ShimmerButton>
               </NavbarButton>
             </div>
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
 
-
-      <EarlyAccessModal
-        isOpen={isEarlyAccessModalOpen}
-        onOpenChange={setIsEarlyAccessModalOpen}
-      />
     </div>
   )
 }
