@@ -19,7 +19,7 @@ export default function CTASection() {
                     <Link href="/signup">
                         <MButton
                             size="lg"
-                            className="bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:brightness-110 text-white shadow-md transition-all"
+                            className="bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:brightness-110 text-white shadow-md transition-all w-40 h-12"
                         >
                             Get Started Free
                             <ArrowRight className="ml-2 h-4 w-4" />

@@ -46,7 +46,7 @@ const LandingPageNavbar = () => {
           <NavItems items={navItem} />
           <div className="flex items-center gap-4">
             <ShimmerButton className="text-sm h-9" onClick={() => router.push("https://cal.com/afrin/30min")}>
-              Book a Demo
+              Book a Call
             </ShimmerButton>
           </div>
         </NavBody>
@@ -80,7 +80,7 @@ const LandingPageNavbar = () => {
                 className="w-full"
               >
                 <ShimmerButton className="text-sm h-9" onClick={() => router.push("https://cal.com/afrin/30min")}>
-                  Book a Demo
+                  Book a Call
                 </ShimmerButton>
               </NavbarButton>
             </div>

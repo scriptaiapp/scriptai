@@ -1,6 +1,5 @@
 "use client"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
@@ -15,9 +14,16 @@ import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
+import { ShinyButton } from "@/components/magicui/shiny-button"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 // DYNAMIC IMPORT
 const LandingPageSVG = dynamic(
@@ -26,10 +32,7 @@ const LandingPageSVG = dynamic(
 )
 
 export default function Home() {
-
-
   useEffect(() => {
-
     const lenis = new Lenis({
       autoRaf: true,
     });
@@ -120,17 +123,27 @@ export default function Home() {
                 className="mt-6 flex flex-col sm:flex-row items-center gap-4"
               >
                 <Link href="/signup">
-
                   <MButton
-                    size="lg"
-                    className="bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                    className="bg-zinc-900 text-white hover:bg-zinc-800 shadow-md"
                     borderClassName="border border-purple-500/60"
                   >
-                    Get Started Free
+                    Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </MButton>
                 </Link>
-                <Button variant="outline">See How It Works</Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <ShinyButton>Watch Demo</ShinyButton>
+                  </DialogTrigger>
+                  <DialogContent className="p-0 border-none max-w-[90vw] md:max-w-4xl bg-transparent shadow-none object-cover">
+                    <DialogTitle></DialogTitle>
+                    <iframe
+                      src="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview"
+                      className="rounded-lg overflow-hidden w-full max-w-full aspect-video"
+                      allow="autoplay"
+                    ></iframe>
+                  </DialogContent>
+                </Dialog>
               </motion.div>
 
               <motion.p
