@@ -1,6 +1,5 @@
 "use client"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
@@ -15,9 +14,16 @@ import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
+import { ShinyButton } from "@/components/magicui/shiny-button"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 // DYNAMIC IMPORT
 const LandingPageSVG = dynamic(
@@ -26,11 +32,7 @@ const LandingPageSVG = dynamic(
 )
 
 export default function Home() {
-  const [isEarlyAccessModalOpen, setIsEarlyAccessModalOpen] = useState(false);
-
-
   useEffect(() => {
-
     const lenis = new Lenis({
       autoRaf: true,
     });
@@ -68,12 +70,9 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <LandingPageNavbar
-        isEarlyAccessModalOpen={isEarlyAccessModalOpen}
-        setIsEarlyAccessModalOpen={setIsEarlyAccessModalOpen}
-      />
+      <LandingPageNavbar />
       <main className="flex-1">
-        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden pt-12 md:pt-0">
           <div aria-hidden="true" className="absolute inset-0 -z-0">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-purple-100/40 rounded-full blur-3xl" />
             <SparklesCore
@@ -103,12 +102,13 @@ export default function Home() {
 
               <motion.h1
                 variants={itemVariants}
-                className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight"
+                className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight"
               >
-                Script AI: Your AI<br />
+                Personalized
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-                  Content Assistant
+                  {" "} Creator Tool {" "}
                 </span>
+                for Youtubers
               </motion.h1>
 
               <motion.div
@@ -123,17 +123,27 @@ export default function Home() {
                 className="mt-6 flex flex-col sm:flex-row items-center gap-4"
               >
                 <Link href="/signup">
-
                   <MButton
-                    size="lg"
-                    className="bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                    className="bg-zinc-900 text-white hover:bg-zinc-800 shadow-md"
                     borderClassName="border border-purple-500/60"
                   >
-                    Get Started Free
+                    Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </MButton>
                 </Link>
-                <Button variant="outline">See How It Works</Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <ShinyButton>Watch Demo</ShinyButton>
+                  </DialogTrigger>
+                  <DialogContent className="p-0 border-none max-w-[90vw] md:max-w-4xl bg-transparent shadow-none object-cover">
+                    <DialogTitle></DialogTitle>
+                    <iframe
+                      src="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview"
+                      className="rounded-lg overflow-hidden w-full max-w-full aspect-video"
+                      allow="autoplay"
+                    ></iframe>
+                  </DialogContent>
+                </Dialog>
               </motion.div>
 
               <motion.p

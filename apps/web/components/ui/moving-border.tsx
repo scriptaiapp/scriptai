@@ -32,7 +32,7 @@ export function MButton({
     return (
         <Component
             className={cn(
-                "relative h-11 w-40 overflow-hidden bg-transparent p-[1px] text-xl",
+                "relative h-10 w-36 overflow-hidden bg-transparent p-[1px] text-xl",
                 containerClassName,
             )}
             style={{
