@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SupabaseProvider } from "@/components/supabase-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -29,6 +30,7 @@ export default function RootLayout({
             <Toaster closeButton />
           </SupabaseProvider>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
