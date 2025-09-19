@@ -1,36 +1,39 @@
 import { createClient } from '@/lib/supabase/server';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
-
-  const url = new URL(request.url);
-  const code = url.searchParams.get('code');
-
-  if (!code) {
-    return NextResponse.json({ error: 'No code provided' }, { status: 400 });
-  }
+  const redirectUrl = new URL('/dashboard', request.url);
 
   try {
-    // Exchange code for session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const url = new URL(request.url);
+    const code = url.searchParams.get('code');
 
-    if (error) {
-      console.error('Error exchanging code:', error);
-      return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
+    if (!code) {
+      redirectUrl.searchParams.set('error', 'missing_code');
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Exchange code for session
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (exchangeError || !data?.session) {
+      console.error('Supabase auth error:', exchangeError);
+      redirectUrl.searchParams.set('error', 'auth_failed');
+      return NextResponse.redirect(redirectUrl);
     }
 
     const { provider_token, refresh_token, user } = data.session;
-
     if (!provider_token) {
-      return NextResponse.json({ error: 'No provider token received' }, { status: 400 });
+      redirectUrl.searchParams.set('error', 'no_provider_token');
+      return NextResponse.redirect(redirectUrl);
     }
 
     // Fetch YouTube channel data
-    const channelResponse = await axios.get(
-      'https://www.googleapis.com/youtube/v3/channels',
-      {
+    let channelResponse;
+    try {
+      channelResponse = await axios.get('https://www.googleapis.com/youtube/v3/channels', {
         params: {
           part: 'id,snippet,statistics,contentDetails,topicDetails,status,brandingSettings',
           mine: true,
@@ -38,17 +41,22 @@ export async function GET(request: Request) {
         headers: {
           Authorization: `Bearer ${provider_token}`,
         },
-      }
-    );
+      });
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      console.error('YouTube API error:', axiosError.response?.data || axiosError.message);
 
-    const channelData = channelResponse.data.items[0];
+      redirectUrl.searchParams.set('error', 'youtube_fetch_failed');
+      return NextResponse.redirect(redirectUrl);
+    }
 
-    // Select highest-resolution thumbnail (high > medium > default)
-    const thumbnail = channelData.snippet.thumbnails.high?.url ||
-      channelData.snippet.thumbnails.medium?.url ||
-      channelData.snippet.thumbnails.default?.url;
+    const channelData = channelResponse.data.items?.[0];
+    if (!channelData) {
+      redirectUrl.searchParams.set('error', 'no_channel_data');
+      return NextResponse.redirect(redirectUrl);
+    }
 
-    // Prepare channel details for storage
+    // Save to DB
     const channelDetails = {
       user_id: user.id,
       channel_id: channelData.id,
@@ -59,7 +67,10 @@ export async function GET(request: Request) {
       custom_url: channelData.snippet.customUrl,
       published_at: channelData.snippet.publishedAt,
       country: channelData.snippet.country,
-      thumbnail,
+      thumbnail:
+        channelData.snippet.thumbnails.high?.url ||
+        channelData.snippet.thumbnails.medium?.url ||
+        channelData.snippet.thumbnails.default?.url,
       default_language: channelData.snippet.defaultLanguage,
       view_count: parseInt(channelData.statistics.viewCount, 10),
       subscriber_count: parseInt(channelData.statistics.subscriberCount, 10),
@@ -71,35 +82,32 @@ export async function GET(request: Request) {
       updated_at: new Date().toISOString(),
     };
 
-
-    // Save channel details to youtube_channels table
     const { error: channelError } = await supabase
       .from('youtube_channels')
-      .upsert(channelDetails, {
-    onConflict: "user_id, channel_id",
-  });
+      .upsert(channelDetails, { onConflict: 'user_id, channel_id' });
 
     if (channelError) {
-      console.log(channelDetails)
-      console.error('Error saving to youtube_channels:', channelError);
-      return NextResponse.json({ error: 'Failed to save channel data' }, { status: 500 });
+      console.error('Error saving channel data:', channelError);
+      redirectUrl.searchParams.set('error', 'save_failed');
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Update profiles table to set youtube_connected to true
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ youtube_connected: true })
       .eq('user_id', user.id);
 
     if (profileError) {
-      console.error('Error updating profiles:', profileError);
-      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+      console.error('Error updating profile:', profileError);
+      redirectUrl.searchParams.set('error', 'profile_update_failed');
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Redirect to dashboard
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  } catch (error) {
-    console.error('Error in YouTube callback:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // ✅ Success → Dashboard
+    return NextResponse.redirect(redirectUrl);
+  } catch (err) {
+    console.error('Unexpected error in YouTube callback:', err);
+    redirectUrl.searchParams.set('error', 'unexpected');
+    return NextResponse.redirect(redirectUrl);
   }
 }
