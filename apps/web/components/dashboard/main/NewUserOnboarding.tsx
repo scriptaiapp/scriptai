@@ -8,6 +8,9 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowRight, Check, PenTool, Search, Unlink } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface NewUserOnboardingProps {
     profile: {
@@ -30,6 +33,19 @@ export function NewUserOnboarding({
     const isYoutubeConnected = profile?.youtube_connected === true;
     const isAiTrained = profile?.ai_trained === true;
     const progressValue = isYoutubeConnected ? (isAiTrained ? 100 : 50) : 0;
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const error = searchParams.get("error");
+        if (error) {
+            toast.error(
+                <>
+                    <div className="font-semibold text-red-600">Oops! We couldn’t connect your YouTube channel. Please try again.</div>
+                </>,
+                { className: "bg-red-50 border-red-600 text-red-900" }
+            );
+        }
+    }, [searchParams]);
 
     const containerVariants = {
         hidden: { opacity: 0 },

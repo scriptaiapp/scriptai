@@ -32,15 +32,12 @@ const LandingPageSVG = dynamic(
 )
 
 export default function Home() {
-  useEffect(() => {
-    const lenis = new Lenis({
-      autoRaf: true,
-    });
 
-    lenis.on('scroll', (e) => {
-      // console.log(e);
-    });
-  }, [])
+  useEffect(() => {
+    const lenis = new Lenis({ autoRaf: true });
+
+    return () => lenis.destroy();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
