@@ -2,7 +2,6 @@
 
 import { motion } from "motion/react"
 import { SuccessDialog } from "@/components/success-dialog"
-import { YoutubePermissionDialog } from "@/components/YoutubePermissionDialog"
 import { PenTool, Search, Volume2 } from "lucide-react"
 
 import { useAITraining } from "@/hooks/useAITraining"
@@ -20,10 +19,7 @@ export default function TrainAIPage() {
     uploading,
     showModal,
     isConnectingYoutube,
-    permissionDialogOpen,
-    youtubeAccessRequested,
     setShowModal,
-    setPermissionDialogOpen,
     handleAddVideoUrl,
     handleRemoveVideoUrl,
     handleVideoUrlChange,
@@ -41,7 +37,6 @@ export default function TrainAIPage() {
   if (!profile) {
     return <TrainAIPageSkeleton />;
   }
-
 
   return (
     <div className="container py-8 h-full">
@@ -83,11 +78,6 @@ export default function TrainAIPage() {
         title="AI Training Complete!"
         description="Your AI has been successfully trained..."
         nextSteps={nextSteps}
-      />
-      <YoutubePermissionDialog
-        open={permissionDialogOpen}
-        onClose={() => setPermissionDialogOpen(false)}
-        isRequested={youtubeAccessRequested}
       />
     </div>
   );

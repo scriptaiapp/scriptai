@@ -1,10 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
-import { Script } from "@repo/validation"
-import { YoutubePermissionDialog } from "@/components/YoutubePermissionDialog"
 import { NewUserOnboarding } from "@/components/dashboard/main/NewUserOnboarding"
 import { ReturningUserHub } from "@/components/dashboard/main/ReturningUserHub"
 import { DashboardSkeleton } from "@/components/dashboard/main/skeleton/DashboardSkeleton"
@@ -13,21 +11,16 @@ import { useScripts } from "@/hooks/use-script"
 
 export default function Dashboard() {
   const { supabase, user, profile, fetchUserProfile } = useSupabase()
-  const { scripts: recentScripts, loading, removeScript } = useScripts()
+  const { scripts: recentScripts, loading } = useScripts()
 
-  // Separate, specific loading states for user actions provide better UX
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
   const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false)
-  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false)
-  const [youtubeAccessRequested, setYoutubeAccessRequested] = useState(false)
 
   const handleConnectYoutube = () => {
     connectYoutubeChannel({
       supabase,
       user,
       setIsConnectingYoutube,
-      setPermissionDialogOpen,
-      setYoutubeAccessRequested,
     })
   }
 
@@ -85,12 +78,6 @@ export default function Dashboard() {
           disconnectingYoutube={isDisconnectingYoutube}
         />
       )}
-
-      <YoutubePermissionDialog
-        open={permissionDialogOpen}
-        onClose={() => setPermissionDialogOpen(false)}
-        isRequested={youtubeAccessRequested}
-      />
     </div>
   )
 }
