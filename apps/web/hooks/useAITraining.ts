@@ -1,4 +1,3 @@
-// hooks/useAITraining.ts
 "use client"
 
 import { useState } from "react"
@@ -16,25 +15,21 @@ type Video = {
   error?: string;
 };
 
-
 const initialVideos: Video[] = [
-  { id: 1, url: "", status: 'empty', error:"" },
-  { id: 2, url: "", status: 'empty', error:"" },
-  { id: 3, url: "", status: 'empty', error:"" },
+  { id: 1, url: "", status: 'empty', error: "" },
+  { id: 2, url: "", status: 'empty', error: "" },
+  { id: 3, url: "", status: 'empty', error: "" },
 ];
 
 export function useAITraining() {
   const { profile, user, supabase, profileLoading: pageLoading, fetchUserProfile } = useSupabase()
 
-
   const [videos, setVideos] = useState<Video[]>(initialVideos);
   const [uploading, setUploading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false);
-  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
-  const [youtubeAccessRequested, setYoutubeAccessRequested] = useState(false);
 
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
 
   const handleAddVideoUrl = () => {
     if (videos.length < 5) {
@@ -63,7 +58,7 @@ export function useAITraining() {
     const video = videos[index];
     if (!video?.url || video.status === 'loaded') return;
 
-    if(!youtubeRegex.test(video.url)) {
+    if (!youtubeRegex.test(video.url)) {
       video.status = 'error';
       setVideos([...videos]);
       video.error = "Invalid YouTube URL.";
@@ -74,13 +69,12 @@ export function useAITraining() {
     if (!newVideos[index]) return;
     try {
       newVideos[index].status = 'loading';
-      setVideos([...newVideos]); 
-      
+      setVideos([...newVideos]);
+
       const response = await fetch(`/api/get-video-metadata?videoUrl=${encodeURIComponent(video.url)}`);
       if (!response.ok) {
         throw new Error("Video could not be found. It may be private or not present.");
       }
-
 
       const data = await response.json();
       newVideos[index] = { ...newVideos[index], ...data, status: 'loaded' };
@@ -88,7 +82,7 @@ export function useAITraining() {
     } catch (error: any) {
       if (!newVideos[index]) return;
       newVideos[index].status = 'error';
-      setVideos([...newVideos]); 
+      setVideos([...newVideos]);
       toast.error(error.message || "Invalid YouTube URL.");
     }
   };
@@ -138,9 +132,8 @@ export function useAITraining() {
     }
   };
 
-
   const handleConnectYoutube = () => {
-    connectYoutubeChannel({ supabase, user, setIsConnectingYoutube, setPermissionDialogOpen, setYoutubeAccessRequested });
+    connectYoutubeChannel({ supabase, user, setIsConnectingYoutube });
   };
 
   return {
@@ -150,10 +143,7 @@ export function useAITraining() {
     uploading,
     showModal,
     isConnectingYoutube,
-    permissionDialogOpen,
-    youtubeAccessRequested,
     setShowModal,
-    setPermissionDialogOpen,
     handleAddVideoUrl,
     handleRemoveVideoUrl,
     handleVideoUrlChange,
