@@ -127,8 +127,8 @@ export function DashboardSidebar({
   const links: ReadonlyArray<NavLink> = [
     { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
     { label: "Train AI", icon: <SparklesIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
-    { label: "Scripts", icon: <FileTextIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
     { label: "Idea Research", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
+    { label: "Scripts", icon: <FileTextIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/scripts" },
     { label: "Thumbnails", icon: <ImageIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/thumbnails" },
     { label: "Subtitles", icon: <MessageSquareIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/subtitles" },
     { label: "Course Modules", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses" },

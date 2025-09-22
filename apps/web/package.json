@@ -53,6 +53,7 @@
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.8.1",
     "@types/three": "^0.178.1",
+    "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "ai": "latest",
     "autoprefixer": "^10.4.20",
