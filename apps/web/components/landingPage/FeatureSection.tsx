@@ -63,6 +63,12 @@ export default function FeatureSection() {
             description:
                 "Automatically generate accurate subtitles for your videos to improve accessibility.",
         },
+        {
+            title: "Audio Dubbing",
+            icon: FileText,
+            description:
+                "Generates audio in multiple languages using generative voice cloning for global reach.",
+        },
     ]
 
     return (

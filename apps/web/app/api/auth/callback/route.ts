@@ -2,6 +2,9 @@ import { type EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest } from 'next/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -36,6 +39,23 @@ export async function GET(request: NextRequest) {
 
       if (profileError) {
         console.error('Error updating profile for Google OAuth:', profileError.message);
+      }
+
+      // Send welcome email for first-time sign up
+      try {
+        await resend.emails.send({
+          from: 'onboarding@tryscriptai.com',
+          to: data.user.email!,
+          subject: 'Welcome to Script AI!',
+          html: `
+            <h1>Welcome aboard, ${full_name}!</h1>
+            <p>We're thrilled to have you here. Get started by heading to your dashboard.</p>
+            <p>Best,<br/>The Script AI Team</p>
+          `,
+        });
+        console.log(`Welcome email sent to ${data.user.email}`);
+      } catch (emailError) {
+        console.error('Error sending welcome email:', emailError);
       }
 
       redirect(next);
@@ -101,6 +121,23 @@ export async function GET(request: NextRequest) {
         } catch (referralError) {
           console.error('Error processing referrals:', referralError);
         }
+      }
+
+      // Send welcome email for first-time sign up
+      try {
+        await resend.emails.send({
+          from: 'onboarding@tryscriptai.com',
+          to: data.user.email!,
+          subject: 'Welcome to Script AI!',
+          html: `
+            <h1>Welcome aboard, ${full_name}!</h1>
+            <p>We're thrilled to have you here. Get started by heading to your dashboard.</p>
+            <p>Best,<br/>The Script AI Team</p>
+          `,
+        });
+        console.log(`Welcome email sent to ${data.user.email}`);
+      } catch (emailError) {
+        console.error('Error sending welcome email:', emailError);
       }
 
       redirect(next);
