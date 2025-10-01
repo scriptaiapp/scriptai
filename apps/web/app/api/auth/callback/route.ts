@@ -41,17 +41,30 @@ export async function GET(request: NextRequest) {
         console.error('Error updating profile for Google OAuth:', profileError.message);
       }
 
-      // Send welcome email for first-time sign up
       try {
         await resend.emails.send({
-          from: 'onboarding@tryscriptai.com',
+          from: 'Script AI <onboarding@tryscriptai.com>',
           to: data.user.email!,
           subject: 'Welcome to Script AI!',
           html: `
-            <h1>Welcome aboard, ${full_name}!</h1>
-            <p>We're thrilled to have you here. Get started by heading to your dashboard.</p>
-            <p>Best,<br/>The Script AI Team</p>
-          `,
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
+              <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
+              <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
+              <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
+
+              <p>We recommend starting with the demo to see Script AI in action.</p>
+              
+              <div style="margin: 20px 0; text-align: center;">
+                <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
+                  style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                  ▶ Watch Demo
+                </a>
+              </div>
+
+              <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
+              
+              <p>Best,<br/>The Script AI Team</p>
+            </div>`,
         });
         console.log(`Welcome email sent to ${data.user.email}`);
       } catch (emailError) {
@@ -126,14 +139,30 @@ export async function GET(request: NextRequest) {
       // Send welcome email for first-time sign up
       try {
         await resend.emails.send({
-          from: 'onboarding@tryscriptai.com',
+          from: 'Script AI <onboarding@tryscriptai.com>',
           to: data.user.email!,
           subject: 'Welcome to Script AI!',
           html: `
-            <h1>Welcome aboard, ${full_name}!</h1>
-            <p>We're thrilled to have you here. Get started by heading to your dashboard.</p>
-            <p>Best,<br/>The Script AI Team</p>
-          `,
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
+              <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
+              <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
+              <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
+
+              <p>We recommend starting with the demo to see Script AI in action.</p>
+              
+              <div style="margin: 20px 0; text-align: center;">
+                <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
+                  style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                  ▶ Watch Demo
+                </a>
+              </div>
+
+              <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
+              
+              <p>Best,<br/>The Script AI Team</p>
+            </div>
+`
+
         });
         console.log(`Welcome email sent to ${data.user.email}`);
       } catch (emailError) {

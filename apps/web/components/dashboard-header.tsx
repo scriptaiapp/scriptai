@@ -54,6 +54,8 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
     }
   };
 
+  console.log(profile)
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-4 backdrop-blur-sm sm:px-6">
       <Button
@@ -83,6 +85,7 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
                 <AvatarImage
                   src={profile?.avatar_url || ""}
                   alt="User avatar"
+                  referrerPolicy="no-referrer"
                 />
                 <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-black dark:text-white">
                   {profile?.full_name?.charAt(0)?.toUpperCase() ||
