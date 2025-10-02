@@ -22,11 +22,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (data.user) {
-      // Extract full_name and avatar_url from user metadata
       const full_name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email;
       const avatar_url = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null;
 
-      // Update full_name and avatar_url in profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -40,34 +38,51 @@ export async function GET(request: NextRequest) {
         console.error('Error updating profile for Google OAuth:', profileError.message);
       }
 
-      try {
-        await resend.emails.send({
-          from: 'Script AI <onboarding@tryscriptai.com>',
-          to: data.user.email!,
-          subject: 'Welcome to Script AI!',
-          html: `
-            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
-              <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
-              <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
-              <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('welcome_email_sent')
+        .eq('id', data.user.id)
+        .single();
 
-              <p>We recommend starting with the demo to see Script AI in action.</p>
-              
-              <div style="margin: 20px 0; text-align: center;">
-                <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
-                  style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                  ▶ Watch Demo
-                </a>
-              </div>
+      if (profileCheck && !profileCheck.welcome_email_sent) {
+        try {
+          await resend.emails.send({
+            from: 'Script AI <onboarding@tryscriptai.com>',
+            to: data.user.email!,
+            subject: 'Welcome to Script AI!',
+            html: `
+              <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
+                <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
+                <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
+                <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
 
-              <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
-              
-              <p>Best,<br/>The Script AI Team</p>
-            </div>`,
-        });
-        console.log(`Welcome email sent to ${data.user.email}`);
-      } catch (emailError) {
-        console.error('Error sending welcome email:', emailError);
+                <p>We recommend starting with the demo to see Script AI in action.</p>
+                
+                <div style="margin: 20px 0; text-align: center;">
+                  <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
+                    style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                    ▶ Watch Demo
+                  </a>
+                </div>
+
+                <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
+                
+                <p>Best,<br/>The Script AI Team</p>
+              </div>`,
+          });
+          console.log(`Welcome email sent to ${data.user.email}`);
+
+          // Mark as sent
+          await supabase
+            .from('profiles')
+            .update({
+              welcome_email_sent: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', data.user.id);
+        } catch (emailError) {
+          console.error('Error sending welcome email:', emailError);
+        }
       }
 
       redirect(next);
@@ -100,7 +115,6 @@ export async function GET(request: NextRequest) {
         console.error('Error updating profile for email OTP:', profileError.message);
       }
 
-      // Handle pending referrals
       if (data.user.email) {
         try {
           const { data: pendingReferrals, error: pendingError } = await supabase
@@ -135,37 +149,52 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Send welcome email for first-time sign up
-      try {
-        await resend.emails.send({
-          from: 'Script AI <onboarding@tryscriptai.com>',
-          to: data.user.email!,
-          subject: 'Welcome to Script AI!',
-          html: `
-            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
-              <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
-              <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
-              <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
+      // For extra safety, also check if type === 'signup' (though flag handles it)
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('welcome_email_sent')
+        .eq('id', data.user.id)
+        .single();
 
-              <p>We recommend starting with the demo to see Script AI in action.</p>
-              
-              <div style="margin: 20px 0; text-align: center;">
-                <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
-                  style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                  ▶ Watch Demo
-                </a>
-              </div>
+      if (profileCheck && !profileCheck.welcome_email_sent && type === 'signup') {
+        try {
+          await resend.emails.send({
+            from: 'Script AI <onboarding@tryscriptai.com>',
+            to: data.user.email!,
+            subject: 'Welcome to Script AI!',
+            html: `
+              <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
+                <h1 style="color: #4F46E5;">Welcome aboard, ${full_name}!</h1>
+                <p>We're thrilled to have you at <strong>Script AI</strong>. 🚀</p>
+                <p>Get started by logging in to your dashboard here 👉: <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none;">Go to Dashboard</a></p>
 
-              <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
-              
-              <p>Best,<br/>The Script AI Team</p>
-            </div>
-`
+                <p>We recommend starting with the demo to see Script AI in action.</p>
+                
+                <div style="margin: 20px 0; text-align: center;">
+                  <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview" 
+                    style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                    ▶ Watch Demo
+                  </a>
+                </div>
 
-        });
-        console.log(`Welcome email sent to ${data.user.email}`);
-      } catch (emailError) {
-        console.error('Error sending welcome email:', emailError);
+                <p>If you have any questions, feel free to reach out at support@tryscriptai.com.</p>
+                
+                <p>Best,<br/>The Script AI Team</p>
+              </div>`,
+          });
+          console.log(`Welcome email sent to ${data.user.email}`);
+
+          // Mark as sent
+          await supabase
+            .from('profiles')
+            .update({
+              welcome_email_sent: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', data.user.id);
+        } catch (emailError) {
+          console.error('Error sending welcome email:', emailError);
+        }
       }
 
       redirect(next);
