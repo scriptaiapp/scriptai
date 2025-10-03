@@ -70,19 +70,21 @@ const Footer = () => {
                   (e) => handleSendEmail(e as unknown as Event)
                 }>
                   <h4 className="font-medium leading-none">Report an issue</h4>
+                   <div> <p className='text-sm  dark:text-slate-100 transition-colors text-purple-500 mb-2'>Feedback Type</p>
                   <Select onValueChange={(value) => setSubject(value) } >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select issue type" />
                     </SelectTrigger>
-                    <SelectContent >
+                    <SelectContent>
+                    
                       {
                         issueTypes.map((issue) => (
                           <SelectItem key={issue.value} value={issue.value}>{issue.label}</SelectItem>
                         ))
                       }
                     </SelectContent>
-                  </Select>
-                  <Textarea className='min-h-40' placeholder='Please describe any feebdack issue you have for scriptai' value={body} onChange={(e) => setBody(e.target.value)} />
+                  </Select></div>
+                  <div> <p className='text-sm  dark:text-slate-100 transition-colors text-purple-500 mb-2'>Your Feedback</p><Textarea className='min-h-40' placeholder='Please describe any feebdack issue you have for scriptai' value={body} onChange={(e) => setBody(e.target.value)} /></div>
                   <div className="flex justify-between items-center">
                     <PopoverClose asChild>
                       <Button variant="outline" size="sm">Close</Button>
