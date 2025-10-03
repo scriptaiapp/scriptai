@@ -22,4 +22,10 @@ export const footerItems = {
   ],
 };
 
+export const issueTypes = [
+  { value: "Bug Report", label: "Bug Report" },
+  { value: "Feature Request", label: "Feature Request" },
+  { value: "Other", label: "Other" },
+];
+
 
