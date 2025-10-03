@@ -26,7 +26,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <ScriptsProvider>
+    // <ScriptsProvider>
       <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
         <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -34,6 +34,6 @@ export default function DashboardLayout({
           <div className="flex-1 overflow-auto">{children}</div>
         </div>
       </div>
-    </ScriptsProvider>
+    // {/*</ScriptsProvider>*/}
   )
 }

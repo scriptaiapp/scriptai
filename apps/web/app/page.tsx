@@ -1,11 +1,11 @@
 "use client"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
 import { SparklesCore } from "@/components/ui/sparkles"
 import { MButton } from "@/components/ui/moving-border"
-import { motion } from "motion/react"
 import ProblemSection from "@/components/landingPage/ProblemSection"
 import SolutionCard from "@/components/landingPage/SolutionSection"
 import { BackgroundBeams } from "@/components/ui/background-beams"
@@ -17,13 +17,9 @@ import dynamic from 'next/dynamic'
 import { useEffect } from "react"
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
-import { ShinyButton } from "@/components/magicui/shiny-button"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import {MotionDiv} from "@/components/MotionComponents/MotionDiv";
+import {MotionH1} from "@/components/MotionComponents/MotionH1";
+import { MotionP } from "@/components/MotionComponents/MotionP"
 
 // DYNAMIC IMPORT
 const LandingPageSVG = dynamic(
@@ -33,11 +29,17 @@ const LandingPageSVG = dynamic(
 
 export default function Home() {
 
-  useEffect(() => {
-    const lenis = new Lenis({ autoRaf: true });
 
-    return () => lenis.destroy();
-  }, []);
+  useEffect(() => {
+
+    const lenis = new Lenis({
+      autoRaf: true,
+    });
+
+    lenis.on('scroll', (e) => {
+      // console.log(e);
+    });
+  }, [])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -67,9 +69,9 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <LandingPageNavbar />
+      <LandingPageNavbar/>
       <main className="flex-1">
-        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden pt-12 md:pt-0">
+        <section className="relative w-full h-screen flex items-center justify-center bg-gradient-to-b from-white to-slate-50 overflow-hidden">
           <div aria-hidden="true" className="absolute inset-0 -z-0">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-purple-100/40 rounded-full blur-3xl" />
             <SparklesCore
@@ -83,67 +85,56 @@ export default function Home() {
           </div>
 
           <div className="container mx-12 px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
-            <motion.div
+            <MotionDiv
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               className="flex flex-col items-center md:items-start text-center md:text-left"
             >
-              <motion.div
+              <MotionDiv
                 variants={itemVariants}
                 className="inline-flex items-center gap-2 px-4 py-1 mb-4 rounded-full text-sm font-medium bg-white/60 ring-1 ring-slate-900/10 backdrop-blur-md"
               >
                 <Sparkles className="w-4 h-4 text-purple-600" />
                 <span>Built for Creators</span>
-              </motion.div>
+              </MotionDiv>
 
-              <motion.h1
+              <MotionH1
                 variants={itemVariants}
-                className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight"
+                className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight"
               >
-                Personalized
+                Script AI: Your AI<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-                  {" "} Creator Tool {" "}
+                  Content Assistant
                 </span>
-                for Youtubers
-              </motion.h1>
+              </MotionH1>
 
-              <motion.div
+              <MotionDiv
                 variants={itemVariants}
                 className="mt-4 text-lg md:text-xl text-slate-700"
               >
                 Generate AI-powered <FlipWords words={words} className="text-purple-600" /> that sound like you.
-              </motion.div>
+              </MotionDiv>
 
-              <motion.div
+              <MotionDiv
                 variants={itemVariants}
                 className="mt-6 flex flex-col sm:flex-row items-center gap-4"
               >
                 <Link href="/signup">
+
                   <MButton
-                    className="bg-zinc-900 text-white hover:bg-zinc-800 shadow-md"
+                    size="lg"
+                    className="bg-slate-900 text-white hover:bg-slate-800 shadow-md"
                     borderClassName="border border-purple-500/60"
                   >
-                    Get Started
+                    Get Started Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </MButton>
                 </Link>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <ShinyButton>Watch Demo</ShinyButton>
-                  </DialogTrigger>
-                  <DialogContent className="p-0 border-none max-w-[90vw] md:max-w-4xl bg-transparent shadow-none object-cover">
-                    <DialogTitle></DialogTitle>
-                    <iframe
-                      src="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview"
-                      className="rounded-lg overflow-hidden w-full max-w-full aspect-video"
-                      allow="autoplay"
-                    ></iframe>
-                  </DialogContent>
-                </Dialog>
-              </motion.div>
+                <Button variant="outline">See How It Works</Button>
+              </MotionDiv>
 
-              <motion.p
+              <MotionP
                 variants={itemVariants}
                 className="mt-4 text-sm text-slate-600"
               >
@@ -151,8 +142,8 @@ export default function Home() {
                 <Link href="/login" className="text-purple-600 hover:underline">
                   Log in
                 </Link>
-              </motion.p>
-            </motion.div>
+              </MotionP>
+            </MotionDiv>
 
             <div className="hidden md:flex w-full h-full items-center justify-center">
               <LandingPageSVG />

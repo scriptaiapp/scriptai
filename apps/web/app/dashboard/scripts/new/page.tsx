@@ -9,7 +9,8 @@ import ScriptGenerationForm, {
 } from "@/components/dashboard/scripts/ScriptGenerationForm"
 import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
-import { useScripts } from "@/hooks/use-script"
+import { updateScript } from "@/lib/actions/Scripts"
+import {ScriptLoaderSkeleton} from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton";
 
 const calculateDurationInSeconds = (duration: string, customDuration: string) => {
   switch (duration) {
@@ -20,7 +21,6 @@ const calculateDurationInSeconds = (duration: string, customDuration: string) =>
     case '5min':
       return "300";
     case 'custom':
-
       if (!customDuration || !customDuration.includes(':')) {
         return 0;
       }
@@ -37,17 +37,12 @@ export default function NewScriptPage() {
   const router = useRouter()
   const { supabase, user, profile, profileLoading } = useSupabase()
   const [loadingSave, setLoadingSave] = useState(false)
-  const [loadingGenerate, setLoadingGenerate] = useState(false);
+  const [loadingGenerate, setLoadingGenerate] = useState(false)
   const [generatedScript, setGeneratedScript] = useState("")
   const [scriptTitle, setScriptTitle] = useState("")
   const [scriptId, setScriptId] = useState<string | null>(null)
-  const { fetchScripts } = useScripts()
 
-
-  // Store the last submitted form data to allow for regeneration
-  const [latestFormData, setLatestFormData] = useState<ScriptFormData | null>(
-    null
-  )
+  const [latestFormData, setLatestFormData] = useState<ScriptFormData | null>(null)
 
   const handleGenerateScript = async (formData: ScriptFormData) => {
     if (!formData.prompt) {
@@ -56,12 +51,12 @@ export default function NewScriptPage() {
       })
       return
     }
+
     const duration = calculateDurationInSeconds(formData.duration, formData.customDuration || "")
     formData.duration = duration || "300"
     delete formData.customDuration
     formData.personalized = profile?.ai_trained
 
-    console.log(formData)
     const multipartData = new FormData();
     for (const [key, value] of Object.entries(formData)) {
       if (key === "files" && Array.isArray(value)) {
@@ -76,19 +71,13 @@ export default function NewScriptPage() {
     }
 
     setLoadingGenerate(true)
-    setGeneratedScript("") // Clear previous script
-    setLatestFormData(formData) // Save for regeneration
+    setGeneratedScript("")
+    setLatestFormData(formData)
 
     try {
-
       const response = await fetch("/api/generate-script", {
         method: "POST",
         body: multipartData,
-        // headers: { "Content-Type": "multipart/form-data" },
-        // body: JSON.stringify({
-        //   ...formData, // Pass all form data to the API
-        //   personalized: profile?.ai_trained,
-        // }),
       })
 
       if (!response.ok) {
@@ -125,8 +114,7 @@ export default function NewScriptPage() {
   const handleSaveScript = async () => {
     if (!generatedScript || !scriptTitle || !scriptId) {
       toast.error("Missing information", {
-        description:
-          "Please generate a script and provide a title before saving.",
+        description: "Please generate a script and provide a title before saving.",
       })
       return
     }
@@ -134,18 +122,15 @@ export default function NewScriptPage() {
     setLoadingSave(true)
 
     try {
-      const { error } = await supabase
-        .from("scripts")
-        .update({
-          title: scriptTitle,
-          content: generatedScript,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", scriptId)
-        .eq("user_id", user?.id)
+      // Use server action instead of direct Supabase call
+      const result = await updateScript(scriptId, {
+        title: scriptTitle,
+        content: generatedScript,
+      })
 
-      if (error) throw error
-      await fetchScripts() // Refresh the scripts list after saving
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update script")
+      }
 
       toast.success("Script updated!", {
         description: "Your script changes have been saved successfully.",
@@ -159,40 +144,40 @@ export default function NewScriptPage() {
     }
   }
 
-  if (!profile?.ai_trained || !profile?.youtube_connected && !profileLoading) {
-    return (
-      <AITrainingRequired />
-    )
+  if(profileLoading){
+    return <ScriptLoaderSkeleton/>
+  }
+
+  if ((!profile?.ai_trained || !profile?.youtube_connected) && !profileLoading) {
+    return <AITrainingRequired />
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Create New Script</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Generate your script step-by-step
-        </p>
-      </div>
+      <div className="container py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Create New Script</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Generate your script step-by-step
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8  items-start">
-        {/* The form component manages its own internal state and calls `onGenerate` when ready. */}
-        <ScriptGenerationForm
-          loading={loadingGenerate}
-          onGenerate={handleGenerateScript}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <ScriptGenerationForm
+              loading={loadingGenerate}
+              onGenerate={handleGenerateScript}
+          />
 
-        {/* The output panel displays the results and calls back to the page for actions. */}
-        <ScriptOutputPanel
-          loading={loadingSave}
-          loadingGenerate={loadingGenerate}
-          generatedScript={generatedScript}
-          setGeneratedScript={setGeneratedScript}
-          scriptTitle={scriptTitle}
-          setScriptTitle={setScriptTitle}
-          onSave={handleSaveScript}
-          onRegenerate={handleRegenerateScript}
-        />
+          <ScriptOutputPanel
+              loading={loadingSave}
+              loadingGenerate={loadingGenerate}
+              generatedScript={generatedScript}
+              setGeneratedScript={setGeneratedScript}
+              scriptTitle={scriptTitle}
+              setScriptTitle={setScriptTitle}
+              onSave={handleSaveScript}
+              onRegenerate={handleRegenerateScript}
+          />
+        </div>
       </div>
-    </div>
   )
 }
