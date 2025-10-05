@@ -129,7 +129,14 @@ export function useAITraining() {
       toast.error("Error training AI", { description: error.message });
     } finally {
       setUploading(false);
-      setVideos(initialVideos);
+      setVideos(videos.map(video => ({
+        ...video,
+        url: "",
+        status: 'empty',
+        error: "",
+        title: undefined,
+        thumbnail: undefined,
+      })));
     }
   };
 

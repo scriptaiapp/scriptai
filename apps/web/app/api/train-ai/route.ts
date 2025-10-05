@@ -299,8 +299,6 @@ Provide the analysis in the following JSON format:
     // NEW: Stringify the style analysis for embedding
     const styleText = JSON.stringify(styleAnalysis);
 
-    console.log('Style Analysis:', typeof styleAnalysis);
-
     // NEW: Generate embedding with retry logic
     let embeddingResponse: any = null;
     retryCount = 0;
@@ -315,8 +313,6 @@ Provide the analysis in the following JSON format:
             taskType: 'RETRIEVAL_DOCUMENT',
           }
         });
-
-        console.log('Embedding response:', embeddingResponse.embeddings);
 
         if (!embeddingResponse?.embeddings) {
           throw new Error('Invalid embedding response');
@@ -338,12 +334,9 @@ Provide the analysis in the following JSON format:
 
     const embeddingValues = embeddingResponse?.embeddings[0]?.values;
     const norm = Math.sqrt(embeddingValues.reduce((sum: number, val: number) => sum + val * val, 0));
-    console.log('Embedding Norm:', norm);
     const normalizedEmbedding = norm > 0
       ? embeddingValues.map((val: number) => val / norm)
       : embeddingValues;
-
-    console.log('Normalized Embedding:', normalizedEmbedding);
 
     const { error: profileError } = await supabase
       .from('profiles')
