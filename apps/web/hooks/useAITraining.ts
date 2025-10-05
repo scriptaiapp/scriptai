@@ -129,6 +129,7 @@ export function useAITraining() {
       toast.error("Error training AI", { description: error.message });
     } finally {
       setUploading(false);
+      setVideos(initialVideos);
     }
   };
 
