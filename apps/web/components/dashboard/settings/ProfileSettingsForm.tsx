@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSettings } from "@/hooks/useSettings"; // 1. Imported the hook
+import { useSettings } from "@/hooks/useSettings"; // Imported the hook
 import { Loader2, Save, Shield } from "lucide-react";
 import {
     Select,
@@ -16,7 +16,7 @@ import {
 import { ImageDropzone } from "@/components/ui/image-dropzone";
 import { useEffect, useState } from "react";
 import { useSupabase } from "../../supabase-provider";
-import { supportedLanguages } from "@repo/config"; // 2
+import { supportedLanguages } from "@repo/config"; //
 import ProfileSettingSkeleton from "./loadingSkeleton/ProfileSettingSkeleton";
 
 interface formDataState {
