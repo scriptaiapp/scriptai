@@ -22,28 +22,11 @@ export async function GET() {
       return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
     }
 
-    // Get pending referrals
-    const { data: pendingReferrals, error: pendingError } = await supabase
-      .from('referrals')
-      .select(`
-        id,
-        referred_user_id,
-        status,
-        created_at,
-        referred_email
-      `)
-      .eq('referrer_id', profile.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
 
-    if (pendingError) {
-      console.error('Error fetching pending referrals:', pendingError);
-    }
 
-    // Get completed referrals with full user info
-    const { data: completedReferrals, error: completedError } = await supabase
-      .from('referrals')
-      .select(`
+    const { data: referrals, error: referralsError } = await supabase
+        .from('referrals')
+        .select(`
         id,
         referred_user_id,
         status,
@@ -58,13 +41,18 @@ export async function GET() {
           email
         )
       `)
-      .eq('referrer_id', profile.id)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: false });
+        .eq('referrer_id', profile.id)
+        .order('created_at', { ascending: false });
 
-    if (completedError) {
-      console.error('Error fetching completed referrals:', completedError);
+    if (referralsError) {
+      console.error('Error fetching referrals:', referralsError);
+      return NextResponse.json({ message: 'Failed to fetch referrals' }, { status: 500 });
     }
+
+    const pendingReferrals = referrals?.filter(r => r.status === 'pending') || [];
+    const completedReferrals = referrals?.filter(r => r.status === 'completed') || [];
+
+
 
     return NextResponse.json({
       referralCode: profile.referral_code,
@@ -74,8 +62,8 @@ export async function GET() {
         full_name: profile.full_name,
         avatar_url: profile.avatar_url
       },
-      pendingReferrals: pendingReferrals || [],
-      completedReferrals: completedReferrals || []
+      pendingReferrals: pendingReferrals,
+      completedReferrals: completedReferrals
     });
 
   } catch (error) {
@@ -88,38 +76,78 @@ export async function GET() {
 export async function POST() {
   const supabase = await createClient();
 
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+
+  try{
+    const {data: {user}, error: userError} = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({message: "Unauthorized" }, {status: 404});
     }
 
-    // Generate unique referral code
-    const referralCode = generateReferralCode();
-    
-    // Update user's profile with referral code
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ referral_code: referralCode })
-      .eq('user_id', user.id);
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('referral_code')
+        .eq('user_id', user.id)
+        .single();
+    if (profileError) {
+      return NextResponse.json({message: "Profile not found"}, {status: 404});
 
-    if (updateError) {
-      return NextResponse.json({ message: 'Failed to generate referral code' }, { status: 500 });
     }
 
-    return NextResponse.json({ referralCode });
+    if (profile.referral_code) {
+      return NextResponse.json({
+        message: 'Referral code already exists',
+        referralCode: profile.referral_code
+      }, { status: 200 });
+    }
 
-  } catch (error) {
+    let referralCode: string;
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while(attempts < maxAttempts) {
+      referralCode = generateReferralCode()
+
+      const {data: existingCode} = await supabase
+          .from('profile')
+          .select('referral_code')
+          .eq('referral_code', referralCode)
+          .single();
+      if(!existingCode){
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ referral_code: referralCode })
+            .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Failed to update referral code:', updateError);
+          return NextResponse.json({ message: 'Failed to generate referral code' }, { status: 500 });
+        }
+
+        return NextResponse.json({ referralCode });
+      }
+
+      attempts++;
+    }
+
+    return NextResponse.json({
+      message: 'Failed to generate unique referral code. Please try again.'
+    }, { status: 500 });
+
+
+  }catch (error) {
     console.error('Error in POST referrals:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
+
 }
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const array = new Uint8Array(8);
+  crypto.getRandomValues(array);
+
+  return Array.from(array)
+      .map(x => chars[x % chars.length])
+      .join('');
 }

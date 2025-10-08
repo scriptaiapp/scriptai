@@ -5,6 +5,8 @@
 import { motion } from "motion/react";
 import { ResultSection } from "@repo/validation/src/types/researchTopicTypes";
 import { ChevronRight } from "lucide-react";
+import ReactMarkdown from "react-markdown"
+import {cn} from "@/lib/utils";
 
 interface ResultSectionCardProps {
     section: ResultSection;
@@ -33,40 +35,56 @@ export default function ResultSectionCard({ section, index }: ResultSectionCardP
             variants={cardVariants}
             initial="hidden"
             animate="visible"
-            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-sm"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 sm:p-6 shadow-sm overflow-hidden"
         >
             {/* Header */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/40 flex items-center justify-center">
                     <Icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">{title}</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-slate-200 break-words">
+                    {title}
+                </h3>
             </div>
 
             {/* Content List */}
             <ul className="space-y-3">
                 {data.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
+                    <li key={idx} className="flex items-start gap-2 sm:gap-3">
                         <ChevronRight className="w-4 h-4 mt-1 flex-shrink-0 text-purple-500" />
 
-                        {/* --- MODIFICATION START --- */}
-                        {/* Conditionally render an anchor tag for sources, otherwise render a span */}
-                        {section.id === 'sources' ? (
-                            <a
-                                href={item}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="break-all text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 hover:underline transition-colors"
+                        <div className={cn("prose dark:prose-invert max-w-none flex-1 min-w-0 overflow-hidden")}>
+                            <ReactMarkdown
+                                components={{
+                                    strong: ({ node, ...props }) => (
+                                        <span className="font-bold text-purple-600" {...props} />
+                                    ),
+                                    em: ({ node, ...props }) => (
+                                        <span className="italic text-slate-500" {...props} />
+                                    ),
+                                    p: ({ node, ...props }) => (
+                                        <p
+                                            className="mb-2 leading-relaxed text-slate-700 dark:text-slate-300 break-words"
+                                            {...props}
+                                        />
+                                    ),
+                                    a: ({ node, ...props }) => (
+                                        <a
+                                            className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 break-all"
+                                            {...props}
+                                        />
+                                    ),
+                                    code: ({ node, ...props }) => (
+                                        <code
+                                            className="break-all"
+                                            {...props}
+                                        />
+                                    ),
+                                }}
                             >
                                 {item}
-                            </a>
-                        ) : (
-                            <span className="break-words text-justify text-sm text-slate-600 dark:text-slate-400">
-                                {item}
-                            </span>
-                        )}
-                        {/* --- MODIFICATION END --- */}
-
+                            </ReactMarkdown>
+                        </div>
                     </li>
                 ))}
             </ul>
