@@ -24,7 +24,8 @@ export async function GET(request: Request) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    const { provider_token, refresh_token, user } = data.session;
+    const { provider_token, provider_refresh_token, user } = data.session;
+    console.log('OAuth session data:', data);
     if (!provider_token) {
       redirectUrl.searchParams.set('error', 'no_provider_token');
       return NextResponse.redirect(redirectUrl);
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
       user_id: user.id,
       channel_id: channelData.id,
       provider_token,
-      refresh_token,
+      refresh_token: provider_refresh_token,
       channel_name: channelData.snippet.title,
       channel_description: channelData.snippet.description,
       custom_url: channelData.snippet.customUrl,
