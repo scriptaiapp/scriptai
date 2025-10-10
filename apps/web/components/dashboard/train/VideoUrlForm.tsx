@@ -45,7 +45,6 @@ function VideoPreview({ video, onRemove }: { video: Video, onRemove: () => void 
             />
             <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate text-slate-800 dark:text-slate-200">{video.title}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Video preview loaded</p>
             </div>
             <Button variant="ghost" size="icon" onClick={onRemove} className="shrink-0">
                 <X className="h-4 w-4" />

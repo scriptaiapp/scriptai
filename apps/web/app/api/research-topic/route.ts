@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { jsonrepair } from "jsonrepair"
+import { parseResearchResponse } from '@/lib/parseResponse';
 
 // Define interfaces for type safety
 interface ResearchRequest {
@@ -11,7 +12,7 @@ interface ResearchRequest {
   autoResearch: boolean;
 }
 
-interface ResearchData {
+export interface ResearchData {
   summary: string;
   keyPoints: string[];
   trends: string[];
@@ -53,48 +54,6 @@ interface StyleData {
   recommendations: Record<string, string>;
 }
 
-interface GeminiResponse {
-  topic: string;
-  research: ResearchData;
-}
-
-// Parse Gemini response into structured research data
-function parseResearchResponse(text: string): GeminiResponse | null {
-  try {
-    // Remove markdown code fences if present
-    const cleanedText = text.replace(/```json\n|\n```/g, '').trim();
-    const parsed = JSON.parse(jsonrepair(cleanedText));
-
-    if (
-      typeof parsed.topic !== 'string' ||
-      typeof parsed.research !== 'object' ||
-      typeof parsed.research.summary !== 'string' ||
-      !Array.isArray(parsed.research.keyPoints) ||
-      !Array.isArray(parsed.research.trends) ||
-      !Array.isArray(parsed.research.questions) ||
-      !Array.isArray(parsed.research.contentAngles) ||
-      !Array.isArray(parsed.research.sources)
-    ) {
-      return null;
-    }
-
-    return {
-      topic: parsed.topic,
-      research: {
-        summary: parsed.research.summary,
-        keyPoints: parsed.research.keyPoints,
-        trends: parsed.research.trends,
-        questions: parsed.research.questions,
-        contentAngles: parsed.research.contentAngles,
-        sources: parsed.research.sources,
-      },
-    };
-  } catch (error) {
-    console.error('Error parsing research response:', error);
-    return null;
-  }
-}
-
 // GET: Fetch recent research topics for the user
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -129,7 +88,6 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   try {
-
     const body: ResearchRequest = await request.json();
     const { topic, context, autoResearch } = body;
 
@@ -203,81 +161,99 @@ export async function POST(request: Request) {
     }
     const ai = new GoogleGenAI({ apiKey });
 
-    // Craft prompt for research
+    // Craft prompt for research (enhanced to ensure direct, actual source links in JSON)
     let researchPrompt = autoResearch
       ? `
-Generate a unique research topic and comprehensive research data for a YouTube video based on the user's channel and style profile. The topic should align with the user's content preferences and audience interests.
+    As an expert YouTube research analyst, generate a unique, high-engagement research topic and comprehensive research data optimized for a YouTube video. The topic should align perfectly with the user's channel niche, style, content preferences, audience demographics, and current trends to maximize views, retention, and subscriber growth. Draw from real-time web insights on viral strategies, SEO best practices, and creator success stories.
 
-Creator's Profile:
-- Channel Name: ${channelData?.channel_name || 'Unknown'}
-- Channel Description: ${channelData?.channel_description || 'None'}
-- Topic Details: ${JSON.stringify(channelData?.topic_details) || 'None'}
-- Default Language: ${channelData?.default_language || 'English'}
-- Style Profile:
-  - Content Style: ${styleData?.style_analysis || 'None'}
-  - Typical Tone: ${styleData?.tone || 'conversational'}
-  - Vocabulary Level: ${styleData?.vocabulary_level || 'general'}
-  - Pacing: ${styleData?.pacing || 'moderate'}
-  - Themes: ${styleData?.themes || 'None'}
-  - Humor Style: ${styleData?.humor_style || 'None'}
-  - Narrative Structure: ${styleData?.structure || 'None'}
-  - Recommendations: ${JSON.stringify(styleData?.recommendations) || '{}'}
+    Creator's Profile (tailor all outputs to this for personalized, industry-level advice):
+    - Channel Name: ${channelData?.channel_name || 'Unknown'}
+    - Channel Description: ${channelData?.channel_description || 'None'}
+    - Topic Details: ${JSON.stringify(channelData?.topic_details) || 'None'}
+    - Default Language: ${channelData?.default_language || 'English'}
+    - Style Profile:
+      - Content Style: ${styleData?.style_analysis || 'None'} – Adapt tone, pacing, and structure accordingly.
+      - Typical Tone: ${styleData?.tone || 'conversational'}
+      - Vocabulary Level: ${styleData?.vocabulary_level || 'general'}
+      - Pacing: ${styleData?.pacing || 'moderate'}
+      - Themes: ${styleData?.themes || 'None'}
+      - Humor Style: ${styleData?.humor_style || 'None'}
+      - Narrative Structure: ${styleData?.structure || 'None'}
+      - Recommendations: ${JSON.stringify(styleData?.recommendations) || '{}'}
 
-${context ? `Additional Context: ${context}` : ''}
+    ${context ? `Additional Context: Incorporate this to refine the topic and research: ${context}` : ''}
 
-Output format:
-{
-  "topic": "Suggested topic",
-  "research": {
-    "summary": "Summary of the topic",
-    "keyPoints": ["Key point 1", "Key point 2"],
-    "trends": ["Current trend 1", "Current trend 2"],
-    "questions": ["Common question 1", "Common question 2"],
-    "contentAngles": ["Content angle 1", "Content angle 2"],
-    "sources": ["Source URL 1", "Source URL 2"]
-  }
-}
-`
+    Ensure the research is actionable for YouTube creators: Include SEO keywords, hook ideas in key points, trend-based content angles for virality, audience questions to boost comments, and angles that drive high watch time. For sources, prioritize 3-5 recent, live valid active URL links from authoritative resources that provide deep, insights about the topic. Base these directly on the grounded search results.
+
+    Return the output as valid JSON with no additional text, comments, markdown or formatting. The JSON should have the following structure:
+    {
+      "topic": "Engaging, SEO-optimized suggested topic title",
+      "research": {
+        "summary": "Concise, hook-filled overview tailored to the channel's style",
+        "keyPoints": ["Actionable point 1 with YouTube tip", "Point 2 focused on engagement"],
+        "trends": ["Current 2025 trend 1 relevant to niche", "Trend 2 with creator examples"],
+        "questions": ["Viewer question 1 to spark discussions", "Question 2 for Q&A segments"],
+        "contentAngles": ["Video angle 1: Step-by-step guide with thumbnails/hooks", "Angle 2: Case study for inspiration"],
+        "sources": ["https://direct-valid-creator-resource-1.com", "https://direct-valid-creator-resource-2.com"]
+      }
+    }
+    `
       : `
-Research the topic "${topic}" for a YouTube video, tailored to the user's channel and style profile if available.
+    As an expert YouTube research analyst, provide comprehensive, industry-level research data for a YouTube video on the topic "${topic}". Tailor everything to the user's channel niche, style, preferences, and audience needs for maximum impact: Optimize for SEO, viewer retention, viral hooks, and monetization potential. Use real-time insights on trends, tools, and strategies from top creator ecosystems.
 
-${typedProfileData.ai_trained ? `
-Creator's Profile:
-- Channel Name: ${channelData?.channel_name || 'Unknown'}
-- Channel Description: ${channelData?.channel_description || 'None'}
-- Topic Details: ${JSON.stringify(channelData?.topic_details) || 'None'}
-- Default Language: ${channelData?.default_language || 'English'}
-- Style Profile:
-  - Content Style: ${styleData?.style_analysis || 'None'}
-  - Typical Tone: ${styleData?.tone || 'conversational'}
-  - Vocabulary Level: ${styleData?.vocabulary_level || 'general'}
-  - Pacing: ${styleData?.pacing || 'moderate'}
-  - Themes: ${styleData?.themes || 'None'}
-  - Humor Style: ${styleData?.humor_style || 'None'}
-  - Narrative Structure: ${styleData?.structure || 'None'}
-  - Recommendations: ${JSON.stringify(styleData?.recommendations) || '{}'}
-` : ''}
+    ${typedProfileData.ai_trained ? `
+    Creator's Profile (tailor all outputs to this for personalized, industry-level advice):
+    - Channel Name: ${channelData?.channel_name || 'Unknown'}
+    - Channel Description: ${channelData?.channel_description || 'None'}
+    - Topic Details: ${JSON.stringify(channelData?.topic_details) || 'None'}
+    - Default Language: ${channelData?.default_language || 'English'}
+    - Style Profile:
+      - Content Style: ${styleData?.style_analysis || 'None'} – Adapt tone, pacing, and structure accordingly.
+      - Typical Tone: ${styleData?.tone || 'conversational'}
+      - Vocabulary Level: ${styleData?.vocabulary_level || 'general'}
+      - Pacing: ${styleData?.pacing || 'moderate'}
+      - Themes: ${styleData?.themes || 'None'}
+      - Humor Style: ${styleData?.humor_style || 'None'}
+      - Narrative Structure: ${styleData?.structure || 'None'}
+      - Recommendations: ${JSON.stringify(styleData?.recommendations) || '{}'}
+    ` : ''}
 
-${context ? `Additional Context: ${context}` : ''}
+    ${context ? `Additional Context: Incorporate this to refine the research: ${context}` : ''}
 
-Output format:
-{
-  "topic": "${topic}",
-  "research": {
-    "summary": "Summary of the topic",
-    "keyPoints": ["Key point 1", "Key point 2"],
-    "trends": ["Current trend 1", "Current trend 2"],
-    "questions": ["Common question 1", "Common question 2"],
-    "contentAngles": ["Content angle 1", "Content angle 2"],
-    "sources": ["Source URL 1", "Source URL 2"]
-  }
-}
-`;
+    Ensure the research is actionable for YouTube creators: Include SEO keywords, hook ideas in key points, trend-based content angles for virality, audience questions to boost comments, and angles that drive high watch time. For sources, prioritize 3-5 recent, live active valid URL links from authoritative resources that provide deep, industry insights about the specific topic. Base these directly on the grounded search results.
 
-    // Generate research with Gemini
+    Return the output as valid JSON with no additional text, comments, markdown or formatting. The JSON should have the following structure:
+
+    {
+      "topic": "${topic}",
+      "research": {
+        "summary": "Concise, hook-filled overview tailored to the channel's style",
+        "keyPoints": ["Actionable point 1 with YouTube tip", "Point 2 focused on engagement"],
+        "trends": ["Current 2025 trend 1 relevant to niche", "Trend 2 with creator examples"],
+        "questions": ["Viewer question 1 to spark discussions", "Question 2 for Q&A segments"],
+        "contentAngles": ["Video angle 1: Step-by-step guide with thumbnails/hooks", "Angle 2: Case study for inspiration"],
+        "sources": ["https://direct-valid-creator-resource-1.com", "https://direct-valid-creator-resource-2.com"]
+      }
+    }
+    `;
+
+    // Generate research with Gemini (updated with grounding via googleSearch tool)
+    const groundingTool = {
+      googleSearch: {},
+    };
+
+    const config = {
+      tools: [groundingTool],
+      // Optional: temperature: 1.0 for more factual outputs
+    };
+
     const result: any = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: researchPrompt,
+      model: "gemini-2.5-flash",
+      contents: [{
+        role: "user",
+        parts: [{ text: researchPrompt }]
+      }],
+      config,
     });
 
     const response = parseResearchResponse(result.text);
