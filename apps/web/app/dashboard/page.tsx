@@ -53,6 +53,7 @@ export default function Dashboard() {
     )
   }
   const isSetupComplete = profile.youtube_connected && profile.ai_trained
+  console.log(isSetupComplete, "isSetupComplete")
 
   return (
     <div className="container py-8">
