@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useSettings } from "@/hooks/useSettings";
 import { CreditCard, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 // A type for the component's data state
 interface BillingData {
@@ -18,6 +19,7 @@ interface BillingData {
 export function BillingInfo() {
 
   const { updateBilling, loadingBilling } = useSettings()
+  const router = useRouter()
 
 
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -80,7 +82,7 @@ export function BillingInfo() {
             {isLoadingData ? (
               <Skeleton className="h-8 w-28 rounded-md" />
             ) : (
-              <Button variant="outline">Upgrade Plan</Button>
+              <Button variant="outline" onClick={() => router.push("/dashboard/plan")}>Upgrade Plan</Button>
             )}
           </div>
         </div>

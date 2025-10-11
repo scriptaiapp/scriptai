@@ -1,9 +1,14 @@
+"use client"
 import { cn } from "@/lib/utils"
 import { Link } from "lucide-react"
 import { Button } from "../ui/button"
 import { WobbleCard } from "../ui/wobble-card"
+import { usePathname, useRouter } from "next/navigation"
 
 export default function PricingSection() {
+    const router = useRouter()
+
+    const pathname = usePathname()
 
     const pricing = [
         {
@@ -33,9 +38,13 @@ export default function PricingSection() {
     return (
         <div className="container px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12 lg:mb-16">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
+                {
+                    pathname === "/" ? <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
                     Pricing
+                </h2>: <h2 className="mt-10 text-xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
+                    Recommended plan for you
                 </h2>
+                }
                 <p className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-prose text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-400">
                     Choose the plan that works best for your content creation needs.
                 </p>
@@ -64,6 +73,7 @@ export default function PricingSection() {
                                 /mo
                             </span>
                         </div>
+                        {pathname !== "/" && <Button className={cn("rounded-full my-4 cursor-pointer", option?.isPopular && "bg-slate-900 text-white")}>Get {option.heading}</Button>}
                         <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400 mb-4 sm:mb-6">
                             {option.description}
                         </p>
