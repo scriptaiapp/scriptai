@@ -7,7 +7,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { Analytics } from "@vercel/analytics/next"
 import { IconBugFilled } from "@tabler/icons-react"
-import ReportIssue from "@/components/dashboard/issue/report-an-issue"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -32,7 +31,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ReportIssue useIcon />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

@@ -11,7 +11,7 @@ import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { issueTypes } from '../../../packages/ui/src/utils/data';
-import ReportIssue from './dashboard/issue/report-an-issue';
+import ReportIssue from './issue/report-an-issue';
 
 const socialLinks = [
   { name: 'Twitter', href: 'https://twitter.com/your-profile', icon: Twitter },
