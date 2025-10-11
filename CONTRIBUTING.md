@@ -1,6 +1,6 @@
-# 🤝 Contributing to ScriptAI
+# 🤝 Contributing to Script AI
 
-Thank you for your interest in contributing to ScriptAI! This guide will help you get started and understand our development process.
+Thank you for your interest in contributing to Script AI! This guide will help you get started and understand our development process.
 
 ## 📋 Table of Contents
 
@@ -61,26 +61,10 @@ Create the necessary environment files:
 
 ```bash
 # Frontend environment
-cp apps/web/.env.example apps/web/.env.local
+cp apps/web/.env.example apps/web/.env
 
 # Backend environment
 cp apps/api/.env.example apps/api/.env
-```
-
-**Required Environment Variables:**
-
-Frontend (`apps/web/.env.local`):
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-Backend (`apps/api/.env`):
-```env
-PORT=8000
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_KEY=your_supabase_service_key
-GOOGLE_AI_STUDIO_API_KEY=your_google_ai_studio_key
 ```
 
 ### 3. Start Development Servers
@@ -105,13 +89,13 @@ Use descriptive branch names with prefixes:
 
 | Prefix | Description | Example |
 |--------|-------------|---------|
-| `feat/` | New features | `feat/add-dark-mode` |
-| `fix/` | Bug fixes | `fix/script-generation-error` |
-| `docs/` | Documentation | `docs/update-readme` |
-| `style/` | Code style changes | `style/format-components` |
-| `refactor/` | Code refactoring | `refactor/extract-hooks` |
-| `test/` | Adding tests | `test/add-script-tests` |
-| `chore/` | Maintenance tasks | `chore/update-dependencies` |
+| `feat/` | New features | `feat:add-dark-mode` |
+| `fix/` | Bug fixes | `fix:script-generation-error` |
+| `docs/` | Documentation | `docs:update-readme` |
+| `style/` | Code style changes | `style:format-components` |
+| `refactor/` | Code refactoring | `refactor:extract-hooks` |
+| `test/` | Adding tests | `test:add-script-tests` |
+| `chore/` | Maintenance tasks | `chore:update-dependencies` |
 
 ### Creating a Branch
 
@@ -121,7 +105,7 @@ git checkout main
 git pull upstream main
 
 # Create and switch to a new branch
-git checkout -b feat/your-feature-name
+git checkout -b feat:your-feature-name
 ```
 
 ### Commit Message Convention
@@ -294,6 +278,10 @@ describe('FeatureComponent', () => {
    - Test different scenarios
    - Test edge cases
 
+4. **Include existing related issue**
+   - Include related issue on the PR description
+   - Example: fixes #issue_number
+
 ### PR Checklist
 
 - [ ] Code follows the project's style guidelines
@@ -304,39 +292,6 @@ describe('FeatureComponent', () => {
 - [ ] PR description clearly describes the changes
 - [ ] PR is linked to an issue (if applicable)
 - [ ] All CI checks pass
-
-### PR Template
-
-```markdown
-## Description
-Brief description of the changes made.
-
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Testing
-- [ ] I have tested my changes locally
-- [ ] I have added tests for my changes
-- [ ] All existing tests pass
-
-## Checklist
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-
-## Screenshots (if applicable)
-Add screenshots to help explain your changes.
-
-## Additional Notes
-Any additional information or context.
-```
 
 ## 🐛 Issue Guidelines
 
@@ -350,15 +305,6 @@ When creating an issue, please use the provided templates and include:
 - **Expected vs actual behavior**
 - **Environment information** (OS, browser, etc.)
 - **Screenshots or videos** (if applicable)
-
-### Issue Labels
-
-- `bug` - Something isn't working
-- `enhancement` - New feature or request
-- `documentation` - Improvements or additions to documentation
-- `good first issue` - Good for newcomers
-- `help wanted` - Extra attention is needed
-- `question` - Further information is requested
 
 ## 🤝 Community Guidelines
 
@@ -379,8 +325,7 @@ If you need help with your contribution:
 
 1. **Check existing documentation** - Start with the README and this guide
 2. **Search existing issues** - Your question might already be answered
-3. **Join our Discord** - [https://discord.gg/f6AG7kt7](https://discord.gg/f6AG7kt7)
-4. **Create an issue** - Use the "Question" template
+3. **Reach out to us on Discord** - [https://discord.gg/k9sZcq2gNG](https://discord.gg/k9sZcq2gNG)
 
 ### Good First Issues
 
@@ -400,14 +345,6 @@ Contributors are recognized in several ways:
 - **Release Notes** - Significant contributions are mentioned in release notes
 - **Community Shoutouts** - Regular acknowledgments in our Discord community
 
-## 📚 Additional Resources
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Documentation](https://react.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-
 ---
 
-Thank you for contributing to ScriptAI! Your contributions help make this project better for everyone. 🚀
+Thank you for contributing to Script AI! Your contributions help make this project better for everyone. 🚀

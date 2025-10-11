@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-scriptai.community@gmail.com.
+support@tryscriptai.com.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
@@ -115,7 +115,7 @@ the community.
 ## Reporting Guidelines
 
 If you experience or witness unacceptable behavior—or have any other concerns—
-please report it by contacting the community team at scriptai.community@gmail.com.
+please report it by contacting the community team at support@tryscriptai.com.
 All reports will be handled with discretion. In your report please include:
 
 * Your contact information.
@@ -160,8 +160,8 @@ https://www.contributor-covenant.org/translations.
 
 For questions or concerns about this Code of Conduct, please contact us:
 
-- **Discord**: [Join our community](https://discord.gg/f6AG7kt7)
-- **Email**: scriptai.community@gmail.com
+- **Discord**: [Join our community](https://discord.gg/k9sZcq2gNG)
+- **Reach out to us at**: support@tryscriptai.com
 - **GitHub Issues**: [Create an issue](https://github.com/scriptaiapp/scriptai/issues)
 
 ## License and Attribution
