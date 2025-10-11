@@ -4,11 +4,13 @@ import { Link } from "lucide-react"
 import { Button } from "../ui/button"
 import { WobbleCard } from "../ui/wobble-card"
 import { usePathname, useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useState } from "react"
 
 export default function PricingSection() {
     const router = useRouter()
-
     const pathname = usePathname()
+    const [loading, setLoading] = useState<boolean>(false)
 
     const pricing = [
         {
@@ -35,15 +37,36 @@ export default function PricingSection() {
         },
     ]
 
+    const handlePlan = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault()
+        console.log("clicked")
+        // if (loading) return
+        setLoading(true)
+        try {
+            const response = await fetch("/api/stripe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ priceId: "price_1SH1sSALTcE9tQgYn5aBB7NT", customerEmail: "test@gmail.com" })
+            })
+            if (!response.ok) throw new Error("Failed to generate referral code")
+            const data = await response.json()
+            if (data.url) window.location.href = data.url;
+        } catch (error: any) {
+            toast.error("Error generating referral code", { description: error.message })
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="container px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12 lg:mb-16">
                 {
                     pathname === "/" ? <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
-                    Pricing
-                </h2>: <h2 className="mt-10 text-xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
-                    Recommended plan for you
-                </h2>
+                        Pricing
+                    </h2> : <h2 className="mt-10 text-xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
+                        Recommended plan for you
+                    </h2>
                 }
                 <p className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-prose text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-400">
                     Choose the plan that works best for your content creation needs.
@@ -73,7 +96,7 @@ export default function PricingSection() {
                                 /mo
                             </span>
                         </div>
-                        {pathname !== "/" && <Button className={cn("rounded-full my-4 cursor-pointer", option?.isPopular && "bg-slate-900 text-white")}>Get {option.heading}</Button>}
+                        {pathname !== "/" && <Button onClick={handlePlan} disabled={loading} className={cn("rounded-full my-4 cursor-pointer", option?.isPopular && "bg-slate-900 text-white hover:text-slate-900")}>{loading ? "Hold in": `Get ${option.heading}`}</Button>}
                         <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400 mb-4 sm:mb-6">
                             {option.description}
                         </p>
