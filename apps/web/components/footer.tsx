@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Image from "next/image";
 import Link from 'next/link';
@@ -5,6 +6,12 @@ import logo from "@/public/dark-logo.png";
 import { IconBrandDiscordFilled as Discord, IconBrandInstagram as Instagram, IconBrandLinkedin as Linkedin, IconBrandX as Twitter, IconBrandGithub as Github, IconBrandFacebook as Facebook } from '@tabler/icons-react';
 import { footerItems } from '@repo/ui';
 import { FloatingDock } from "@/components/ui/floating-dock";
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Textarea } from './ui/textarea';
+import { issueTypes } from '../../../packages/ui/src/utils/data';
+import ReportIssue from './issue/report-an-issue';
 
 const socialLinks = [
   { name: 'Twitter', href: 'https://twitter.com/your-profile', icon: Twitter },
@@ -43,6 +50,8 @@ const Footer = () => {
                 {item.name}
               </Link>
             ))}
+
+            <ReportIssue useIcon={false} />
           </nav>
 
           <div className="relative mb-8 mt-6">
