@@ -11,7 +11,7 @@
 
 If you discover a security vulnerability, please report it to us at:
 - **Email**: scriptai.community@gmail.com
-- **Discord**: [Join our community](https://discord.gg/f6AG7kt7)
+- **Discord**: [Join our community](https://discord.gg/k9sZcq2gNG)
 
 Please include:
 - Description of the vulnerability

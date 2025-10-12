@@ -1,10 +1,10 @@
 import { type EmailOtpType } from '@supabase/supabase-js';
-import { type NextRequest } from 'next/server';
-import { redirect } from 'next/navigation';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 
-async function sendWelcomeEmail(full_name: string, email: string, user_id: string, resend: Resend) {
+async function sendWelcomeEmail(full_name: string, email: string, user_id: string, resend: Resend | null) {
+  if (!resend) return;
   try {
     await resend.emails.send({
       from: 'Script AI <onboarding@tryscriptai.com>',
@@ -60,7 +60,8 @@ async function sendWelcomeEmail(full_name: string, email: string, user_id: strin
   }
 }
 
-async function sendAdminNotification(full_name: string, email: string, resend: Resend) {
+async function sendAdminNotification(full_name: string, email: string, resend: Resend | null) {
+  if (!resend) return;
   try {
     await resend.emails.send({
       from: 'Script AI <notifications@tryscriptai.com>',
@@ -88,16 +89,17 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash');
   const code = searchParams.get('code');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/dashboard';
+  const next = searchParams.get('next') ?? '/login';
   const supabase = await createClient();
-  const resend = new Resend(process.env.RESEND_API_KEY!);
+  const resendKey = process.env.RESEND_API_KEY;
+  const resend = resendKey ? new Resend(resendKey) : null;
 
   // For Google sign-in
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
+if (error) {
       console.error('Error exchanging code for session:', error.message);
-      redirect('/error');
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
     if (data.user) {
@@ -137,7 +139,7 @@ export async function GET(request: NextRequest) {
           .eq('id', data.user.id);
       }
 
-      redirect(next);
+      return NextResponse.redirect(new URL(next, request.url));
     }
   }
 
@@ -219,9 +221,9 @@ export async function GET(request: NextRequest) {
           .eq('id', data.user.id);
       }
 
-      redirect(next);
+      return NextResponse.redirect(new URL(next, request.url));
     }
   }
 
-  redirect('/error');
+  return NextResponse.redirect(new URL('/login', request.url));
 }
