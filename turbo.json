@@ -18,6 +18,10 @@
          "dist/**"
       ]
     },
+  "db:pull": {
+    "dependsOn": ["^build"],
+    "outputs": ["packages/supabase/migrations/**"]
+  },
     "lint": {},
     "type-check": {},
     "test": {},
