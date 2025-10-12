@@ -1843,8 +1843,10 @@ using ((bucket_id = 'user_avatar'::text));
   as permissive
   for insert
   to authenticated
-with check (((bucket_id = 'user_avatar'::text) AND (storage.filename(name) ~ '.*\.(jpg|jpeg|png|gif|bmp|webp);
-::text)));
+with check (
+  (bucket_id = 'user_avatar'::text)
+  AND (storage.filename(name) ~ '.*\.(jpg|jpeg|png|gif|bmp|webp)$')
+);
 
 
 
