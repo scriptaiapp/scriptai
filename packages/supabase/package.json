@@ -1,0 +1,16 @@
+{
+  "name": "supabase",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+"scripts": {
+  "supabase:dev": "pnpx supabase start", 
+    "supabase:init": "pnpx supabase init",
+    "supabase:link": "pnpx supabase link --project-ref <your-project-ID>",
+    "supabase:pull": "pnpx supabase db pull",
+    "supabase:push": "pnpx supabase db push"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
