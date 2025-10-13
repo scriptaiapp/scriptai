@@ -11,7 +11,8 @@ async function sendWelcomeEmail(
     email: string,
     user_id: string,
     resend: Resend
-) {
+| null) {
+  if (!resend) return;
   try {
     await resend.emails.send({
       from: 'Script AI <onboarding@tryscriptai.com>',
@@ -41,7 +42,7 @@ async function sendWelcomeEmail(
 
           <h2 style="margin-top: 30px; color: #111;">📝 Quick Feedback</h2>
           <p>
-            We'd love to hear your thoughts! It'll only take a minute.  
+            We’d love to hear your thoughts! It’ll only take a minute.  
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScLoa3gQRo44ygVofL-pY-HKgNwWRfP72qUKN6yaG7UZngFwA/viewform?usp=header" 
               style="color: #4F46E5; font-weight: bold; text-decoration: none;">
               Share Feedback
@@ -66,11 +67,8 @@ async function sendWelcomeEmail(
   }
 }
 
-async function sendAdminNotification(
-    full_name: string,
-    email: string,
-    resend: Resend
-) {
+async function sendAdminNotification(full_name: string, email: string, resend: Resend | null) {
+  if (!resend) return;
   try {
     await resend.emails.send({
       from: 'Script AI <notifications@tryscriptai.com>',
@@ -87,12 +85,11 @@ async function sendAdminNotification(
           </ul>
         </div>`,
     });
-    console.log(`Admin notification sent for: ${email}`);
+    console.log(`Admin notification sent for new user: ${email}`);
   } catch (error) {
-    console.error(' Error sending admin notification:', error);
+    console.error('Error sending admin notification:', error);
   }
 }
-
 
 async function updateUserProfile(
     supabase: any,
@@ -250,16 +247,14 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type') as EmailOtpType | null;
   const next = searchParams.get('next') ?? '/dashboard';
   const referralCode = searchParams.get('ref');
-
-  // Validate environment
+  //validate environment
   if (!process.env.RESEND_API_KEY) {
     console.error(' RESEND_API_KEY is not configured');
     redirect('/error?message=Server configuration error. Please contact support.');
   }
-
   const supabase = await createClient();
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+  // For Google sign-in
   if (code) {
     try {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -294,14 +289,14 @@ export async function GET(request: NextRequest) {
         await completePendingReferral(supabase, user.email, user.id);
       }
 
-      // await sendWelcomeEmailsIfNeeded(
-      //     supabase,
-      //     user.id,
-      //     full_name,
-      //     user.email!,
-      //     resend,
-      //     true
-      // );
+      await sendWelcomeEmailsIfNeeded(
+          supabase,
+          user.id,
+          full_name,
+          user.email!,
+          resend,
+          true
+      );
 
       console.log(` Google OAuth flow completed for: ${user.email}`);
     } catch (error) {
@@ -311,6 +306,7 @@ export async function GET(request: NextRequest) {
     return redirect(next);
   }
 
+  // For email OTP verification (manual signup)
   if (token_hash && type) {
     try {
       const { data, error } = await supabase.auth.verifyOtp({

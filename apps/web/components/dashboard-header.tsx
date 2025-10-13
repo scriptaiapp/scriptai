@@ -54,8 +54,6 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed 
     }
   };
 
-  console.log(profile)
-
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-4 backdrop-blur-sm sm:px-6">
       <Button

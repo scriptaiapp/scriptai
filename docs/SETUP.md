@@ -1,6 +1,6 @@
 # 🚀 Development Setup Guide
 
-This guide will help you set up the ScriptAI development environment on your local machine.
+This guide will help you set up the Script AI development environment on your local machine.
 
 ## 📋 Prerequisites
 
@@ -59,16 +59,10 @@ pnpm install
 
 ```bash
 # Copy the example environment file
-cp apps/web/env.example apps/web/.env.local
+cp apps/web/env.example apps/web/.env
 
 # Edit the file with your actual values
-nano apps/web/.env.local
-```
-
-**Required Variables:**
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+nano apps/web/.env
 ```
 
 #### Backend Environment
@@ -79,14 +73,6 @@ cp apps/api/env.example apps/api/.env
 
 # Edit the file with your actual values
 nano apps/api/.env
-```
-
-**Required Variables:**
-```env
-PORT=8000
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-GOOGLE_AI_STUDIO_API_KEY=your_google_ai_studio_api_key
 ```
 
 ### 4. Supabase Setup

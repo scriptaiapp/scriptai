@@ -164,6 +164,7 @@ function SignupForm() {
         email: details.email!,
         password: details.password!,
         options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/login`,
           data: {
             full_name: details.name,
           },

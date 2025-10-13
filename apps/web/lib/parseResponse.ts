@@ -1,3 +1,4 @@
+import { ResearchData } from '@/app/api/research-topic/route';
 import { jsonrepair } from 'jsonrepair';
 
 export interface StyleAnalysis {
@@ -23,6 +24,7 @@ interface ScriptResponse {
   script: string;
 }
 
+// for model training
 export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
   try {
     // Remove markdown code block formatting if present
@@ -76,10 +78,6 @@ export function parseGeminiResponse(rawText: string): StyleAnalysis | null {
 // Function to parse Gemini response into a typed object
 export function parseScriptResponse(text: string): ScriptResponse | null {
   try {
-    // Log raw response for debugging
-    console.log('Raw Gemini response:', text);
-
-    // Clean the response
     let cleanedText = text.trim();
 
     // Remove markdown code fences if present
@@ -129,6 +127,60 @@ export function parseScriptResponse(text: string): ScriptResponse | null {
     return null;
   } catch (error) {
     console.error('Error parsing Gemini response:', error, { inputText: text });
+    return null;
+  }
+}
+
+interface GeminiResponse {
+  topic: string;
+  research: ResearchData;
+}
+
+// Parse Gemini response into structured research data
+export function parseResearchResponse(text: string): GeminiResponse | null {
+  try {
+    let cleanedText = text.trim();
+
+    // Remove markdown code fences if present
+    if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(7, -3).trim();
+    } else if (cleanedText.startsWith('```') && cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(3, -3).trim();
+    }
+
+    // Additional cleaning: remove leading/trailing newlines, tabs, or whitespace
+    cleanedText = cleanedText.replace(/^\s+|\s+$/g, '');
+
+    // Log cleaned text for debugging
+    console.log('Cleaned Gemini response:', cleanedText);
+    const parsed = JSON.parse(jsonrepair(cleanedText));
+
+    if (
+      typeof parsed.topic !== 'string' ||
+      typeof parsed.research !== 'object' ||
+      typeof parsed.research.summary !== 'string' ||
+      !Array.isArray(parsed.research.keyPoints) ||
+      !Array.isArray(parsed.research.trends) ||
+      !Array.isArray(parsed.research.questions) ||
+      !Array.isArray(parsed.research.contentAngles) ||
+      !Array.isArray(parsed.research.sources)
+    ) {
+      return null;
+    }
+
+    return {
+      topic: parsed.topic,
+      research: {
+        summary: parsed.research.summary,
+        keyPoints: parsed.research.keyPoints,
+        trends: parsed.research.trends,
+        questions: parsed.research.questions,
+        contentAngles: parsed.research.contentAngles,
+        sources: parsed.research.sources,
+      },
+    };
+  } catch (error) {
+    console.error('Error parsing research response:', error);
     return null;
   }
 }

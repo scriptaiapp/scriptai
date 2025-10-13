@@ -27,14 +27,14 @@ export interface StyleAnalysis {
 
 export async function POST(request: Request) {
   const supabase = await createClient();
-  
+
   try {
     const { userId, videoUrls, isRetraining = false } = await request.json();
 
     // Input validation
     if (!userId || !videoUrls || !Array.isArray(videoUrls) || videoUrls.length < 3) {
-      return NextResponse.json({ 
-        error: 'Invalid input: userId and at least 3 video URLs are required' 
+      return NextResponse.json({
+        error: 'Invalid input: userId and at least 3 video URLs are required'
       }, { status: 400 });
     }
 
@@ -42,15 +42,15 @@ export async function POST(request: Request) {
     const envValidation = validateOAuthEnvironment();
     if (!envValidation.isValid) {
       logError('train-ai', new Error(`Missing environment variables: ${envValidation.missing.join(', ')}`));
-      return NextResponse.json({ 
-        error: 'Server configuration error: Missing Google OAuth credentials' 
+      return NextResponse.json({
+        error: 'Server configuration error: Missing Google OAuth credentials'
       }, { status: 500 });
     }
 
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       logError('train-ai', new Error('Missing Google Generative AI API key'));
-      return NextResponse.json({ 
-        error: 'Server configuration error: Missing AI API key' 
+      return NextResponse.json({
+        error: 'Server configuration error: Missing AI API key'
       }, { status: 500 });
     }
 
@@ -62,14 +62,14 @@ export async function POST(request: Request) {
       .single();
 
     if (channelError || !channelData) {
-      return NextResponse.json({ 
-        error: 'YouTube channel not found. Please connect your YouTube channel first.' 
+      return NextResponse.json({
+        error: 'YouTube channel not found. Please connect your YouTube channel first.'
       }, { status: 404 });
     }
 
     if (!channelData.provider_token) {
-      return NextResponse.json({ 
-        error: 'YouTube channel not properly connected. Please reconnect your YouTube channel.' 
+      return NextResponse.json({
+        error: 'YouTube channel not properly connected. Please reconnect your YouTube channel.'
       }, { status: 400 });
     }
 
@@ -87,13 +87,13 @@ export async function POST(request: Request) {
 
       if (!tokenResult.isValid) {
         if (tokenResult.error === 'No refresh token available') {
-          return NextResponse.json({ 
-            error: 'Your YouTube connection has expired. Please reconnect your YouTube channel in the dashboard.' 
+          return NextResponse.json({
+            error: 'Your YouTube connection has expired. Please reconnect your YouTube channel in the dashboard.'
           }, { status: 401 });
         }
-        
-        return NextResponse.json({ 
-          error: 'Your YouTube connection has expired and could not be refreshed. Please reconnect your YouTube channel in the dashboard.' 
+
+        return NextResponse.json({
+          error: 'Your YouTube connection has expired and could not be refreshed. Please reconnect your YouTube channel in the dashboard.'
         }, { status: 401 });
       }
 
@@ -104,22 +104,21 @@ export async function POST(request: Request) {
       if (tokenRefreshed) {
         const { error: updateError } = await supabase
           .from('youtube_channels')
-          .update({ 
-            provider_token: accessToken, 
-            updated_at: new Date().toISOString() 
+          .update({
+            provider_token: accessToken,
+            updated_at: new Date().toISOString()
           })
           .eq('user_id', userId)
           .eq('channel_id', channelData.channel_id);
 
         if (updateError) {
           console.error('Error updating provider_token:', updateError);
-          // Continue with the new token even if update fails
         }
       }
     } catch (error: any) {
       logError('train-ai-token-management', error, { userId, channelId: channelData.channel_id });
-      return NextResponse.json({ 
-        error: 'Unable to validate YouTube connection. Please try again or reconnect your channel.' 
+      return NextResponse.json({
+        error: 'Unable to validate YouTube connection. Please try again or reconnect your channel.'
       }, { status: 500 });
     }
 
@@ -137,8 +136,8 @@ export async function POST(request: Request) {
       .filter((id): id is string => Boolean(id));
 
     if (videoIds.length < 3) {
-      return NextResponse.json({ 
-        error: 'At least 3 valid YouTube video URLs are required' 
+      return NextResponse.json({
+        error: 'At least 3 valid YouTube video URLs are required'
       }, { status: 400 });
     }
 
@@ -155,7 +154,7 @@ export async function POST(request: Request) {
             id: videoIds.join(','),
             mine: true
           },
-          headers: { 
+          headers: {
             Authorization: `Bearer ${accessToken}`,
             'User-Agent': 'ScriptAI/1.0'
           },
@@ -164,14 +163,14 @@ export async function POST(request: Request) {
         break; // Success, exit retry loop
       } catch (error: any) {
         retryCount++;
-        
+
         if (retryCount >= maxRetries || !shouldRetry(error, retryCount, maxRetries)) {
           logError('train-ai-youtube-api', error, { userId, videoIds, retryCount });
-          return NextResponse.json({ 
-            error: 'Failed to fetch video data from YouTube. Please check your video URLs and try again.' 
+          return NextResponse.json({
+            error: 'Failed to fetch video data from YouTube. Please check your video URLs and try again.'
           }, { status: 500 });
         }
-        
+
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, calculateRetryDelay(retryCount)));
       }
@@ -180,8 +179,8 @@ export async function POST(request: Request) {
     // Validate video ownership and existence
     const videos = videoResponse!.data.items;
     if (!videos || videos.length < 3) {
-      return NextResponse.json({ 
-        error: 'Could not find at least 3 videos from your channel. Please check the video URLs and ensure they belong to your connected YouTube channel.' 
+      return NextResponse.json({
+        error: 'Could not find at least 3 videos from your channel. Please check the video URLs and ensure they belong to your connected YouTube channel.'
       }, { status: 400 });
     }
 
@@ -212,7 +211,7 @@ export async function POST(request: Request) {
 
     // Enhanced prompt for style analysis
     const prompt = `
-Analyze the following YouTube channel and video data to extract the creator's content style, which will be used for generating scripts, research topics, thumbnails, subtitles, and audio conversions. Provide a detailed analysis of the following aspects: tone (e.g., conversational, formal), vocabulary level (e.g., simple, technical), pacing (e.g., fast, slow), themes (e.g., educational, entertainment), humor style (e.g., witty, sarcastic), narrative structure (e.g., storytelling, listicle), visual style (based on thumbnails and descriptions), and audience engagement techniques (e.g., calls to action, audience questions). Additionally, include a comprehensive narrative overview of the creator's overall content style in the style_analysis field, synthesizing all aspects into a cohesive summary. The analysis should be structured as a JSON object for easy reuse.
+Analyze the following YouTube channel and video data to extract the creator's content style, which will be used for generating scripts, research topics, thumbnails, subtitles, and audio conversions. Provide a detailed analysis of the following aspects: tone (e.g., conversational, formal), vocabulary level (e.g., simple, technical), pacing (e.g., fast, slow), themes (e.g., educational, entertainment), humor style (e.g., witty, sarcastic), narrative structure (e.g., storytelling, listicle), visual style, thumbnails and descriptions, and audience engagement techniques (e.g., calls to action, audience questions). Additionally, include a comprehensive narrative overview of the creator's overall content style in the style_analysis field, synthesizing all aspects into a cohesive summary. The analysis should be structured as a JSON object for easy reuse.
 
 Channel Data:
 - Name: ${channelData.channel_name}
@@ -274,12 +273,12 @@ Provide the analysis in the following JSON format:
         });
 
         styleAnalysis = parseGeminiResponse(result.text);
-        
+
         if (!styleAnalysis) {
           console.error('Failed to parse Gemini response, attempt:', retryCount + 1);
           retryCount++;
           if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       } catch (error: any) {
@@ -292,12 +291,53 @@ Provide the analysis in the following JSON format:
     }
 
     if (!styleAnalysis) {
-      return NextResponse.json({ 
-        error: 'Failed to analyze your content style. Please try again with different videos.' 
+      return NextResponse.json({
+        error: 'Failed to analyze your content style. Please try again with different videos.'
       }, { status: 500 });
     }
 
-    // Update profiles table to mark AI as trained
+    // NEW: Stringify the style analysis for embedding
+    const styleText = JSON.stringify(styleAnalysis);
+
+    // NEW: Generate embedding with retry logic
+    let embeddingResponse: any = null;
+    retryCount = 0;
+
+    while (retryCount < maxRetries && !embeddingResponse) {
+      try {
+        embeddingResponse = await ai.models.embedContent({
+          model: 'gemini-embedding-001',
+          contents: styleText,
+          config: {
+            outputDimensionality: 768,
+            taskType: 'RETRIEVAL_DOCUMENT',
+          }
+        });
+
+        if (!embeddingResponse?.embeddings) {
+          throw new Error('Invalid embedding response');
+        }
+      } catch (error: any) {
+        logError('train-ai-embedding', error, { userId, retryCount });
+        retryCount++;
+        if (retryCount < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+
+    if (!embeddingResponse) {
+      return NextResponse.json({
+        error: 'Failed to generate embedding for style analysis'
+      }, { status: 500 });
+    }
+
+    const embeddingValues = embeddingResponse?.embeddings[0]?.values;
+    const norm = Math.sqrt(embeddingValues.reduce((sum: number, val: number) => sum + val * val, 0));
+    const normalizedEmbedding = norm > 0
+      ? embeddingValues.map((val: number) => val / norm)
+      : embeddingValues;
+
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ ai_trained: true })
@@ -305,8 +345,8 @@ Provide the analysis in the following JSON format:
 
     if (profileError) {
       logError('train-ai-profile-update', profileError, { userId });
-      return NextResponse.json({ 
-        error: 'Failed to update training status' 
+      return NextResponse.json({
+        error: 'Failed to update training status'
       }, { status: 500 });
     }
 
@@ -325,6 +365,8 @@ Provide the analysis in the following JSON format:
       style_analysis: styleAnalysis.style_analysis,
       recommendations: styleAnalysis.recommendations,
       updated_at: new Date().toISOString(),
+      content: styleText,
+      embedding: normalizedEmbedding || null
     };
 
     const { error: styleError } = await supabase
@@ -336,12 +378,12 @@ Provide the analysis in the following JSON format:
 
     if (styleError) {
       logError('train-ai-style-save', styleError, { userId });
-      return NextResponse.json({ 
-        error: 'Failed to save your content style analysis' 
+      return NextResponse.json({
+        error: 'Failed to save your content style analysis'
       }, { status: 500 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: isRetraining ? 'AI re-training completed successfully' : 'AI training completed successfully',
       tokenRefreshed,
       videosAnalyzed: videos.length
@@ -349,7 +391,7 @@ Provide the analysis in the following JSON format:
 
   } catch (error: any) {
     logError('train-ai', error);
-    
+
     const errorResponse = createErrorResponse(error);
     return NextResponse.json(errorResponse, { status: 500 });
   }
