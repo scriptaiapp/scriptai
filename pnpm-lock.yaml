@@ -438,6 +438,8 @@ importers:
         specifier: ^14.1.1
         version: 14.2.31(@babel/core@7.28.0)(react-dom@18.3.1)(react@18.3.1)
 
+  packages/supabase: {}
+
   packages/typescript-config: {}
 
   packages/ui:

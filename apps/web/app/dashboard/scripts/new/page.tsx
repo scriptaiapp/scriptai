@@ -9,33 +9,33 @@ import ScriptGenerationForm, {
 } from "@/components/dashboard/scripts/ScriptGenerationForm"
 import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
-import { updateScript } from "@/lib/actions/Scripts"
-import {ScriptLoaderSkeleton} from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton";
+import { updateScript } from "@/lib/api/getScripts"
+import { ScriptLoaderSkeleton } from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton"
 
 const calculateDurationInSeconds = (duration: string, customDuration: string) => {
   switch (duration) {
-    case '1min':
-      return "60";
-    case '3min':
-      return "180";
-    case '5min':
-      return "300";
-    case 'custom':
-      if (!customDuration || !customDuration.includes(':')) {
-        return 0;
+    case "1min":
+      return "60"
+    case "3min":
+      return "180"
+    case "5min":
+      return "300"
+    case "custom":
+      if (!customDuration || !customDuration.includes(":")) {
+        return "0"
       }
-      const parts = customDuration.split(':');
-      const minutes = parseInt(parts[0] ?? '0', 10) || 0;
-      const seconds = parseInt(parts[1] ?? '0', 10) || 0;
-      return ((minutes * 60) + seconds).toString();
+      const parts = customDuration.split(":")
+      const minutes = parseInt(parts[0] ?? "0", 10) || 0
+      const seconds = parseInt(parts[1] ?? "0", 10) || 0
+      return (minutes * 60 + seconds).toString()
     default:
-      return 0;
+      return "0"
   }
-};
+}
 
 export default function NewScriptPage() {
   const router = useRouter()
-  const { supabase, user, profile, profileLoading } = useSupabase()
+  const { profile, profileLoading } = useSupabase()
   const [loadingSave, setLoadingSave] = useState(false)
   const [loadingGenerate, setLoadingGenerate] = useState(false)
   const [generatedScript, setGeneratedScript] = useState("")
@@ -52,21 +52,24 @@ export default function NewScriptPage() {
       return
     }
 
-    const duration = calculateDurationInSeconds(formData.duration, formData.customDuration || "")
-    formData.duration = duration || "300"
+    const durationInSeconds = calculateDurationInSeconds(
+        formData.duration,
+        formData.customDuration || ""
+    )
+    formData.duration = durationInSeconds || "300"
     delete formData.customDuration
     formData.personalized = profile?.ai_trained
 
-    const multipartData = new FormData();
+    const multipartData = new FormData()
     for (const [key, value] of Object.entries(formData)) {
       if (key === "files" && Array.isArray(value)) {
         for (const file of value) {
-          multipartData.append("files", file, file.name);
+          multipartData.append("files", file, file.name)
         }
       } else if (typeof value === "boolean") {
-        multipartData.append(key, String(value));
+        multipartData.append(key, String(value))
       } else if (value !== undefined && value !== null) {
-        multipartData.append(key, value as string);
+        multipartData.append(key, value as string)
       }
     }
 
@@ -114,7 +117,7 @@ export default function NewScriptPage() {
   const handleSaveScript = async () => {
     if (!generatedScript || !scriptTitle || !scriptId) {
       toast.error("Missing information", {
-        description: "Please generate a script and provide a title before saving.",
+        description: "Please generate a script before saving.",
       })
       return
     }
@@ -122,18 +125,17 @@ export default function NewScriptPage() {
     setLoadingSave(true)
 
     try {
-      // Use server action instead of direct Supabase call
       const result = await updateScript(scriptId, {
         title: scriptTitle,
         content: generatedScript,
       })
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to update script")
+      if (!result) {
+        throw new Error("Failed to save the script. Please try again.")
       }
 
-      toast.success("Script updated!", {
-        description: "Your script changes have been saved successfully.",
+      toast.success("Script saved!", {
+        description: "Your script has been saved successfully.",
       })
 
       router.push(`/dashboard/scripts`)
@@ -144,11 +146,11 @@ export default function NewScriptPage() {
     }
   }
 
-  if(profileLoading){
-    return <ScriptLoaderSkeleton/>
+  if (profileLoading) {
+    return <ScriptLoaderSkeleton />
   }
 
-  if ((!profile?.ai_trained || !profile?.youtube_connected) && !profileLoading) {
+  if (!profile?.ai_trained || !profile?.youtube_connected) {
     return <AITrainingRequired />
   }
 
