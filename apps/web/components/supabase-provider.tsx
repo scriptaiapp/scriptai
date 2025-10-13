@@ -152,7 +152,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setProfile(null)
       setProfileLoading(false)
     }
-  }, [user])
+  }, [user?.id])
 
   const value: SupabaseContext = {
     supabase,
