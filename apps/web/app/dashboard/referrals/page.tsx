@@ -104,7 +104,7 @@ export default function Referrals() {
       if (!response.ok) throw new Error("Failed to generate referral code")
       const data = await response.json()
       toast.success("Referral code generated!", { description: `Your code: ${data.referralCode}` })
-      fetchReferralData() // Refresh data
+      await fetchReferralData() // Refresh data
     } catch (error: any) {
       toast.error("Error generating referral code", { description: error.message })
     } finally {

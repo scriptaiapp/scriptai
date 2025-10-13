@@ -1,11 +1,10 @@
-# Script AI: Personalized creator tool for Youtubers
+# Script AI: Personalized creator tool for YouTubers
 
 > **Transform your YouTube content creation with AI that learns your style and voice.** Script AI is a personalized AI assistant that helps YouTubers generate scripts, thumbnails, subtitles, and more - all tailored to their unique content style and audience.
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?style=for-the-badge&logo=discord)](https://discord.com/invite/k9sZcq2gNG)
 [![GitHub Stars](https://img.shields.io/github/stars/scriptaiapp/scriptai?style=for-the-badge)](https://github.com/scriptaiapp/scriptai/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
 
 ### 🎯 Core AI Features
 - **Script Generation** - AI learns your style from 3-5 videos
@@ -48,20 +47,35 @@
    pnpm install
    ```
 
-3. **Set up environment variables**
+3. **Set up Supabase**
+   - Create a fresh Supabase project at [supabase.com/dashboard](https://supabase.com/dashboard) (free tier is fine for development).
+   - Run `pnpx supabase login` and follow the prompts to log in with your Supabase account (if not already logged in).
+   - Get your project's Database URL from the Supabase dashboard (Settings > Database > Connection String; use the `postgresql://` format).
+   - Apply the existing schema to your new database:
+     ```bash
+     pnpx supabase db push --db-url <your-supabase-db-url>
+     ```
+   - Note: This uses the schema from `packages/supabase/migrations/` and won't add any seed data.
+
+4. **Set up environment variables**
    ```bash
    # Copy example environment files
    cp apps/web/.env.example apps/web/.env
    cp apps/api/.env.example apps/api/.env
-   
    ```
+   - Edit `apps/web/.env` and `apps/api/.env` to include your Supabase credentials:
+     ```
+     SUPABASE_URL=<your-supabase-project-url>
+     SUPABASE_ANON_KEY=<your-supabase-anon-key>
+     ```
+     (Get these from your Supabase dashboard under Settings > API.)
 
-4. **Start development servers**
+5. **Start development servers**
    ```bash
    pnpm run dev
    ```
 
-5. **Open your browser**
+6. **Open your browser**
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend: [http://localhost:8000](http://localhost:8000)
 

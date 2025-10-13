@@ -20,7 +20,7 @@ Thank you for your interest in contributing to Script AI! This guide will help y
 
 Before you begin, make sure you have the following installed:
 
-- **Node.js** 18.x or higher
+- **Node.js** 19.x or higher
 - **pnpm** package manager
 - **Git** for version control
 - **VS Code** (recommended) with extensions:
@@ -55,7 +55,20 @@ Before you begin, make sure you have the following installed:
 pnpm install
 ```
 
-### 2. Environment Configuration
+This installs all dependencies, including the Supabase CLI as a dev dependency at the root.
+
+### 2. Set up Supabase
+
+- Create a fresh Supabase project at [supabase.com/dashboard](https://supabase.com/dashboard) (free tier is sufficient for development).
+- Run `pnpx supabase login` and follow the prompts to log in with your Supabase account (if not already logged in).
+- Get your project's Database URL from the Supabase dashboard (Settings > Database > Connection String; use the `postgresql://` format).
+- Apply the existing schema to your new database:
+  ```bash
+  pnpx supabase db push --db-url <your-supabase-db-url>
+  ```
+  - Note: This applies the schema from `packages/supabase/migrations/` to your database, run from the project root. No seed data is included.
+
+### 3. Environment Configuration
 
 Create the necessary environment files:
 
@@ -67,7 +80,14 @@ cp apps/web/.env.example apps/web/.env
 cp apps/api/.env.example apps/api/.env
 ```
 
-### 3. Start Development Servers
+Edit `apps/web/.env` and `apps/api/.env` to include your Supabase credentials:
+```
+SUPABASE_URL=<your-supabase-project-url>
+SUPABASE_ANON_KEY=<your-supabase-anon-key>
+```
+(Get these from your Supabase dashboard under Settings > API.)
+
+### 4. Start Development Servers
 
 ```bash
 # Start all services

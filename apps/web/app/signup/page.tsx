@@ -164,6 +164,7 @@ function SignupForm() {
         email: details.email!,
         password: details.password!,
         options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/login`,
           data: {
             full_name: details.name,
           },
@@ -174,7 +175,7 @@ function SignupForm() {
 
       if (data.user) {
         toast.success("Account created!", { description: "Please check your email to verify your account." });
-        trackReferral(data?.user?.email);
+        await trackReferral(data?.user?.email);
         router.push("/login");
       }
     } catch (error: any) {
@@ -201,20 +202,20 @@ function SignupForm() {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
+
+      const redirectUrl = referralCode
+          ? `${window.location.origin}/api/auth/callback?ref=${referralCode}`
+          : `${window.location.origin}/api/auth/callback`;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
+          redirectTo: redirectUrl,
           scopes: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
         },
       });
 
       if (error) throw error;
-
-      if (data.url) {
-        console.log(data);
-        // window.location.href = data.url;
-      }
     } catch (error: any) {
       toast.error("Google Signup Failed", {
         description: error.message || "Could not sign up with Google. Please try again.",
@@ -266,7 +267,7 @@ function SignupForm() {
               {showReferralBanner && referralCode && (
                 <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
                   <p className="text-sm text-center text-purple-700 dark:text-purple-300">
-                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 5 credits.
+                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 10 credits.
                   </p>
                 </div>
               )}

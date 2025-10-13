@@ -6,10 +6,8 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
 
   if (request.nextUrl.pathname === "/api/auth/callback" ||
-    request.nextUrl.pathname === "/api/track-referral" ||
     request.nextUrl.pathname === "/api/stripe/webhook" ||
-    // request.nextUrl.pathname === "/api/stripe" ||
-    request.nextUrl.pathname === "/api/complete-pending-referral"
+    request.nextUrl.pathname === "/api/track-referral"
   ) {
     return response
   }

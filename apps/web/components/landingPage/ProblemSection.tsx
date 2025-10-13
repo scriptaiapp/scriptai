@@ -1,11 +1,6 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 import { AlertCircle, TrendingUp, Clock, Target } from "lucide-react";
-import { motion } from "motion/react";
-import { BackgroundLines } from "../ui/background-lines";
-import { Timeline } from "../ui/timeline";
-
+import {MotionDiv} from "@/components/MotionComponents/MotionDiv";
 
 const ProblemSection = () => {
 
@@ -74,7 +69,7 @@ const ProblemSection = () => {
 
             <div className="space-y-10">
                 {problems.map((p, i) => (
-                    <motion.div
+                    <MotionDiv
                         key={p.title}
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -97,7 +92,7 @@ const ProblemSection = () => {
                         </div>
 
                         <div className="mt-6 border-l-2 border-dashed border-slate-200 ml-[20px] h-10" />
-                    </motion.div>
+                    </MotionDiv>
                 ))}
             </div>
         </div>
