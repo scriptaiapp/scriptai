@@ -1,20 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 import { NewUserOnboarding } from "@/components/dashboard/main/NewUserOnboarding"
 import { ReturningUserHub } from "@/components/dashboard/main/ReturningUserHub"
 import { DashboardSkeleton } from "@/components/dashboard/main/skeleton/DashboardSkeleton"
 import { connectYoutubeChannel } from "@/lib/connectYT"
-import { useScripts } from "@/hooks/use-script"
+import { getScripts, Script } from "@/lib/api/getScripts"
+
 
 export default function Dashboard() {
   const { supabase, user, profile, fetchUserProfile } = useSupabase()
-  const { scripts: recentScripts, loading } = useScripts()
 
+  const [recentScripts, setRecentScripts] = useState<Script[]>([])
+  const [isLoadingScripts, setIsLoadingScripts] = useState(true)
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
   const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false)
+
+  // Fetch scripts on component mount
+  useEffect(() => {
+    const fetchScripts = async () => {
+      setIsLoadingScripts(true)
+      try {
+        const scripts = await getScripts()
+        setRecentScripts(scripts)
+      } catch (error) {
+        console.error("Error loading scripts:", error)
+        toast.error("Failed to load scripts")
+      } finally {
+        setIsLoadingScripts(false)
+      }
+    }
+
+    fetchScripts()
+  }, [])
 
   const handleConnectYoutube = () => {
     connectYoutubeChannel({
@@ -29,15 +49,15 @@ export default function Dashboard() {
     setIsDisconnectingYoutube(true)
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({ ai_trained: false, youtube_connected: false })
-        .eq("user_id", user.id)
-        .single()
+          .from("profiles")
+          .update({ ai_trained: false, youtube_connected: false })
+          .eq("user_id", user.id)
+          .single()
 
       if (error) throw error
 
       toast.success("YouTube channel disconnected successfully.")
-      fetchUserProfile(user.id)
+      await fetchUserProfile(user.id)
     } catch (error: any) {
       toast.error(error.message || "Failed to disconnect YouTube channel.")
     } finally {
@@ -45,39 +65,40 @@ export default function Dashboard() {
     }
   }
 
-  if (loading || !profile) {
+  if (!profile || isLoadingScripts) {
     return (
-      <div className="container py-8">
-        <DashboardSkeleton />
-      </div>
+        <div className="container py-8">
+          <DashboardSkeleton />
+        </div>
     )
   }
+
   const isSetupComplete = profile.youtube_connected && profile.ai_trained
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome, {profile.full_name || "Creator"}
-        </h1>
-      </div>
+      <div className="container py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome, {profile.full_name || "Creator"}
+          </h1>
+        </div>
 
-      {isSetupComplete ? (
-        <ReturningUserHub
-          profile={profile}
-          recentScripts={recentScripts}
-          disconnectYoutubeChannel={handleDisconnectYoutube}
-          disconnectingYoutube={isDisconnectingYoutube}
-        />
-      ) : (
-        <NewUserOnboarding
-          profile={profile}
-          connectYoutubeChannel={handleConnectYoutube}
-          connectingYoutube={isConnectingYoutube}
-          disconnectYoutubeChannel={handleDisconnectYoutube}
-          disconnectingYoutube={isDisconnectingYoutube}
-        />
-      )}
-    </div>
+        {isSetupComplete ? (
+            <ReturningUserHub
+                profile={profile}
+                recentScripts={recentScripts}
+                disconnectYoutubeChannel={handleDisconnectYoutube}
+                disconnectingYoutube={isDisconnectingYoutube}
+            />
+        ) : (
+            <NewUserOnboarding
+                profile={profile}
+                connectYoutubeChannel={handleConnectYoutube}
+                connectingYoutube={isConnectingYoutube}
+                disconnectYoutubeChannel={handleDisconnectYoutube}
+                disconnectingYoutube={isDisconnectingYoutube}
+            />
+        )}
+      </div>
   )
 }
