@@ -11,6 +11,7 @@ export const footerItems = {
     { name: "Pricing", href: "./#pricing" },
     { name: "Book a Call", href: "https://cal.com/afrin/30min" },
     { name: "About Us", href: "/about-us" },
+    { name: "Contact Us", href: "/contact-us" },
     // { name: "Docs", href: "/docs" },
   ],
   "Account": [
