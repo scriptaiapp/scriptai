@@ -74,7 +74,7 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 bg-white">
+      <section className="py-2 md:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <motion.div  className="w-full rounded-2xl flex justify-center object-cover"
             initial={{ opacity: 0, x: -40 }}
