@@ -6,6 +6,9 @@ import logo from "@/public/dark-logo.png"
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
@@ -17,11 +20,28 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     if(loading) return
+    setLoading(true)
+    console.log(formData)
     e.preventDefault();
     try {
-      console.log(formData)
-    } catch (error) {
+     const response = await fetch("/api/contact-us", {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify(formData),
+           });
+     
+           if (!response.ok) throw new Error("Failed to send mail");
+     
+           await response.json();
+           toast.success("mail sent successfully!", {
+             description: "Thank you for reaching out!. We'll look into it soon.",
+           });
+           setFormData({ name: "", email: "", message: "" })
+    } catch (error:any) {
       console.error(error, "error")
+       toast.error("Failed to send mail", {
+              description: error?.message || "Something went wrong. Please try again.",
+            });
     }finally{
       setLoading(false)
     }
@@ -107,14 +127,8 @@ export default function ContactPage() {
                   placeholder="Write your message here..."
                 />
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                type="submit"
-                className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-indigo-500 transition-colors duration-200 w-full"
-              >
-                Send Message
-              </motion.button>
+              <Button className={cn("w-full")} disabled={loading}>Send Message</Button>
+              
             </form>
           </motion.div>
         </div>
