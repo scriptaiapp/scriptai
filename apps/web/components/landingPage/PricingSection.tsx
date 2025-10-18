@@ -6,9 +6,49 @@ import { WobbleCard } from "../ui/wobble-card"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useState } from "react"
+import { useSupabase } from "../supabase-provider"
 
 export default function PricingSection() {
+    const [loading, setLoading] = useState(false)
+    const { user } = useSupabase();
 
+    const pathname = usePathname()
+    const router = useRouter()
+
+    const pro__plan = process.env.NEXT_PUBLIC_PRO_PRICE
+    const enterprice_plan = process.env.NEXT_PUBLIC__ENTERPRICE_PLAN
+
+    const handleStripeCheckout = async (price_id: string, sub_type: string) => {
+        if (loading) return
+        setLoading(true)
+        try {
+            const response = await fetch('/api/stripe', {
+                method: "POST",
+                body: JSON.stringify({ price_id,sub_type })
+            })
+
+            if (!response.ok) {
+                toast.error("Something happened, please try again")
+                return
+            }
+            const data = await response.json()
+            // if (data.url) window.location.href = data.url;
+        } catch (error: any) {
+            toast.error("Failed to send issue report", {
+                description: error?.message || "Something went wrong. Please try again.",
+            });
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handlePricingRoute = (price_id: string, sub_type: string) => {
+        if (user) {
+            handleStripeCheckout(price_id, sub_type)
+        } else {
+            router.push("/login")
+        }
+    }
     const pricing = [
         {
             price: 0,
@@ -23,14 +63,17 @@ export default function PricingSection() {
             isPopular: true,
             confess: "Get Started",
             description: "For serious content creators.",
-            features: ["300 credits", "Custom fine tuned model", "All script customization options", "Thumbnail & title generation", "Course module creaton"]
+            features: ["300 credits", "Custom fine tuned model", "All script customization options", "Thumbnail & title generation", "Course module creaton"],
+            stripe_pricing: pro__plan,
+            credit_to_be_added: 300
         },
         {
             price: 49,
             heading: "Enterprise",
             confess: "Contact Sales",
             description: "For professional YouTubers and teams.",
-            features: ["Everything in Pro", "Team collaboration", "Advanced analytics", "Priority support", "Custom integrations"]
+            features: ["Everything in Pro", "Team collaboration", "Advanced analytics", "Priority support", "Custom integrations"],
+            stripe_pricing: enterprice_plan
         },
     ]
 
@@ -100,24 +143,24 @@ export default function PricingSection() {
                                 </li>
                             ))}
                         </ul>
-                        <Link href="/signup">
+                      
                             <Button
-                                asChild
+                            disabled={loading}
+                                onClick={() => option.heading === "Free" ? router.push("/dashboard") : handlePricingRoute(option.stripe_pricing || "", option.heading)}
                                 className={cn(
                                     "w-full text-sm sm:text-base",
-                                    isPopular
+                                    option.isPopular
                                         ? "bg-slate-900 hover:bg-slate-800 text-white"
                                         : "border-slate-300 dark:border-slate-600"
                                 )}
-                                variant={isPopular ? "default" : "outline"}
+                                variant={option.isPopular ? "default" : "outline"}
                             >
-                                <Link href={plan.name === "Enterprise" ? "/contact" : "/signup"}>
-                                    {buttonLabel}
-                                </Link>
+                                    <p>{`Get ${option.heading}`}</p>
                             </Button>
-                        </WobbleCard>
-                    )
-                })}
+                      
+                    </WobbleCard>
+                )
+                )}
             </div>
         </div>
     )
