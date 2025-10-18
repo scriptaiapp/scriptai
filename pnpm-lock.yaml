@@ -385,6 +385,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.1.7(@types/react@19.1.9)
+      '@types/stripe':
+        specifier: ^8.0.417
+        version: 8.0.417(@types/node@22.17.0)
       postcss:
         specifier: ^8.5
         version: 8.5.6
@@ -4503,6 +4506,15 @@ packages:
   /@types/stats.js@0.17.4:
     resolution: {integrity: sha512-jIBvWWShCvlBqBNIZt0KAshWpvSjhkwkEu4ZUcASoAvhmrgAUI2t1dXrjSL4xXVLB4FznPrIsX3nKXFl/Dt4vA==}
     dev: false
+
+  /@types/stripe@8.0.417(@types/node@22.17.0):
+    resolution: {integrity: sha512-PTuqskh9YKNENnOHGVJBm4sM0zE8B1jZw1JIskuGAPkMB+OH236QeN8scclhYGPA4nG6zTtPXgwpXdp+HPDTVw==}
+    deprecated: This is a stub types definition. stripe provides its own type definitions, so you do not need this installed.
+    dependencies:
+      stripe: 19.1.0(@types/node@22.17.0)
+    transitivePeerDependencies:
+      - '@types/node'
+    dev: true
 
   /@types/superagent@8.1.9:
     resolution: {integrity: sha512-pTVjI73witn+9ILmoJdajHGW2jkSaOzhiFYF1Rd3EQ94kymLqB9PjD9ISg7WaALC7+dCHT0FGe9T2LktLq/3GQ==}
@@ -9874,7 +9886,6 @@ packages:
     dependencies:
       '@types/node': 22.17.0
       qs: 6.14.0
-    dev: false
 
   /strtok3@10.3.4:
     resolution: {integrity: sha512-KIy5nylvC5le1OdaaoCJ07L+8iQzJHGH6pWDuzS+d07Cu7n1MZ2x26P8ZKIWfbK02+XIL8Mp4RkWeqdUCrDMfg==}

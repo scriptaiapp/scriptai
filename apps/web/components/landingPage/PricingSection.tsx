@@ -22,17 +22,17 @@ export default function PricingSection() {
         if (loading) return
         setLoading(true)
         try {
-            const response = await fetch('/api/stripe', {
+            const response = await fetch('/api/stripe/create-subscription', {
                 method: "POST",
                 body: JSON.stringify({ price_id,sub_type })
             })
 
+            const data = await response.json()
             if (!response.ok) {
-                toast.error("Something happened, please try again")
+                toast.error(data.error || "Something went wrong")
                 return
             }
-            const data = await response.json()
-            // if (data.url) window.location.href = data.url;
+            if (data.url) window.location.href = data.url;
         } catch (error: any) {
             toast.error("Failed to send issue report", {
                 description: error?.message || "Something went wrong. Please try again.",

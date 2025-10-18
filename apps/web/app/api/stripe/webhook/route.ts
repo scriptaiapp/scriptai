@@ -26,13 +26,13 @@ export async function POST(req: Request) {
 
     try {
         switch (event.type) {
-            case "customer.subscription.created": {
+            case "checkout.session.completed": {
                 const session = event.data.object as any;
                 const subscriptionId = session.subscription;
                 const customerId = session.customer;
                 let userId = session.metadata?.user_id;
                 let sub_type: SubType = session.metadata?.sub_type;
-                console.log("customerId: ", customerId)
+                console.log("customerId: ", session)
 
                 if (!userId) {
                     try {
@@ -78,41 +78,58 @@ export async function POST(req: Request) {
 
                     const { data: existing, error } = await supabaseAdmin
                         .from("subscriptions")
-                        .select("stripe_customer_id")
+                        .select("stripe_customer_id, stripe_subscription_id")
                         .eq("user_id", userId)
                         .single()
 
-                        let ExistingCustomerId = existing?.stripe_customer_id
+                    let ExistingCustomerId = existing?.stripe_customer_id
 
-                   if(ExistingCustomerId !== customerId) {
-                     const { error } = await supabaseAdmin.from("subscriptions").upsert({
-                        user_id: userId,
-                        payment_details: session,
-                        stripe_customer_id: customerId,
-                        stripe_subscription_id: session.id,
-                        subscription_type: "active",
-                    })
+                     const subscription_data: any = await stripe.subscriptions.retrieve(subscriptionId);
+                        const subscriptionItemEndDate = subscription_data.items.data[0].current_period_end;
+                        const expires = new Date(subscriptionItemEndDate * 1000)
+                        console.log("subscriptionItemEndDate: ",subscriptionItemEndDate)
+                   
+                    if (ExistingCustomerId !== customerId) {
+                        const { error } = await supabaseAdmin.from("subscriptions").upsert({
+                            user_id: userId,
+                            // payment_details: session,
+                            stripe_customer_id: customerId,
+                            stripe_subscription_id: session.subscription,
+                            subscription_type: sub_type,
+                            subscription_end_date: expires.toUTCString()
+                        })
 
-                    if (error) {
-                        console.log(error, "errorrr")
-                        return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
+                        if (error) {
+                            console.log(error, "errorrr")
+                            return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
+                        }
+
                     }
+                    if (ExistingCustomerId === customerId) {
+                        const { error } = await supabaseAdmin.from("subscriptions").update({
+                            // payment_details: session,
+                            stripe_subscription_id: session.subscription,
+                            subscription_type: sub_type.toLocaleLowerCase(),
+                            subscription_end_date: expires.toUTCString()
+                        }).eq("user_id", userId);
 
-                   }
+                        if (error) {
+                            console.log(error, "errorrr")
+                            return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
+                        }
+                    }
                 } catch (err) {
                     console.error("Error updating credits:", err);
                 }
-
-                // await db.user.update({
-                //   where: { id: userId },
-                //   data: {
-                //     stripeSubscriptionId: subscriptionId,
-                //     status: "active",
-                //   },
-                // });
                 break;
             }
 
+            case "customer.subscription.created": {
+                const sub = event.data.object as any;
+                
+                console.log(sub)
+                break;
+            }
             case "invoice.payment_succeeded": {
                 const invoice = event.data.object as any;
                 const customerId = invoice.customer;
@@ -147,10 +164,9 @@ export async function POST(req: Request) {
                 const customer = await stripe.customers.retrieve(customerId);
                 const userId = (customer as any).metadata.userId;
 
-                // await db.user.update({
-                //   where: { id: userId },
-                //   data: { status: "canceled" },
-                // });
+                const { error } = await supabaseAdmin.from("subscriptions").update({
+                    subscription_type: "cancelled",
+                }).eq("user_id", userId);
                 break;
             }
 

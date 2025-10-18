@@ -5,8 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSettings } from "@/hooks/useSettings";
 import { CreditCard, Loader2 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/components/supabase-provider";
+import {capitalize} from "@/helpers/capitalize"
+import { formatDate } from "@/helpers/formatDate";
 
 // A type for the component's data state
 interface BillingData {
@@ -15,14 +19,27 @@ interface BillingData {
   paymentMethod: string | null
 }
 
+interface BillingDetails {
+  subscription_end_date: string;
+  subscription_type: string;
+}
+
 export function BillingInfo() {
 
-  const { updateBilling, loadingBilling } = useSettings()
+  const { updateBilling, loadingBilling, billingDetails, fetchSubscriptionDetails } = useSettings()
   const router = useRouter()
+    const { supabase, user } = useSupabase()
 
 
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [billingData, setBillingData] = useState<BillingData | null>(null)
+ 
+  useEffect(() => {
+   if(user) {
+    fetchSubscriptionDetails(user?.id)
+   }
+  }, [user])
+
 
   useEffect(() => {
     const fetchBillingData = async () => {
@@ -69,10 +86,10 @@ export function BillingInfo() {
                 </>
               ) : (
                 <>
-                  <p className="font-medium">{billingData?.currentPlan} Plan</p>
-                  {billingData?.nextBillingDate && (
+                  <p className="font-medium">{capitalize(billingDetails?.subscription_type) || "Free"} Plan</p>
+                  {billingDetails?.subscription_end_date && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Next billing date: {billingData.nextBillingDate}
+                      Next billing date: {formatDate(billingDetails.subscription_end_date) || "Please subscribe to a plan"}
                     </p>
                   )}
                 </>
