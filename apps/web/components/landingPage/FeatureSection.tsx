@@ -58,7 +58,7 @@ export default function FeatureSection() {
                 "Create eye-catching thumbnails that drive clicks and views.",
         },
         {
-            title: "Subtitle Generator",
+            title: "subtitle Generator",
             icon: FileText,
             description:
                 "Automatically generate accurate subtitles for your videos to improve accessibility.",

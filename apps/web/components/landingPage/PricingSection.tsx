@@ -11,7 +11,7 @@ export default function PricingSection() {
             "New idea research",
             "Script generation",
             "Thumbnail generation",
-            "Subtitle generation",
+            "subtitle generation",
             "Course module creation",
         ],
         proExtras: [

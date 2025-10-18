@@ -28,7 +28,7 @@ INSERT INTO plans (name, price_monthly, credits_monthly, features, is_active) VA
         {"feature": "New idea research", "limit": "limited"},
         {"feature": "Script generation", "limit": "limited"},
         {"feature": "Thumbnail generation", "limit": "limited"},
-        {"feature": "Subtitle generation", "limit": "limited"},
+        {"feature": "subtitle generation", "limit": "limited"},
         {"feature": "Course module creation", "limit": "limited"}
     ]'::jsonb,
     true
@@ -43,7 +43,7 @@ INSERT INTO plans (name, price_monthly, credits_monthly, features, is_active) VA
         {"feature": "New idea research", "limit": "unlimited"},
         {"feature": "Script generation", "limit": "unlimited"},
         {"feature": "Thumbnail generation", "limit": "unlimited"},
-        {"feature": "Subtitle generation", "limit": "unlimited"},
+        {"feature": "subtitle generation", "limit": "unlimited"},
         {"feature": "Audio dubbing", "limit": "unlimited"}
     ]'::jsonb,
     true
@@ -58,7 +58,7 @@ INSERT INTO plans (name, price_monthly, credits_monthly, features, is_active) VA
         {"feature": "New idea research", "limit": "unlimited"},
         {"feature": "Script generation", "limit": "unlimited"},
         {"feature": "Thumbnail generation", "limit": "unlimited"},
-        {"feature": "Subtitle generation", "limit": "unlimited"},
+        {"feature": "subtitle generation", "limit": "unlimited"},
         {"feature": "Course module creation", "limit": "unlimited"},
         {"feature": "Audio dubbing", "limit": "unlimited"},
         {"feature": "Advanced analytics", "limit": "included"},
