@@ -2,7 +2,7 @@ export const navItem = [
   { name: "Features", href: "/#features" },
   { name: "How It Works", href: "/#how-it-works" },
   { name: "Pricing", href: "/#pricing" },
-  { name: "About Us", href: "/about-us" },
+  // { name: "About Us", href: "/about-us" },
 ]
 
 export const footerItems = {
