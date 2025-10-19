@@ -124,7 +124,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="Please input your phone number"
+                  placeholder="Your phone"
                 />
               </div>
               <div>
