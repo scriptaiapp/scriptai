@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", message: "", phone: "" });
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,7 +36,7 @@ export default function ContactPage() {
            toast.success("mail sent successfully!", {
              description: "Thank you for reaching out!. We'll look into it soon.",
            });
-           setFormData({ name: "", email: "", message: "" })
+           setFormData({ name: "", email: "", message: "", phone:"" })
     } catch (error:any) {
       console.error(error, "error")
        toast.error("Failed to send mail", {
@@ -113,6 +113,18 @@ export default function ContactPage() {
                   required
                   className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-1 font-medium">Phone</label>
+                <Input
+                  type="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="Please input your phone number"
                 />
               </div>
               <div>

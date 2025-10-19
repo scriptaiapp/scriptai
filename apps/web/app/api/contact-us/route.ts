@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 
-async function contactUsMail(name:string, email: string,message:string, resend: Resend) {
+async function contactUsMail(name: string, email: string, message: string,phone:string, resend: Resend) {
   try {
-    const {data, error} = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'Script AI <notifications@tryscriptai.com>',
       to: 'afrin@tryscriptai.com',
       subject: "📬 New Contact Message",
@@ -14,6 +13,7 @@ async function contactUsMail(name:string, email: string,message:string, resend: 
             <h2 style="color: #4F46E5;">📬 New Contact Message</h2>
             <p><strong>From:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone No:</strong> ${phone}</p>
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
             <p style="white-space: pre-line;">${message}</p>
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
@@ -33,19 +33,19 @@ async function contactUsMail(name:string, email: string,message:string, resend: 
 }
 
 export async function POST(req: NextRequest) {
-  const { email, message, name } = await req.json()
+  const { email, message, name, phone } = await req.json()
 
- try {
-     const resend = new Resend(process.env.RESEND_API_KEY!);
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
 
-  if ( !email || !message || !name) {
+    if (!email || !message || !name) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
 
-  const result = await contactUsMail(email, message,name, resend)
-   return NextResponse.json(result, { status: result?.success ? 200 : 500 })
+    const result = await contactUsMail(email, message, name, phone, resend)
+    return NextResponse.json(result, { status: result?.success ? 200 : 500 })
 
- } catch (error) {
+  } catch (error) {
     console.log(error)
- }
+  }
 }
