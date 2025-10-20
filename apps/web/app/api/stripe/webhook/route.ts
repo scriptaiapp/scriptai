@@ -32,7 +32,7 @@ export async function POST(req: Request) {
                 const customerId = session.customer;
                 let userId = session.metadata?.user_id;
                 let sub_type: SubType = session.metadata?.sub_type;
-                console.log("customerId: ", session)
+                let plan_id: SubType = session.metadata?.plan_id;
 
                 if (!userId) {
                     try {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
                         console.error("Failed to fetch user for credit update:", fetchError);
                         break;
                     }
-                    const amount_to_add = sub_type === "Pro" ? 300 : 1000;
+                    const amount_to_add = sub_type === "Pro" ? 5000 : 100000;
                     const currentCredits = (userRow as any)?.credits ?? 0;
                     const newCredits = currentCredits + amount_to_add
 
@@ -82,42 +82,29 @@ export async function POST(req: Request) {
                         .eq("user_id", userId)
                         .single()
 
-                    let ExistingCustomerId = existing?.stripe_customer_id
 
                      const subscription_data: any = await stripe.subscriptions.retrieve(subscriptionId);
                         const subscriptionItemEndDate = subscription_data.items.data[0].current_period_end;
+                        const subscriptionItemStartDate = subscription_data.items.data[0].current_period_start;
+                        const starts = new Date(subscriptionItemStartDate * 1000)
                         const expires = new Date(subscriptionItemEndDate * 1000)
-                        console.log("subscriptionItemEndDate: ",subscriptionItemEndDate)
                    
-                    if (ExistingCustomerId !== customerId) {
-                        const { error } = await supabaseAdmin.from("subscriptions").upsert({
+                        const { error:subError } = await supabaseAdmin.from("subscriptions").upsert({
                             user_id: userId,
-                            // payment_details: session,
-                            stripe_customer_id: customerId,
+                            plan_id: plan_id,
                             stripe_subscription_id: session.subscription,
-                            subscription_type: sub_type,
-                            subscription_end_date: expires.toUTCString()
+                            current_period_end: expires.toUTCString(),
+                            current_period_start: starts.toUTCString(),
+                            status: "active",
+                             updated_at: new Date().toISOString(),
                         })
 
-                        if (error) {
+                        if (subError) {
                             console.log(error, "errorrr")
                             return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
                         }
 
-                    }
-                    if (ExistingCustomerId === customerId) {
-                        const { error } = await supabaseAdmin.from("subscriptions").update({
-                            // payment_details: session,
-                            stripe_subscription_id: session.subscription,
-                            subscription_type: sub_type.toLocaleLowerCase(),
-                            subscription_end_date: expires.toUTCString()
-                        }).eq("user_id", userId);
-
-                        if (error) {
-                            console.log(error, "errorrr")
-                            return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
-                        }
-                    }
+                    
                 } catch (err) {
                     console.error("Error updating credits:", err);
                 }
@@ -165,7 +152,7 @@ export async function POST(req: Request) {
                 const userId = (customer as any).metadata.userId;
 
                 const { error } = await supabaseAdmin.from("subscriptions").update({
-                    subscription_type: "cancelled",
+                    status: "canceled",
                 }).eq("user_id", userId);
                 break;
             }

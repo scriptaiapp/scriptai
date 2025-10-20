@@ -194,7 +194,7 @@ export function ReturningUserHub({
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">Free Plan</div>
-                        <Link href="#upgrade">
+                        <Link href="/dashboard/plan">
                             <Button variant="outline" className="mt-3 w-full">
                                 Upgrade to Pro
                             </Button>

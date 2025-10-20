@@ -5,17 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
+  const pro__plan = process.env.NEXT_PUBLIC_PRO_PRICE
+    const enterprice_plan = process.env.NEXT_PUBLIC__ENTERPRICE_PLAN
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { price_id, sub_type } = await req.json();
+    const { sub_type, plan_id } = await req.json();
 
     const { data: existing } = await supabase
       .from("subscriptions")
-      .select("stripe_customer_id, subscription_type")
+      .select("stripe_subscription_id, plan_id")
       .eq("user_id", user.id)
       .single()
     const { data: profile } = await supabase
@@ -23,31 +25,25 @@ export async function POST(req: Request) {
       .select("full_name")
       .eq("user_id", user.id)
       .single()
-
-
-    let customerId = existing?.stripe_customer_id
-
     
-    if(existing?.subscription_type.toLowerCase() === sub_type.toLowerCase()){
-      return NextResponse.json({ error: `${sub_type} is. your. active. plan, Please select a different active. plan if you want to upgrade` }, { status: 400 });
+    if(existing?.plan_id === plan_id){
+      return NextResponse.json({ error: `${sub_type} is your active plan, Please select a different active. plan if you want to upgrade` }, { status: 400 });
     }
 
-    if (!customerId) {
       const customer = await stripe.customers.create({
         name: profile?.full_name,
         metadata: { user_id: user.id },
         email: user.email
       })
-      customerId = customer.id
-    }
+
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      customer: customerId,
+      customer: customer.id,
       line_items: [
         {
-          price: price_id, // e.g. "price_12345"
+          price: sub_type === "Pro" ? pro__plan : enterprice_plan,
           quantity: 1,
         },
       ],
@@ -55,7 +51,8 @@ export async function POST(req: Request) {
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
       metadata: {
         user_id: user.id,
-        sub_type: sub_type
+        sub_type: sub_type,
+        plan_id: plan_id
       }
     });
 
@@ -64,7 +61,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       url: session.url
-      // url: "Done"
 
     });
   } catch (error: any) {

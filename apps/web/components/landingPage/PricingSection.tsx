@@ -5,12 +5,17 @@ import { Button } from "../ui/button"
 import { WobbleCard } from "../ui/wobble-card"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSupabase } from "../supabase-provider"
+import { Skeleton } from "../ui/skeleton"
+import { Features, Plans } from "@/types/plans"
+import { capitalize } from "@/helpers/capitalize"
+import { useSettings } from "@/hooks/useSettings"
 
 export default function PricingSection() {
+    const { loadingBilling, billingDetails, fetchSubscriptionDetails } = useSettings()
     const [loading, setLoading] = useState(false)
-    const { user } = useSupabase();
+    const { user, supabase, fetchPlan, plans, planLoading } = useSupabase();
 
     const pathname = usePathname()
     const router = useRouter()
@@ -18,13 +23,21 @@ export default function PricingSection() {
     const pro__plan = process.env.NEXT_PUBLIC_PRO_PRICE
     const enterprice_plan = process.env.NEXT_PUBLIC__ENTERPRICE_PLAN
 
-    const handleStripeCheckout = async (price_id: string, sub_type: string) => {
+
+    useEffect(() => {
+        if(user) {
+            fetchPlan()
+            fetchSubscriptionDetails(user?.id)
+        }
+    }, [])
+
+    const handleStripeCheckout = async (plan_id: string, sub_type: string) => {
         if (loading) return
         setLoading(true)
         try {
             const response = await fetch('/api/stripe/create-subscription', {
                 method: "POST",
-                body: JSON.stringify({ price_id,sub_type })
+                body: JSON.stringify({ plan_id, sub_type })
             })
 
             const data = await response.json()
@@ -42,9 +55,9 @@ export default function PricingSection() {
         }
     }
 
-    const handlePricingRoute = (price_id: string, sub_type: string) => {
+    const handlePricingRoute = (plan_id: string, sub_type: string) => {
         if (user) {
-            handleStripeCheckout(price_id, sub_type)
+            handleStripeCheckout(plan_id, sub_type)
         } else {
             router.push("/login")
         }
@@ -93,71 +106,91 @@ export default function PricingSection() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12">
-                {pricing.map((option, key) => (
+                {plans && plans.map((option:Plans, key) => (
                     <WobbleCard
                         key={key}
                         className={cn(
                             "flex flex-col p-6 sm:p-8 md:p-10 relative",
-                            option.isPopular ? "bg-slate-50 dark:bg-slate-700" : "bg-white dark:bg-slate-800",
+                            option?.name === "Pro" ? "bg-slate-50 dark:bg-slate-700" : "bg-white dark:bg-slate-800",
                             "border border-slate-200 dark:border-slate-700 rounded-lg shadow-md"
                         )}
                     >
-                        {option?.isPopular && (
+                        {option?.name === "Pro" && (
                             <div className="absolute top-0 right-0 mr-3 sm:mr-4 bg-slate-700 text-white text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full">
                                 POPULAR
                             </div>
                         )}
-                        <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-slate-900 dark:text-slate-50">
-                            {option.heading}
-                        </h3>
-                        <div className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-slate-900 dark:text-slate-50">
-                            ${option.price}
-                            <span className="text-sm sm:text-base font-normal text-slate-600 dark:text-slate-400">
-                                /mo
-                            </span>
-                        </div>
-                        <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400 mb-4 sm:mb-6">
-                            {option.description}
-                        </p>
-                        <ul className="space-y-2 mb-4 sm:mb-6 flex-1">
-                            {option.features.map((feature, featureKey) => (
-                                <li
-                                    key={featureKey}
-                                    className="flex items-start text-sm sm:text-base text-slate-600 dark:text-slate-400"
-                                >
-                                    <svg
-                                        className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
+                        {
+                            planLoading || loadingBilling ? <Skeleton className="h-4 w-32 mb-2" /> : <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-slate-900 dark:text-slate-50">
+                                {option.name}
+                            </h3>
+                        }
+                        {
+                            planLoading || loadingBilling ? <Skeleton className="h-3 w-40 mb-4" /> : <div className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-slate-900 dark:text-slate-50">
+                                ${option.price_monthly}
+                                <span className="text-sm sm:text-base font-normal text-slate-600 dark:text-slate-400">
+                                    /mo
+                                </span>
+                            </div>
+                        }
+                        {
+                            planLoading || loadingBilling ? <Skeleton className="h-3 w-40 mb-6" /> :  <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400 mb-4 sm:mb-6">
+                                {option.name === "Enterprise"
+                                    ? "For professional YouTubers and teams."
+                                    : option.name === "Pro"
+                                        ? "For serious content creators."
+                                        : "Perfect for trying out Script AI."}
+                            </p>
+                        }
+                        {
+                            planLoading || loadingBilling ? <>
+                                <Skeleton className="h-4 w-32 mb-2" />
+                                <Skeleton className="h-3 w-40 mb-64" /></> : <ul className="space-y-2 mb-4 sm:mb-6 flex-1">
+                                {option.features.map((f: Features, featureKey) => (
+                                    <li
+                                        key={featureKey}
+                                        className="flex items-center text-sm sm:text-base text-slate-600 dark:text-slate-400"
                                     >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M5 13l4 4L19 7"
-                                        />
-                                    </svg>
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                      
-                            <Button
-                            disabled={loading}
-                                onClick={() => option.heading === "Free" ? router.push("/dashboard") : handlePricingRoute(option.stripe_pricing || "", option.heading)}
+                                        <svg
+                                            className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M5 13l4 4L19 7"
+                                            />
+                                        </svg>
+                                       {f.feature}  {f.limit !== "unlimited" && (
+                                            <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                                                ({f.limit})
+                                            </span>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        }
+
+                        {
+                            planLoading || loadingBilling ? <Skeleton className="h-8 w-full rounded-md " /> : <Button
+                                disabled={loading || option.id === billingDetails?.plan_id}
+                                onClick={() => option.name === "Starter" ? router.push("/dashboard") : option.name === "Pro" ? handlePricingRoute( option.id,option.name): router.push("/sales") }
                                 className={cn(
                                     "w-full text-sm sm:text-base",
-                                    option.isPopular
+                                    option?.name === "Pro"
                                         ? "bg-slate-900 hover:bg-slate-800 text-white"
                                         : "border-slate-300 dark:border-slate-600"
                                 )}
-                                variant={option.isPopular ? "default" : "outline"}
+                                variant={option?.name === "Pro" ? "default" : "outline"}
                             >
-                                    <p>{`Get ${option.heading}`}</p>
+                                <p>{option.name === "Enterprise" ? "Contact Sales" : "Get Started"}</p>
                             </Button>
-                      
+                        }
+
                     </WobbleCard>
                 )
                 )}

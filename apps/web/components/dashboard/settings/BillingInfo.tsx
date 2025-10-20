@@ -28,7 +28,7 @@ export function BillingInfo() {
 
   const { updateBilling, loadingBilling, billingDetails, fetchSubscriptionDetails } = useSettings()
   const router = useRouter()
-    const { supabase, user } = useSupabase()
+    const { supabase, user, fetchPlan, plans, planLoading } = useSupabase()
 
 
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -37,8 +37,11 @@ export function BillingInfo() {
   useEffect(() => {
    if(user) {
     fetchSubscriptionDetails(user?.id)
+    fetchPlan()
    }
   }, [user])
+
+  const findUserPlan = plans?.find(item => item.id === billingDetails?.plan_id)
 
 
   useEffect(() => {
@@ -86,10 +89,10 @@ export function BillingInfo() {
                 </>
               ) : (
                 <>
-                  <p className="font-medium">{capitalize(billingDetails?.subscription_type) || "Free"} Plan</p>
-                  {billingDetails?.subscription_end_date && (
+                  <p className="font-medium">{capitalize(findUserPlan?.name) || "Free"} Plan</p>
+                  {billingDetails?.current_period_end && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Next billing date: {formatDate(billingDetails.subscription_end_date) || "Please subscribe to a plan"}
+                      Next billing date: {formatDate(billingDetails.current_period_end) || "Please subscribe to a plan"}
                     </p>
                   )}
                 </>

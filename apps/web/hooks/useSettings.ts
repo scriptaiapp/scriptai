@@ -6,8 +6,8 @@ import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
 
 interface BillingDetails {
-  subscription_end_date: string;
-  subscription_type: string;
+  current_period_end: string;
+  plan_id: string;
 }
 
 export function useSettings
@@ -152,12 +152,12 @@ const [isChangingPassword, setIsChangingPassword] = useState(false);
      try {
       const { data: existing } = await supabase
       .from("subscriptions")
-      .select("subscription_end_date, subscription_type")
+      .select("*")
       .eq("user_id", userId)
       .single()
 
       if(existing) {
-        setBillingDetails(existing)
+        setBillingDetails(existing as BillingDetails)
       }
      } catch (error) {
       
