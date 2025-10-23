@@ -57,7 +57,21 @@
      ```
    - Note: This uses the schema from `packages/supabase/migrations/` and won't add any seed data.
 
-4. **Set up environment variables**
+4. **Set up Stripe Integration (Local Setup)**
+- Get pk_test_***** and sk_test_**** from your stripe dashboard [https://dashboard.stripe.com/acct_*****/test/apikeys](https://dashboard.stripe.com/) 
+- In another terminal, run Stripe CLI to forward events to your local webhook endpoint
+   ```bash
+      stripe listen --forward-to localhost:3000/api/stripe/webhook
+- webhook secret will be generate in your terminal  whsec_******
+   ```
+   - Edit `apps/web/.env` and `apps/api/.env` to include your stripe credentials:
+     ```
+     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=whsec_******
+     STRIPE_SECRET_KEY=pk_test_******
+     STRIPE_WEBHOOK_SECRET=sk_test_******
+     ```
+
+5. **Set up environment variables**
    ```bash
    # Copy example environment files
    cp apps/web/.env.example apps/web/.env
@@ -70,12 +84,12 @@
      ```
      (Get these from your Supabase dashboard under Settings > API.)
 
-5. **Start development servers**
+6. **Start development servers**
    ```bash
    pnpm run dev
    ```
 
-6. **Open your browser**
+7. **Open your browser**
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend: [http://localhost:8000](http://localhost:8000)
 

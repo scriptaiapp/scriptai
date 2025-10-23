@@ -13,7 +13,7 @@ import { capitalize } from "@/helpers/capitalize"
 import { useSettings } from "@/hooks/useSettings"
 
 export default function PricingSection() {
-    const { loadingBilling, billingDetails, fetchSubscriptionDetails } = useSettings()
+    const { loadingBilling, subscriptionDetails, fetchSubscriptionDetails } = useSettings()
     const [loading, setLoading] = useState(false)
     const { user, supabase, fetchPlan, plans, planLoading } = useSupabase();
 
@@ -31,13 +31,13 @@ export default function PricingSection() {
         }
     }, [])
 
-    const handleStripeCheckout = async (plan_id: string, sub_type: string) => {
+    const handleStripeCheckout = async (plan_id: string, sub_type: string, ) => {
         if (loading) return
         setLoading(true)
         try {
             const response = await fetch('/api/stripe/create-subscription', {
                 method: "POST",
-                body: JSON.stringify({ plan_id, sub_type })
+                body: JSON.stringify({ plan_id, sub_type, stripe_customer_id: subscriptionDetails?.stripe_customer_id })
             })
 
             const data = await response.json()
@@ -54,10 +54,11 @@ export default function PricingSection() {
             setLoading(false)
         }
     }
+    console.log(subscriptionDetails, "subscriptionDetails")
 
     const handlePricingRoute = (plan_id: string, sub_type: string) => {
         if (user) {
-            handleStripeCheckout(plan_id, sub_type)
+            sub_type === "Starter" ? router.push("/dashboard") : sub_type === "Pro" ? handleStripeCheckout( plan_id,sub_type): router.push("/sales")
         } else {
             router.push("/login")
         }
@@ -177,8 +178,8 @@ export default function PricingSection() {
 
                         {
                             planLoading || loadingBilling ? <Skeleton className="h-8 w-full rounded-md " /> : <Button
-                                disabled={loading || option.id === billingDetails?.plan_id}
-                                onClick={() => option.name === "Starter" ? router.push("/dashboard") : option.name === "Pro" ? handlePricingRoute( option.id,option.name): router.push("/sales") }
+                                disabled={loading || option.id === subscriptionDetails?.plan_id}
+                                onClick={() => handlePricingRoute( option.id,option.name) }
                                 className={cn(
                                     "w-full text-sm sm:text-base",
                                     option?.name === "Pro"

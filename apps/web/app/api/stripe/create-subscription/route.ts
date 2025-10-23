@@ -13,11 +13,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { sub_type, plan_id } = await req.json();
+    const { sub_type, plan_id, stripe_customer_id } = await req.json();
 
     const { data: existing } = await supabase
       .from("subscriptions")
-      .select("stripe_subscription_id, plan_id")
+      .select("stripe_subscription_id, plan_id, stripe_customer_id")
       .eq("user_id", user.id)
       .single()
     const { data: profile } = await supabase
@@ -26,21 +26,30 @@ export async function POST(req: Request) {
       .eq("user_id", user.id)
       .single()
     
-    if(existing?.plan_id === plan_id){
-      return NextResponse.json({ error: `${sub_type} is your active plan, Please select a different active. plan if you want to upgrade` }, { status: 400 });
-    }
+    // if(existing?.plan_id === plan_id){
+    //   return NextResponse.json({ error: `${sub_type} is your active plan, Please select a different active. plan if you want to upgrade` }, { status: 400 });
+    // }
 
-      const customer = await stripe.customers.create({
+    let customerId;
+
+    if(stripe_customer_id) {
+      customerId = stripe_customer_id
+    }else {
+        const customer = await stripe.customers.create({
         name: profile?.full_name,
         metadata: { user_id: user.id },
         email: user.email
       })
+      customerId = customer.id
+    }
+
+    
 
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      customer: customer.id,
+      customer: customerId,
       line_items: [
         {
           price: sub_type === "Pro" ? pro__plan : enterprice_plan,
@@ -53,7 +62,14 @@ export async function POST(req: Request) {
         user_id: user.id,
         sub_type: sub_type,
         plan_id: plan_id
-      }
+      },
+      subscription_data: {
+    metadata: {
+      user_id: user.id,
+      sub_type,
+      plan_id,
+    }
+  }
     });
 
 

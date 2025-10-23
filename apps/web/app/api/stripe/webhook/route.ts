@@ -34,6 +34,105 @@ export async function POST(req: Request) {
                 let sub_type: SubType = session.metadata?.sub_type;
                 let plan_id: SubType = session.metadata?.plan_id;
 
+                // if (!userId) {
+                //     try {
+                //         const customer = await stripe.customers.retrieve(customerId);
+                //         userId = (customer as any).metadata?.user_id ?? (customer as any).metadata?.userId;
+                //     } catch (err) {
+                //         console.error("Failed to retrieve Stripe customer:", err);
+                //     }
+                // }
+
+                // if (!userId) {
+                //     console.warn("No userId found for subscription.created event, skipping credit increment.");
+                //     break;
+                // }
+
+                // console.log("subscription created", userId);
+
+                // Read current credits and update
+                // try {
+                //     const { data: userRow, error: fetchError } = await supabaseAdmin
+                //         .from("profiles")
+                //         .select("credits")
+                //         .eq("user_id", userId)
+                //         .single();
+
+                //     if (fetchError) {
+                //         console.error("Failed to fetch user for credit update:", fetchError);
+                //         break;
+                //     }
+                //     const amount_to_add = sub_type === "Pro" ? 5000 : 100000;
+                //     const currentCredits = (userRow as any)?.credits ?? 0;
+                //     const newCredits = currentCredits + amount_to_add
+
+                //     const { error: updateError } = await supabaseAdmin
+                //         .from("profiles")
+                //         .update({ credits: newCredits })
+                //         .eq("user_id", userId);
+
+                //     if (updateError) {
+                //         console.error("Failed to update user credits:", updateError);
+                //         break;
+                //     }
+
+                //     const { data: existing, error } = await supabaseAdmin
+                //         .from("subscriptions")
+                //         .select("stripe_customer_id, stripe_subscription_id")
+                //         .eq("user_id", userId)
+                //         .single()
+
+
+                //     const subscription_data: any = await stripe.subscriptions.retrieve(subscriptionId);
+                //     const subscriptionItemEndDate = subscription_data.items.data[0].current_period_end;
+                //     const subscriptionItemStartDate = subscription_data.items.data[0].current_period_start;
+                //     const starts = new Date(subscriptionItemStartDate * 1000)
+                //     const expires = new Date(subscriptionItemEndDate * 1000)
+
+                //     const { error: subError } = await supabaseAdmin.from("subscriptions").upsert({
+                //         user_id: userId,
+                //         plan_id: plan_id,
+                //         stripe_subscription_id: session.subscription,
+                //         current_period_end: expires.toUTCString(),
+                //         current_period_start: starts.toUTCString(),
+                //         status: "active",
+                //         updated_at: new Date().toISOString(),
+                //         stripe_customer_id: session.customer
+                //     })
+
+                //     if (subError) {
+                //         console.log(error, "errorrr")
+                //         return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
+                //     }
+
+
+                // } catch (err) {
+                //     console.error("Error updating credits:", err);
+                // }
+                break;
+            }
+
+            case "customer.subscription.created": {
+                const sub = event.data.object as any;
+
+                // console.log(sub)
+                break;
+            }
+            case "invoice.payment_succeeded": {
+                let userId;
+                const invoice = event.data.object as any;
+                const customerId = invoice.customer;
+
+                const subscription = await stripe.subscriptions.retrieve(
+                    invoice.parent.subscription_details.subscription
+                );
+
+                console.log(customerId, "customerId")
+                
+                const metadata = subscription.metadata
+                 userId = metadata?.user_id
+                const plan_id = metadata?.plan_id
+
                 if (!userId) {
                     try {
                         const customer = await stripe.customers.retrieve(customerId);
@@ -43,15 +142,15 @@ export async function POST(req: Request) {
                     }
                 }
 
+                
                 if (!userId) {
                     console.warn("No userId found for subscription.created event, skipping credit increment.");
                     break;
                 }
 
-                // console.log("subscription created", userId);
+                 try {
 
-                // Read current credits and update
-                try {
+                    
                     const { data: userRow, error: fetchError } = await supabaseAdmin
                         .from("profiles")
                         .select("credits")
@@ -62,7 +161,7 @@ export async function POST(req: Request) {
                         console.error("Failed to fetch user for credit update:", fetchError);
                         break;
                     }
-                    const amount_to_add = sub_type === "Pro" ? 5000 : 100000;
+                    const amount_to_add = 5000;
                     const currentCredits = (userRow as any)?.credits ?? 0;
                     const newCredits = currentCredits + amount_to_add
 
@@ -83,46 +182,50 @@ export async function POST(req: Request) {
                         .single()
 
 
-                     const subscription_data: any = await stripe.subscriptions.retrieve(subscriptionId);
-                        const subscriptionItemEndDate = subscription_data.items.data[0].current_period_end;
-                        const subscriptionItemStartDate = subscription_data.items.data[0].current_period_start;
-                        const starts = new Date(subscriptionItemStartDate * 1000)
-                        const expires = new Date(subscriptionItemEndDate * 1000)
-                   
-                        const { error:subError } = await supabaseAdmin.from("subscriptions").upsert({
-                            user_id: userId,
-                            plan_id: plan_id,
-                            stripe_subscription_id: session.subscription,
-                            current_period_end: expires.toUTCString(),
-                            current_period_start: starts.toUTCString(),
-                            status: "active",
-                             updated_at: new Date().toISOString(),
-                        })
+                    const subscription_data: any = await stripe.subscriptions.retrieve(subscription.id);
+                    const subscriptionItemEndDate = subscription_data.items.data[0].current_period_end;
+                    const subscriptionItemStartDate = subscription_data.items.data[0].current_period_start;
+                    const starts = new Date(subscriptionItemStartDate * 1000)
+                    const expires = new Date(subscriptionItemEndDate * 1000)
+                    let sub_error;
 
-                        if (subError) {
-                            console.log(error, "errorrr")
-                            return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
-                        }
+                    if(existing) {
+                        const { error: subError } = await supabaseAdmin.from("subscriptions").update({
+                        user_id: userId,
+                        plan_id: plan_id,
+                        stripe_subscription_id: subscription.id,
+                        current_period_end: expires.toUTCString(),
+                        current_period_start: starts.toUTCString(),
+                        status: "active",
+                        updated_at: new Date().toISOString(),
+                        stripe_customer_id: customerId
+                    }).eq("stripe_customer_id",customerId)
+                    sub_error = subError
+                    } else {
+                        const { error: subError } = await supabaseAdmin.from("subscriptions").upsert({
+                        user_id: userId,
+                        plan_id: plan_id,
+                        stripe_subscription_id: subscription.id,
+                        current_period_end: expires.toUTCString(),
+                        current_period_start: starts.toUTCString(),
+                        status: "active",
+                        updated_at: new Date().toISOString(),
+                        stripe_customer_id: customerId
+                    })
+                    sub_error = subError
+                    }
 
-                    
+                    if (sub_error) {
+                        console.log(error, "errorrr")
+                        return NextResponse.json({ message: 'Something happened', error }, { status: 401 });
+                    }
+
+
                 } catch (err) {
                     console.error("Error updating credits:", err);
                 }
-                break;
-            }
 
-            case "customer.subscription.created": {
-                const sub = event.data.object as any;
-                
-                console.log(sub)
-                break;
-            }
-            case "invoice.payment_succeeded": {
-                const invoice = event.data.object as any;
-                const customerId = invoice.customer;
-                const customer = await stripe.customers.retrieve(customerId);
-                const userId = (customer as any).metadata.userId;
-                // console.log(invoice, "invoice")
+
 
                 // await db.user.update({
                 //   where: { id: userId },
@@ -149,10 +252,11 @@ export async function POST(req: Request) {
                 const subscription = event.data.object as any;
                 const customerId = subscription.customer;
                 const customer = await stripe.customers.retrieve(customerId);
-                const userId = (customer as any).metadata.userId;
+                const userId = (customer as any).metadata.user_id;
 
                 const { error } = await supabaseAdmin.from("subscriptions").update({
                     status: "canceled",
+                    plan_id: "51cb98f9-192a-4464-9a15-e3114aaf0c20"
                 }).eq("user_id", userId);
                 break;
             }

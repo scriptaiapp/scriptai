@@ -5,9 +5,10 @@ import { useState } from "react";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
 
-interface BillingDetails {
+interface SubscriptionDetails {
   current_period_end: string;
   plan_id: string;
+  stripe_customer_id: string;
 }
 
 export function useSettings
@@ -19,7 +20,7 @@ export function useSettings
 const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [loadingBilling, setLoadingBilling] = useState(false);
-  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null)
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null)
 
   // --- Profile update ---
   const updateProfile = async ({
@@ -157,7 +158,7 @@ const [isChangingPassword, setIsChangingPassword] = useState(false);
       .single()
 
       if(existing) {
-        setBillingDetails(existing as BillingDetails)
+        setSubscriptionDetails(existing as SubscriptionDetails)
       }
      } catch (error) {
       
@@ -200,6 +201,6 @@ const [isChangingPassword, setIsChangingPassword] = useState(false);
     updateBilling,
     loadingBilling,
     fetchSubscriptionDetails,
-    billingDetails,
+    subscriptionDetails,
   };
 }

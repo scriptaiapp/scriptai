@@ -19,14 +19,14 @@ interface BillingData {
   paymentMethod: string | null
 }
 
-interface BillingDetails {
+interface SubscriptionDetails {
   subscription_end_date: string;
   subscription_type: string;
 }
 
 export function BillingInfo() {
 
-  const { updateBilling, loadingBilling, billingDetails, fetchSubscriptionDetails } = useSettings()
+  const { updateBilling, loadingBilling, subscriptionDetails, fetchSubscriptionDetails } = useSettings()
   const router = useRouter()
     const { supabase, user, fetchPlan, plans, planLoading } = useSupabase()
 
@@ -41,7 +41,25 @@ export function BillingInfo() {
    }
   }, [user])
 
-  const findUserPlan = plans?.find(item => item.id === billingDetails?.plan_id)
+  const findUserPlan = plans?.find(item => item.id === subscriptionDetails?.plan_id)
+
+  const fetchTransactionHistory = async() => {
+    const res = await fetch("/api/stripe", {
+      method: "GET"
+    })
+
+    if(!res.ok)  throw new Error("Failed to fetch transaction histpry")
+
+    const data = await res.json()
+    console.log(data)
+    return
+  }
+
+  useEffect(() => {
+    if(subscriptionDetails) {
+      fetchTransactionHistory()
+    }
+  }, [subscriptionDetails])
 
 
   useEffect(() => {
@@ -90,9 +108,9 @@ export function BillingInfo() {
               ) : (
                 <>
                   <p className="font-medium">{capitalize(findUserPlan?.name) || "Free"} Plan</p>
-                  {billingDetails?.current_period_end && (
+                  {subscriptionDetails?.current_period_end && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Next billing date: {formatDate(billingDetails.current_period_end) || "Please subscribe to a plan"}
+                      Next billing date: {formatDate(subscriptionDetails.current_period_end) || "Please subscribe to a plan"}
                     </p>
                   )}
                 </>
