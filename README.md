@@ -62,7 +62,7 @@
 - In another terminal, run Stripe CLI to forward events to your local webhook endpoint
    ```bash
       stripe listen --forward-to localhost:3000/api/stripe/webhook
-- webhook secret will be generate in your terminal  whsec_******
+- A webhook secret will be generated in your terminal, formatted like this: whsec_******
    - Edit `apps/web/.env` and `apps/api/.env` to include your stripe credentials:
      ```
      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=whsec_******
