@@ -63,7 +63,6 @@
    ```bash
       stripe listen --forward-to localhost:3000/api/stripe/webhook
 - webhook secret will be generate in your terminal  whsec_******
-   ```
    - Edit `apps/web/.env` and `apps/api/.env` to include your stripe credentials:
      ```
      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=whsec_******
