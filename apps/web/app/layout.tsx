@@ -7,6 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { Analytics } from "@vercel/analytics/next"
 import { IconBugFilled } from "@tabler/icons-react"
+import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -44,7 +45,7 @@ export default function RootLayout({
         </ThemeProvider>
         <SpeedInsights />
         <Analytics />
-
+<Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
       </body>
     </html>
   )
