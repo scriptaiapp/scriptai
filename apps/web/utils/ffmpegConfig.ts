@@ -6,5 +6,6 @@ export const configureFFmpeg = () => {
         : "ffmpeg";
 
     ffmpeg.setFfmpegPath(ffmpegPath);
-    return ffmpeg;
+
+    return (input?: string) => ffmpeg(input);
 };
