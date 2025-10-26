@@ -267,7 +267,7 @@ function SignupForm() {
               {showReferralBanner && referralCode && (
                 <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
                   <p className="text-sm text-center text-purple-700 dark:text-purple-300">
-                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 10 credits.
+                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 500 credits.
                   </p>
                 </div>
               )}

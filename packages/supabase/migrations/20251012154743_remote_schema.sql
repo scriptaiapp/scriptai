@@ -389,7 +389,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "full_name" "text",
     "email" "text",
     "bio" "text",
-    "credits" integer DEFAULT 500,
+    "credits" integer DEFAULT 10,
     "ai_trained" boolean DEFAULT false,
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
