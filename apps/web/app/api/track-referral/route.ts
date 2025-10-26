@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       ...(referredUserId && {
         referred_user_id: referredUserId,
         completed_at: new Date().toISOString(),
-        credits_awarded: 10
+        credits_awarded: 250
       }),
     };
 
