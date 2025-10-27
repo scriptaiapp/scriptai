@@ -22,7 +22,7 @@ export default function NewDubbing() {
   const [targetLanguage, setTargetLanguage] = useState("");
   const [loading, setLoading] = useState(false);
   const [dubbedResult, setDubbedResult] = useState<DubbedResult | null>(null);
-  const isComingSoon = true; // Toggle this to false when feature is released
+  const isComingSoon = false;
 
   // Supported languages from ElevenLabs Dubbing API
   const supportedLanguages = [

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseServer } from '@/lib/supabase/server';
 import axios from 'axios';
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
@@ -26,7 +26,7 @@ export interface StyleAnalysis {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   try {
     const { userId, videoUrls, isRetraining = false } = await request.json();

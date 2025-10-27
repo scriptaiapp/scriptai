@@ -15,7 +15,8 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-         "dist/**"
+         "dist/**",
+         ".tsup/**"
       ]
     },
   "db:pull": {
