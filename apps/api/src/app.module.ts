@@ -1,19 +1,42 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { TrainAiProcessor } from '@repo/queues';
+import redisConfig from './config/redis.config';
 import { SupabaseModule } from './supabase/supabase.module';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
+import { TrainAiController } from './train-ai/train-ai.controller';
+import { TrainAiModule } from './train-ai/train-ai.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [redisConfig]
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: configService.get('redis'),
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 1000 },
+          removeOnComplete: { count: 1000 },
+          removeOnFail: { count: 5000 },
+          limiter: { max: 100, duration: 60000 }
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.registerQueue({
+      name: 'train-ai'
     }),
     SupabaseModule,
+    TrainAiModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, TrainAiController],
+  providers: [AppService, TrainAiProcessor],
 })
 export class AppModule { }

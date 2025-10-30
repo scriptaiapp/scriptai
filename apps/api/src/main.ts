@@ -3,28 +3,39 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api/v1');
 
-  const allowedOrigins = [
-    process.env.FRONTEND_DEV_URL, // Local frontend
-    process.env.FRONTEND_PROD_URL, // Production frontend
-    "*" // Allow all origins (for testing purposes)
-  ];
+  // Check if this instance should run as a worker
+  const isWorker = process.env.NODE_ENV === 'worker';
 
-  app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: 'GET,POST,PUT,DELETE',
-    credentials: true,
-  });
+  if (isWorker) {
+    // Initialize worker mode
+    await app.init();
+    console.log('Worker initialized successfully');
+  } else {
+    // Initialize API server mode
+    app.setGlobalPrefix('api/v1');
 
-  await app.listen(process.env.PORT || 8080, () => {
-    console.log(`Server running on port ${process.env.PORT || 8080}`);
-  });
+    const allowedOrigins = [
+      process.env.FRONTEND_DEV_URL, // Local frontend
+      process.env.FRONTEND_PROD_URL, // Production frontend
+      "*" // Allow all origins (for testing purposes)
+    ];
+
+    app.enableCors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      methods: 'GET,POST,PUT,DELETE',
+      credentials: true,
+    });
+
+    await app.listen(process.env.PORT || 8080, () => {
+      console.log(`API Server running on port ${process.env.PORT || 8080}`);
+    });
+  }
 }
 bootstrap();

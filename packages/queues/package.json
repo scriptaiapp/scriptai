@@ -1,0 +1,23 @@
+{
+  "name": "@repo/queues",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.21.0",
+    "@nestjs/bullmq": "^10.2.1",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^4.0.2",
+    "@repo/validation": "workspace:*",
+    "bullmq": "^5.62.2",
+    "jsonrepair": "^3.13.0",
+    "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
