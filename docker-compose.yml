@@ -2,7 +2,8 @@
 services:
   redis:
     image: redis:latest
-    command: redis-server --requirepass your_strong_password_here
+    container_name: redis
+    command: redis-server --requirepass abcd1234
     ports:
       - "6379:6379"
     volumes:

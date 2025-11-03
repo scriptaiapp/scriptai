@@ -2,9 +2,9 @@
   "name": "@repo/supabase",
   "version": "1.0.0",
   "description": "Shared Supabase config and CLI",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -19,6 +19,8 @@
   },
   "scripts": {
     "build": "tsup",
+    "dev": "tsup --watch",
+    "prepare": "tsup",
     "supabase:dev": "pnpx supabase start",
     "supabase:init": "pnpx supabase init",
     "supabase:link": "pnpx supabase link --project-ref <your-project-ID>",
@@ -33,6 +35,8 @@
     "@supabase/supabase-js": "^2.76.1"
   },
   "devDependencies": {
-    "tsup": "^8.5.0"
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "tsup": "catalog:"
   }
 }

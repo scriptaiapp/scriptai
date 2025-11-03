@@ -21,8 +21,10 @@ const initialVideos: Video[] = [
   { id: 3, url: "", status: 'empty', error: "" },
 ];
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
 export function useAITraining() {
-  const { profile, user, supabase, profileLoading: pageLoading, fetchUserProfile } = useSupabase()
+  const { profile, user, session, supabase, profileLoading: pageLoading, fetchUserProfile } = useSupabase()
 
   const [videos, setVideos] = useState<Video[]>(initialVideos);
   const [uploading, setUploading] = useState(false);
@@ -114,11 +116,20 @@ export function useAITraining() {
         .filter((video) => video.url.trim() !== "")
         .map((video) => video.url);
 
-      const response = await fetch("/api/train-ai", {
+      if (!session?.access_token) {
+        throw new Error("You must be signed in to train AI.");
+      }
+
+      const response = await fetch(`${backendUrl}/api/v1/train-ai`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ userId: user?.id, videoUrls: validUrls, isRetraining: profile?.ai_trained }),
       });
+
+      console.log("Train AI response:", response);
 
       if (!response.ok) throw new Error((await response.json()).error || "Failed to train AI");
       await fetchUserProfile(user?.id || "");

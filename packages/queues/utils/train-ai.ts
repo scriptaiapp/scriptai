@@ -25,12 +25,15 @@ export async function validateEnvironment(): Promise<void> {
 
 // Fetch channel data
 export async function fetchChannelData(supabase: any, userId: string): Promise<ChannelData> {
+  console.log('Fetching channel data for userId:', userId);
   const { data, error } = await supabase
     .from('youtube_channels')
     .select('channel_name, channel_id, provider_token, refresh_token, channel_description, custom_url, country, default_language, view_count, subscriber_count, video_count, topic_details')
     .eq('user_id', userId)
     .single();
   if (error || !data) {
+    console.log(error);
+    console.log(data)
     throw new Error('YouTube channel not found');
   }
   return data;

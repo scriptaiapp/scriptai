@@ -9,7 +9,7 @@ interface TrainAiDto {
   isRetraining?: boolean;
 }
 
-@Controller('api/v1')
+@Controller()
 @UseGuards(SupabaseAuthGuard)
 export class TrainAiController {
   constructor(@InjectQueue('train-ai') private readonly queue: Queue) { }
