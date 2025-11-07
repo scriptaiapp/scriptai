@@ -29,7 +29,8 @@ export function useAITraining() {
   const [showModal, setShowModal] = useState(false);
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false);
 
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+  // Support regular YouTube URLs and YouTube Shorts
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/).+$/;
 
   const handleAddVideoUrl = () => {
     if (videos.length < 5) {
@@ -100,7 +101,7 @@ export function useAITraining() {
     }
 
     if (filledVideos.some((video) => !youtubeRegex.test(video.url))) {
-      toast.error("Please provide valid YouTube video URLs.");
+      toast.error("Please provide valid YouTube video or Shorts URLs.");
       return false;
     }
     return true;
