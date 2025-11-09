@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Script AI front-page', () => {
-  const baseURL = 'http://localhost:3000';
 
-  test('should load the homepage and show main sections', async ({ page }) => {
-    await page.goto(baseURL);
+  test('should load the homepage and show main sections', async ({ page,baseURL }) => {
+    await page.goto(baseURL!);
 
     // Check title contains expected text
     await expect(page).toHaveTitle(/Script AI/i);

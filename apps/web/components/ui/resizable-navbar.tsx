@@ -11,18 +11,18 @@ import {
 import React, { useRef, useState } from "react";
 
 
-interface NavbarProps {
+export interface NavbarProps {
     children: React.ReactNode;
     className?: string;
 }
 
-interface NavBodyProps {
+export interface NavBodyProps {
     children: React.ReactNode;
     className?: string;
     visible?: boolean;
 }
 
-interface NavItemsProps {
+export interface NavItemsProps {
     items: {
         name: string;
         href: string;
@@ -31,18 +31,18 @@ interface NavItemsProps {
     onItemClick?: () => void;
 }
 
-interface MobileNavProps {
+export interface MobileNavProps {
     children: React.ReactNode;
     className?: string;
     visible?: boolean;
 }
 
-interface MobileNavHeaderProps {
+export interface MobileNavHeaderProps {
     children: React.ReactNode;
     className?: string;
 }
 
-interface MobileNavMenuProps {
+export interface MobileNavMenuProps {
     children: React.ReactNode;
     className?: string;
     isOpen: boolean;
