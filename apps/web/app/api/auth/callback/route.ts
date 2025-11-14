@@ -18,7 +18,7 @@ async function sendWelcomeEmail(
       from: 'Script AI <onboarding@tryscriptai.com>',
       to: email,
       subject: 'Welcome to Script AI!',
-      replyTo: 'support@tryscriptai.com',
+      replyTo: 'no-reply@tryscriptai.com', // support@tryscriptai.com
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
           <h1 style="color: #4F46E5; margin-bottom: 10px;">Welcome aboard, ${full_name}! 🎉</h1>
@@ -56,7 +56,7 @@ async function sendWelcomeEmail(
           </p>
 
           <p style="margin-top: 30px;">Have any questions? Just reply to this email or reach us at 
-            <a href="mailto:support@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">support@tryscriptai.com</a>.
+            <a href="mailto:no-reply@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">no-reply@tryscriptai.com</a>. <!-- support@tryscriptai.com -->
           </p>
 
           <p style="margin-top: 20px;">Cheers,<br/>The Script AI Team</p>

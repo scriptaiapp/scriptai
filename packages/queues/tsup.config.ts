@@ -5,4 +5,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: true,
+  external: ['@repo/supabase', '@repo/validation'],
 });

@@ -123,11 +123,27 @@ export async function POST(request: Request) {
     }
 
     // Extract video IDs from URLs with better error handling
+    // Support regular YouTube URLs and YouTube Shorts
     const videoIds = videoUrls
       .map((url: string) => {
         try {
           const urlObj = new URL(url);
-          return urlObj.searchParams.get('v') || url.split('/').pop();
+          // Check for regular watch URL
+          if (urlObj.searchParams.get('v')) {
+            return urlObj.searchParams.get('v');
+          }
+          // Check for Shorts URL: youtube.com/shorts/VIDEO_ID
+          if (urlObj.pathname.startsWith('/shorts/')) {
+            return urlObj.pathname.split('/shorts/')[1]?.split('?')[0] || null;
+          }
+          // Fallback: extract from path (for youtu.be/VIDEO_ID or other formats)
+          const pathParts = urlObj.pathname.split('/').filter(Boolean);
+          const lastPart = pathParts[pathParts.length - 1];
+          // YouTube video IDs are 11 characters
+          if (lastPart && lastPart.length === 11 && /^[a-zA-Z0-9_-]+$/.test(lastPart)) {
+            return lastPart;
+          }
+          return null;
         } catch (error) {
           console.error('Invalid URL format:', url);
           return null;
@@ -151,8 +167,7 @@ export async function POST(request: Request) {
         videoResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
           params: {
             part: 'snippet,contentDetails,statistics,topicDetails',
-            id: videoIds.join(','),
-            mine: true
+            id: videoIds.join(',')
           },
           headers: {
             Authorization: `Bearer ${accessToken}`,
