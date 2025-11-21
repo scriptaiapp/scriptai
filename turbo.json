@@ -15,14 +15,16 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-         "dist/**",
-         ".tsup/**"
-      ]
+        "dist/**",
+        ".tsup/**"
+      ],
+      "cache": true,
+      "env": ["NODE_ENV"]
     },
-  "db:pull": {
-    "dependsOn": ["^build"],
-    "outputs": ["packages/supabase/migrations/**"]
-  },
+    "db:pull": {
+      "dependsOn": ["^build"],
+      "outputs": ["packages/supabase/migrations/**"]
+    },
     "lint": {},
     "type-check": {},
     "test": {},

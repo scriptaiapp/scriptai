@@ -32,8 +32,8 @@ async function bootstrap() {
       credentials: true,
     });
 
-    await app.listen(process.env.PORT || 8080, () => {
-      console.log(`API Server running on port ${process.env.PORT || 8080}`);
+    await app.listen(process.env.PORT || 8000, () => {
+      console.log(`API Server running on port ${process.env.PORT || 8000}`);
     });
   }
 }

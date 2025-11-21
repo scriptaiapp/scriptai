@@ -10,9 +10,12 @@
     "apps/*",
     "packages/*"
   ],
+
   "scripts": {
     "dev": "turbo run dev",
+    "dev:setup": "turbo run dev --filter='./apps/*'",
     "build": "turbo run build",
+    "build:packages": "turbo run build --filter='./packages/*'",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",

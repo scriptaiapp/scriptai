@@ -46,7 +46,8 @@ BEFORE UPDATE ON user_style
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Index for embedding (HNSW for vector search)
-CREATE INDEX IF NOT EXISTS user_style_embedding_idx ON user_style USING hnsw (embedding vector_cosine_ops) TABLESPACE pg_default;
+-- Note: The operator class must be qualified with the extensions schema
+CREATE INDEX IF NOT EXISTS user_style_embedding_idx ON user_style USING hnsw (embedding extensions.vector_cosine_ops) TABLESPACE pg_default;
 
 -- Add credits column to profiles (if not exists)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS credits INTEGER DEFAULT 1000;
