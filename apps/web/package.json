@@ -94,6 +94,7 @@
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
+    "@repo/validation": "workspace:*",
     "@repo/jest-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22",
