@@ -73,10 +73,9 @@ export const registerUserSchema = z
   });
 
 export const trainAiSchema = z.object({
-  userId: z.string().min(1, "User ID is required"),
   videoUrls: z
     .array(z.string().url("Invalid video URL"))
-    .min(1, "At least one video URL is required"),
+    .min(3, "At least three video URLLs are required"),
   isRetraining: z.boolean().optional().default(false),
 });
 

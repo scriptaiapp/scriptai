@@ -2,7 +2,7 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createSupabaseClient, getSupabaseEnv, SupabaseClient } from '@repo/supabase';
+import { createSupabaseClient, getSupabaseEnv, getSupabaseServiceEnv, SupabaseClient } from '@repo/supabase';
 import { Thumbnail, Transcript, VideoData } from "@repo/validation";
 import { GoogleGenAI } from '@google/genai';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
@@ -19,7 +19,6 @@ interface TrainAiJobData {
   isRetraining?: boolean;
 }
 
-
 @Processor('train-ai', { concurrency: 5 })
 export class TrainAiProcessor extends WorkerHost {
   private readonly logger = new Logger(TrainAiProcessor.name);
@@ -27,11 +26,9 @@ export class TrainAiProcessor extends WorkerHost {
   private readonly genAI: GoogleGenAI;
   private readonly client: ElevenLabsClient;
 
-
-
   constructor(private readonly configService: ConfigService) {
     super();
-    const { url, key } = getSupabaseEnv();
+    const { url, key } = getSupabaseServiceEnv();
     this.supabase = createSupabaseClient(url, key);
 
     console.log(this.configService)
@@ -40,25 +37,48 @@ export class TrainAiProcessor extends WorkerHost {
     this.client = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY! });
   }
 
-
   async process(job: Job<TrainAiJobData>): Promise<void> {
     const { userId, videoUrls, isRetraining } = job.data;
     const supabase = this.supabase;
+
+    await job.updateProgress(0); // Initial: Queued
+    await job.log('Job queued and validations starting...');
 
     try {
       await validateInputs(userId, videoUrls);
       await validateEnvironment();
 
+      await job.updateProgress(10); // 10%: Validated
+      await job.log('Fetching channel and token...');
+
       const channelData = await fetchChannelData(supabase, userId);
       const { accessToken } = await manageYouTubeToken(supabase, userId, channelData);
+
+      await job.updateProgress(20); // 20%: Channel ready
+      await job.log('Fetching video data...');
+
       const videoData = await fetchVideoData(videoUrls, accessToken, channelData.channel_id);
+
+      await job.updateProgress(30); // 30%: Videos fetched
+      await job.log('Processing assets (audio/transcripts)...');
+
       const { transcripts, thumbnails, geminiInputTokens: assetInput, geminiOutputTokens: assetOutput, elevenlabsClonesCreated } = await this.processVideoAssets(supabase, userId, videoData, videoUrls);
+
+      await job.updateProgress(60); // 60%: Assets done
+      await job.log('Analyzing style and embedding...');
+
       const { styleAnalysis, geminiInputTokens: styleInput, geminiOutputTokens: styleOutput } = await analyzeStyle(this.genAI, channelData, videoData, videoUrls);
       const embedding = await generateEmbedding(styleAnalysis);
+
+      await job.updateProgress(80); // 80%: Analysis done
+      await job.log('Saving data...');
+
       await saveStyleData(supabase, userId, styleAnalysis, embedding, videoUrls, transcripts, thumbnails, assetInput + styleInput, assetOutput + styleOutput, elevenlabsClonesCreated);
 
+      await job.updateProgress(100); // 100%: Complete
       this.logger.log(`Train AI completed for ${userId}, retraining: ${isRetraining}`);
     } catch (error: any) {
+      await job.log(`Error: ${error.message}`);
       this.logger.error(`Job ${job.id} failed: ${error.message}`);
       throw error;  // Retry via BullMQ
     }
@@ -204,7 +224,6 @@ export class TrainAiProcessor extends WorkerHost {
       await fs.rm(tempDir, { recursive: true, force: true });
     }
   }
-
 
   // @OnWorkerEvent('stalled')
   // onStalled(jobId: string) {
