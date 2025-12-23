@@ -13,6 +13,7 @@ import {
 import { type SupabaseClient, type User, type Session } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { UserProfile } from "@repo/validation"
+import { Plans } from "@/types/plans"
 
 type SupabaseContext = {
   supabase: SupabaseClient
@@ -26,6 +27,9 @@ type SupabaseContext = {
   setProfile: Dispatch<SetStateAction<UserProfile | null>>
   profileLoading: boolean
   fetchUserProfile: (userId: string) => Promise<void>
+  fetchPlan: () => Promise<Plans[] | undefined>
+  plans: Plans[] | null
+  planLoading: boolean
 }
 
 // Suspense boundary helpers
@@ -44,6 +48,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
+
+  const [planLoading, setplanLoading] = useState(false)
+   const [plans, setPlans] = useState<Plans[] | null>(null)
 
   // Generate referral code
   function generateReferralCode(): string {
@@ -100,6 +107,28 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const fetchPlan = async () => {
+        setplanLoading(true)
+        try {
+            const { data, error } = await supabase
+                .from('plans')
+                .select('*')
+                .eq('is_active', true)
+
+            if (error) {
+                console.error('Error fetching data:', error)
+                return []
+            }
+
+            setPlans(data)
+            return data
+        } catch (error) {
+
+        } finally {
+            setplanLoading(false)
+        }
+    }
+
   // Initial session loader
   const getInitialSession = async (): Promise<Session | null> => {
     const { data, error } = await supabase.auth.getSession()
@@ -148,6 +177,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       fetchUserProfile(user.id)
+      fetchPlan()
     } else {
       setProfile(null)
       setProfileLoading(false)
@@ -166,6 +196,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setProfile,
     profileLoading,
     fetchUserProfile,
+    plans,
+    fetchPlan,
+    planLoading
   }
 
   return <Context.Provider value={value}>{children}</Context.Provider>
