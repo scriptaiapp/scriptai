@@ -122,123 +122,6 @@ export async function fetchVideoData(
   throw new Error('Max retries reached for YouTube API');
 }
 
-// Process video assets (audio, transcripts, thumbnails)
-// export async function processVideoAssets(
-//   supabase: any,
-//   genAI: any,
-//   userId: string,
-//   videos: VideoData[],
-//   videoUrls: string[]
-// ): Promise<{
-//   transcripts: Transcript[];
-//   thumbnails: Thumbnail[];
-//   geminiInputTokens: number;
-//   geminiOutputTokens: number;
-//   elevenlabsClonesCreated: number;
-// }> {
-//   const transcripts: Transcript[] = [];
-//   const thumbnails: Thumbnail[] = [];
-//   const audioFiles: BodyAddVoiceV1VoicesAddPost["files"] = [];
-//   let geminiInputTokens = 0;
-//   let geminiOutputTokens = 0;
-//   let elevenlabsClonesCreated = 0;
-//   const client = new ElevenLabsClient({
-//     apiKey: process.env.ELEVENLABS_API_KEY,
-//   });
-
-//   for (const [index, video] of videos.entries()) {
-//     const videoUrl = videoUrls[index];
-
-//     try {
-//       // Extract audio using youtube-dl-exec
-
-//       const tempDir = path.join(process.cwd(), "public", "temp");
-//       if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-
-//       const outputFile = path.join(tempDir, `${Date.now()}.mp3`);
-
-
-
-//       await youtubedl(videoUrl, {
-//         extractAudio: true,
-//         audioFormat: "mp3",
-//         format: "bestaudio[ext=m4a]/bestaudio",
-//         output: outputFile,
-//         noPlaylist: true,
-//         preferFreeFormats: true,
-//         noCheckCertificates: true,
-//         addMetadata: true,
-//       });
-
-//       const fileData = fs.readFileSync(outputFile);
-
-//       // Upload audio to Supabase
-//       const { data: { publicUrl: audioUrl } } = await supabase.storage
-//         .from('training-audio')
-//         .upload(`voices/${userId}/${video.id}.mp3`, fileData, { contentType: 'audio/mp3', upsert: true });
-
-//       console.log('Uploaded audio URL:', audioUrl);
-//       audioFiles.push(audioUrl);
-//       console.log(audioFiles)
-
-//       fs.rmSync(tempDir, { recursive: true, force: true });
-//       // Transcribe with Gemini using YouTube URL
-//       const lang = video.defaultAudioLanguage || 'en';
-//       const sttPrompt = `Transcribe this YouTube video to timed segments in JSON format (array of objects with "text", "start_time", "end_time"). Language: ${lang}`;
-//       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-//       const transcriptResult = await model.generateContent([
-//         sttPrompt,
-//         {
-//           fileData: {
-//             fileUri: videoUrl,
-//           },
-//         },
-//       ]);
-//       const transcriptText = transcriptResult.response.text();
-//       const transcript = JSON.parse(transcriptText) as { text: string; start_time: number; end_time: number }[];
-//       console.log(`Transcribed video ${video.id}:`, transcript);
-//       geminiInputTokens += transcriptResult.response.usageMetadata?.promptTokenCount || 0;
-//       geminiOutputTokens += transcriptResult.response.usageMetadata?.candidatesTokenCount || 0;
-//       transcripts.push({
-//         videoId: video.id, transcriptText, segments: transcript.map(segment => ({
-//           start: segment.start_time,
-//           end: segment.end_time,
-//           text: segment.text,
-//         }))
-//       });
-//       thumbnails.push({ videoId: video.id, thumbnailUrl: video.thumbnailUrl });
-//     } catch (error: any) {
-//       logError('process-video-assets', error, { videoId: video.id });
-//       throw new Error(`Failed to process video ${video.id}: ${error.message}`);
-//     }
-//   }
-
-//   // Clone voice with ElevenLabs
-//   const voiceResponse = await client.voices.ivc.create(
-//     {
-//       name: `${userId}_voice`,
-//       files: audioFiles.slice(0, 3),
-//     }
-//   );
-//   elevenlabsClonesCreated = 1;
-
-//   // Save voice to user_voices
-//   const { error: voiceError } = await supabase.from('user_voices').insert({
-//     user_id: userId,
-//     voice_id: voiceResponse.voiceId,
-//     name: `${userId}_voice`,
-//     sample_url: audioFiles[0],
-//     elevenlabs_voice_clones_created: elevenlabsClonesCreated,
-//     credits_consumed: Math.ceil(elevenlabsClonesCreated * 0.75), // Adjust factor
-//   });
-//   if (voiceError) {
-//     logError('train-ai-voice-save', voiceError, { userId });
-//     throw new Error('Failed to save voice data');
-//   }
-
-//   return { transcripts, thumbnails, geminiInputTokens, geminiOutputTokens, elevenlabsClonesCreated };
-// }
-
 // Analyze content style with Gemini
 export async function analyzeStyle(
   genAI: any,
@@ -248,8 +131,7 @@ export async function analyzeStyle(
   maxRetries = 3
 ): Promise<{
   styleAnalysis: StyleAnalysis;
-  geminiInputTokens: number;
-  geminiOutputTokens: number;
+  totalStyleTokens: number;
 }> {
   const prompt = `
 Analyze the following YouTube channel and video data to extract the creator's content style, which will be used for generating scripts, research topics, thumbnails, subtitles, and audio conversions. Provide a detailed analysis of the following aspects: tone (e.g., conversational, formal), vocabulary level (e.g., simple, technical), pacing (e.g., fast, slow), themes (e.g., educational, entertainment), humor style (e.g., witty, sarcastic), narrative structure (e.g., storytelling, listicle), visual style, thumbnails and descriptions, and audience engagement techniques (e.g., calls to action, audience questions). Additionally, include a comprehensive narrative overview of the creator's overall content style in the style_analysis field, synthesizing all aspects into a cohesive summary.
@@ -328,29 +210,31 @@ Video ${i + 1}:
   };
 
   let styleAnalysis: StyleAnalysis | null = null;
-  let geminiInputTokens = 0;
-  let geminiOutputTokens = 0;
+  let totalStyleTokens = 0;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = 'gemini-1.5-flash';
 
-      const result = await model.generateContent({
+      const result = await genAI.models.generateContent({
+        model,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: schema,
-          temperature: 0.2,
-          maxOutputTokens: 2048
+          temperature: 0
         }
       });
 
-      console.log('Gemini style analysis response:', result);
+      styleAnalysis = JSON.parse(result.text) as StyleAnalysis;
 
-      styleAnalysis = result.text as StyleAnalysis;
+      console.log('Gemini style analysis result:', styleAnalysis);
 
-      geminiInputTokens += result.response.usageMetadata?.promptTokenCount ?? 0;
-      geminiOutputTokens += result.response.usageMetadata?.candidatesTokenCount ?? 0;
+      if (!styleAnalysis) {
+        throw new Error(`Gemini failed to return structured Style Analysis data.`);
+      }
+
+      totalStyleTokens += result?.usageMetadata?.totalTokenCount ?? 0;
 
       if (styleAnalysis) break;
     } catch (error) {
@@ -363,22 +247,22 @@ Video ${i + 1}:
     }
   }
 
-  return { styleAnalysis: styleAnalysis!, geminiInputTokens, geminiOutputTokens };
+  return { styleAnalysis: styleAnalysis!, totalStyleTokens };
 }
 
 
 // Generate embedding with Gemini
 export async function generateEmbedding(
+  genAI: any,
   styleAnalysis: StyleAnalysis,
   maxRetries = 3
 ): Promise<number[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
 
   const styleText = JSON.stringify(styleAnalysis);
   let retryCount = 0;
   while (retryCount < maxRetries) {
     try {
-      const response = await ai.models.embedContent({
+      const response = await genAI.models.embedContent({
         model: 'gemini-embedding-001',
         contents: styleText,
         config: {
@@ -417,21 +301,18 @@ export async function saveStyleData(
   videoUrls: string[],
   transcripts: Transcript[],
   thumbnails: Thumbnail[],
-  geminiInputTokens: number,
-  geminiOutputTokens: number,
-  elevenlabsClonesCreated: number
+  totalConsumedTokens: number
 ): Promise<void> {
-  const geminiTotalTokens = geminiInputTokens + geminiOutputTokens;
-  const geminiCredits = Math.ceil(geminiTotalTokens / 1000);
-  const elevenlabsCredits = elevenlabsClonesCreated * 0.75; // Adjust factor
-  const totalCredits = geminiCredits + Math.ceil(elevenlabsCredits);
+  const geminiCredits = Math.ceil(totalConsumedTokens / 1000);
+
+  console.log(`Credits to consumed: ${geminiCredits}`);
 
   const { data: profile } = await supabase.from('profiles').select('credits').eq('user_id', userId).single();
-  if (profile.credits < totalCredits) {
-    throw new Error('Insufficient credits');
+  if (profile.credits < geminiCredits) {
+    throw new Error('Insufficient credits, Please upgrade your plan.');
   }
 
-  await supabase.from('profiles').update({ credits: profile.credits - totalCredits, ai_trained: true }).eq('user_id', userId);
+  await supabase.from('profiles').update({ credits: profile.credits - geminiCredits, ai_trained: true }).eq('user_id', userId);
 
   const styleData = {
     user_id: userId,
@@ -453,10 +334,8 @@ export async function saveStyleData(
     embedding,
     transcripts,
     thumbnails,
-    gemini_input_tokens: geminiInputTokens,
-    gemini_output_tokens: geminiOutputTokens,
-    elevenlabs_voice_clones_created: elevenlabsClonesCreated,
-    credits_consumed: totalCredits,
+    gemini_total_tokens: totalConsumedTokens,
+    credits_consumed: geminiCredits,
   };
 
   const { error } = await supabase.from('user_style').upsert(styleData, { onConflict: 'user_id' });

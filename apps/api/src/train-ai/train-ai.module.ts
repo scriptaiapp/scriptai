@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { TrainAiProcessor } from '@repo/queues';
+import { TrainAiProcessor } from '@repo/train-ai-worker';
 
 @Module({
   imports: [

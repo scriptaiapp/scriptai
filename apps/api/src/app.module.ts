@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { TrainAiProcessor } from '@repo/queues';
 import redisConfig from './config/redis.config';
 import { SupabaseModule } from './supabase/supabase.module';
 
@@ -22,7 +21,7 @@ import { AuthModule } from './auth/auth.module';
       useFactory: async (configService: ConfigService) => ({
         connection: configService.get('redis'),
         defaultJobOptions: {
-          attempts: 3,
+          attempts: 1,
           backoff: { type: 'exponential', delay: 1000 },
           removeOnComplete: { count: 1000 },
           removeOnFail: { count: 5000 },
@@ -39,6 +38,6 @@ import { AuthModule } from './auth/auth.module';
     AuthModule
   ],
   controllers: [AppController, TrainAiController],
-  providers: [AppService, TrainAiProcessor],
+  providers: [AppService],
 })
 export class AppModule { }
