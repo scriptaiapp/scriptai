@@ -22,8 +22,11 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.21.0",
     "@eslint/js": "^9.0.0",
+    "@google/genai": "^1.13.0",
     "@repo/config": "workspace:*",
+    "@repo/email-templates": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/train-ai-worker": "workspace:*",
     "@repo/typescript-config": "workspace:*",
@@ -32,15 +35,13 @@
     "globals": "^15.0.0",
     "prettier": "^3.6.2",
     "supabase": "^2.48.3",
-    "turbo": "^2.5.6"
+    "turbo": "^2.7.2"
   },
   "packageManager": "pnpm@9.12.3",
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.21.0",
-    "@google/genai": "^1.13.0",
     "@types/node": "^24.9.2",
     "axios": "^1.11.0",
     "bullmq": "^5.62.2",
