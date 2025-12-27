@@ -8,11 +8,6 @@ import { SupabaseAuthGuard } from './guards/auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService, private readonly supabaseService: SupabaseService) { }
 
-  @Get()
-  getTrainAI() {
-    return { message: 'Protected train-ai endpoint' };
-  }
-
   @Get('test-db')
   async testDb(@Req() req) {
     const { data, error } = await this.supabaseService.getClient().from('profiles').select('*').limit(1);

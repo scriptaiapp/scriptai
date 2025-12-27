@@ -13,8 +13,9 @@
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "lint": "echo 'No JavaScript files to lint'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.21.0",
@@ -31,7 +32,7 @@
     "@repo/validation": "workspace:*",
     "@supabase/supabase-js": "^2.53.0",
     "@tabler/icons-react": "^3.34.1",
-    "bullmq": "^5.62.2",
+    "bullmq": "catalog:",
     "clsx": "^2.1.1",
     "jsonrepair": "^3.13.0",
     "motion": "^12.23.12",
@@ -43,6 +44,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@darraghor/eslint-plugin-nestjs-typed": "^7.1.5",
     "@jest/globals": "^29.7.0",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
