@@ -59,9 +59,9 @@ const Footer = () => {
               }))}
             />
 
-            <p className="text-sm max-w-sm mt-3">
+            {/* <p className="text-sm max-w-sm mt-3">
               Connect with us:  <a href="mailto:support@tryscriptai.com" className="text-purple-500 hover:underline">support@tryscriptai.com</a>
-            </p>
+            </p> */}
           </div>
           <div className="border-t border-slate-200 dark:border-slate-700 w-full pt-8 text-sm text-slate-600 dark:text-slate-400 flex flex-col items-center gap-2">
             &copy; {new Date().getFullYear()} Script AI. All rights reserved.

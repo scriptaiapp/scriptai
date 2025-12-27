@@ -1,7 +1,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest } from 'next/server';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseServer } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 
 const CREDITS_PER_REFERRAL = 10;
@@ -252,7 +252,7 @@ export async function GET(request: NextRequest) {
     console.error(' RESEND_API_KEY is not configured');
     redirect('/error?message=Server configuration error. Please contact support.');
   }
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   const resend = new Resend(process.env.RESEND_API_KEY!);
   // For Google sign-in
   if (code) {

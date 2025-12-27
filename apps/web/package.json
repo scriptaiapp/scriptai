@@ -44,6 +44,7 @@
     "@react-three/fiber": "^9.3.0",
     "@repo/api": "workspace:*",
     "@repo/config": "workspace:*",
+    "@repo/supabase": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/validation": "workspace:*",
     "@supabase/ssr": "^0.6.1",
@@ -88,11 +89,12 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.178.0",
     "uuid": "^11.1.0",
-    "vaul": "^0.9.6",
+    "vaul": "^0.9.9",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
+    "@repo/validation": "workspace:*",
     "@repo/jest-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22",
