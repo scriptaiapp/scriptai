@@ -214,7 +214,7 @@ Video ${i + 1}:
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const model = 'gemini-1.5-flash';
+      const model = 'gemini-2.5-flash';
 
       const result = await genAI.models.generateContent({
         model,
@@ -266,7 +266,7 @@ export async function generateEmbedding(
         model: 'gemini-embedding-001',
         contents: styleText,
         config: {
-          outputDimensionality: 768,
+          outputDimensionality: 1536,
           taskType: 'RETRIEVAL_DOCUMENT',
         }
       });

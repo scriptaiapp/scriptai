@@ -33,7 +33,7 @@ export class TrainAiProcessor extends WorkerHost {
     const { url, key } = getSupabaseServiceEnv();
     this.supabase = createSupabaseClient(url, key);
 
-    this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!, apiVersion: 'v1beta' });
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
   }
 
   async process(job: Job<TrainAiJobData>): Promise<void> {
@@ -96,7 +96,7 @@ export class TrainAiProcessor extends WorkerHost {
     } catch (error: any) {
       await job.log(`Error: ${error.message}`);
       this.logger.error(`Job ${job.id} failed: ${error.message}`, error.stack);
-      throw error; // BullMQ retry
+      throw error;
     }
   }
 
@@ -143,7 +143,7 @@ export class TrainAiProcessor extends WorkerHost {
         required: ["videoId", "transcriptText", "segments"],
       };
 
-      const model = 'gemini-1.5-flash';
+      const model = 'gemini-2.5-flash';
 
       const result: any = await this.genAI.models.generateContent({
         model,

@@ -97,7 +97,6 @@ export async function apiRequest<T = unknown>(
       try {
         data = await response.json();
       } catch {
-        // If JSON parsing fails but response is ok, return empty object
         if (response.ok) {
           return {} as T;
         }
@@ -107,7 +106,6 @@ export async function apiRequest<T = unknown>(
         );
       }
     } else {
-      // Non-JSON response
       if (!response.ok) {
         const text = await response.text();
         throw new ApiClientError(
