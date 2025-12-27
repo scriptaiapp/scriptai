@@ -5,7 +5,7 @@ import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { trainAiSchema, type TrainAiDto } from '@repo/validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { Request } from 'express';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { Job } from 'bullmq';
 
 interface AuthRequest extends Request {
@@ -22,11 +22,12 @@ interface JobEvent {
 }
 
 @Controller('train-ai')
-@UseGuards(SupabaseAuthGuard)
+
 export class TrainAiController {
   constructor(@InjectQueue('train-ai') private readonly queue: Queue) { }
 
   @Post()
+  @UseGuards(SupabaseAuthGuard)
   async trainAi(
     @Req() req: AuthRequest,
     @Body(new ZodValidationPipe(trainAiSchema)) dto: TrainAiDto
@@ -43,6 +44,7 @@ export class TrainAiController {
 
   @Sse('status/:jobId')
   status(@Param('jobId') jobId: string, @Req() req: AuthRequest): Observable<MessageEvent> {
+
     return new Observable((observer) => {
       let closed = false;
 

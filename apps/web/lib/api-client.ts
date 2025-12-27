@@ -3,6 +3,7 @@
  * Handles authentication, error handling, and type safety
  * Client-side only - use in components and hooks
  */
+import { createSupabaseClient, getSupabaseEnv } from "@repo/supabase"
 
 export interface ApiErrorResponse {
   message: string;
@@ -65,10 +66,9 @@ export async function apiRequest<T = unknown>(
     let token = accessToken;
 
     if (!token && requireAuth) {
-      // Try to get token from Supabase session (client-side)
       try {
-        const { createClient } = await import('@/lib/supabase/client');
-        const supabase = createClient();
+        const { url, key } = getSupabaseEnv();
+        const supabase = createSupabaseClient(url, key);
         const { data: { session } } = await supabase.auth.getSession();
         token = session?.access_token ?? undefined;
       } catch (error) {
