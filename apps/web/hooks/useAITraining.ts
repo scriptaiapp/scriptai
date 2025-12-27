@@ -122,7 +122,7 @@ export function useAITraining() {
     }
 
     if (filledVideos.some((video) => !youtubeRegex.test(video.url))) {
-      toast.error("Please provide valid YouTube video URLs.");
+      toast.error("Please provide valid YouTube video or Shorts URLs.");
       return false;
     }
     return true;
@@ -169,7 +169,6 @@ export function useAITraining() {
   };
 
   // Polling for real-time updates
-  // Replace the polling useEffect (lines 172-251) with this SSE implementation
   useEffect(() => {
     if (!jobId) return;
 
