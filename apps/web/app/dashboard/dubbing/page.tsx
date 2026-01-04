@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Loader2, Play, Download, Clock, UploadCloud, RefreshCw } from "lucide-react";
-import { useDubbing, supportedLanguages } from "@/hooks/useDubbing";
+import { useDubbing } from "@/hooks/useDubbing";
+import { supportedLanguages } from "@repo/validation";
 
 export default function NewDubbing() {
   const router = useRouter();
