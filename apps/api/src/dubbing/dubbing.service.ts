@@ -28,7 +28,7 @@ export class DubbingService {
   }
 
 
-  async createDub(userId: string, dto: CreateDubInput): Promise<DubResponse> {
+  async createDub(userId: string, dto: CreateDubInput): Promise<any> {
     console.log('Creating Dubbing Project for user:', userId);
 
     const targetLocale = murfLocaleMap[dto.targetLanguage as SupportedLanguage];
@@ -283,10 +283,10 @@ export class DubbingService {
     return data;
   }
 
-  async getDub(userId: string, projectId: string): Promise<DubResponse & { targetLanguage?: string }> {
+  async getDub(userId: string, projectId: string): Promise<DubResponse> {
     const { data, error } = await this.supabase
       .from('dubbing_projects')
-      .select('project_id, dubbed_url, target_language')
+      .select('project_id, dubbed_url, original_media_url, target_language, status, credits_consumed, is_video, created_at')
       .eq('user_id', userId)
       .eq('project_id', projectId)
       .single();
@@ -297,7 +297,12 @@ export class DubbingService {
 
     return {
       projectId: data.project_id,
+      originalMediaUrl: data.original_media_url,
       dubbedUrl: data.dubbed_url,
+      status: data.status,
+      creditsConsumed: data.credits_consumed,
+      isVideo: data.is_video,
+      createdAt: data.created_at,
       targetLanguage: data.target_language,
     };
   }

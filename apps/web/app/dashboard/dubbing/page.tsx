@@ -1,171 +1,184 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Play, Download, Clock, UploadCloud, RefreshCw } from "lucide-react";
-import { useDubbing } from "@/hooks/useDubbing";
-import { supportedLanguages } from "@repo/validation";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { useSupabase } from "@/components/supabase-provider"
+import { Plus, Search } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { ContentCard } from "@/components/dashboard/common/ContentCard"
+import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton"
+import { EmptySvg } from "@/components/dashboard/common/EmptySvg"
+import { getDubbings, deleteDubbing, DubbingProject } from "@/lib/api/getDubbings"
+import { supportedLanguages } from "@repo/validation"
 
-export default function NewDubbing() {
-  const router = useRouter();
-  const {
-    fileInputRef,
-    mediaFile,
-    isVideo,
-    targetLanguage,
-    setTargetLanguage,
-    dubbedResult,
-    progress,
-    isLoading,
-    handleFileChange,
-    resetForm,
-    handleDubMedia,
-  } = useDubbing();
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.07,
+    },
+  },
+}
+
+const emptyStateVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4 },
+  },
+}
+
+function getLanguageLabel(code: string): string {
+  return supportedLanguages.find((l) => l.value === code)?.label ?? code
+}
+
+function formatTitle(project: DubbingProject): string {
+  const lang = getLanguageLabel(project.target_language)
+  const type = project.is_video ? "Video" : "Audio"
+  return `${type} dubbed to ${lang}`
+}
+
+export default function DubbingList() {
+  const { session } = useSupabase()
+  const [dubbings, setDubbings] = useState<DubbingProject[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [dubbingToDelete, setDubbingToDelete] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDubbings = async () => {
+      setLoading(true)
+      const data = await getDubbings(session?.access_token)
+      setDubbings(data)
+      setLoading(false)
+    }
+
+    if (session?.access_token) {
+      fetchDubbings()
+    }
+  }, [session?.access_token])
+
+  const handleDeleteDubbing = async () => {
+    if (!dubbingToDelete) return
+
+    const success = await deleteDubbing(dubbingToDelete, session?.access_token)
+
+    if (success) {
+      setDubbings(dubbings.filter((d) => d.project_id !== dubbingToDelete))
+      toast.success("Dubbing deleted", {
+        description: "Your dubbed media has been deleted successfully.",
+      })
+    } else {
+      toast.error("Error deleting dubbing", {
+        description: "Could not delete the dubbed media. Please try again.",
+      })
+    }
+    setDubbingToDelete(null)
+  }
+
+  if (loading) {
+    return <ContentCardSkeleton />
+  }
+
+  const filteredDubbings = dubbings.filter((d) => {
+    const title = formatTitle(d).toLowerCase()
+    return title.includes(searchQuery.toLowerCase()) || d.target_language.toLowerCase().includes(searchQuery.toLowerCase())
+  })
 
   return (
-    <div className="container py-8 relative">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">AI Dubbing</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Upload an audio or video file and dub it into another language with AI, preserving tone and style.
-        </p>
+    <motion.div
+      className="container py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Dubbings</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Manage all your dubbed audio and video files
+          </p>
+        </div>
+        <Link href="/dashboard/dubbing/new">
+          <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
+            <Plus className="mr-2 h-4 w-4" />
+            New Dubbing
+          </Button>
+        </Link>
       </div>
 
-      <Card className="relative">
-        <CardHeader>
-          <CardTitle>Dub Your Media</CardTitle>
-          <CardDescription>Translate your audio or video into one of 29 languages while keeping the original voice characteristics.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="media-upload">Upload Audio or Video File</Label>
-              {progress.state === "failed" && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={resetForm}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Try Again</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <Input
-              ref={fileInputRef}
-              id="media-upload"
-              type="file"
-              accept="audio/*,video/*"
-              onChange={handleFileChange}
-              disabled={isLoading}
-            />
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Upload MP3, WAV, MP4, or MOV (max 500MB, 45 minutes).
-            </p>
-          </div>
+      {/* Search Bar */}
+      <div className="mb-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+          <Input
+            placeholder="Search dubbings by language..."
+            className="pl-10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="target-language">Target Language</Label>
-            <Select
-              value={targetLanguage}
-              onValueChange={setTargetLanguage}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="target-language">
-                <SelectValue placeholder="Select a language" />
-              </SelectTrigger>
-              <SelectContent>
-                {supportedLanguages.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Choose the language to dub your media into.
-            </p>
-          </div>
-
-          {progress.state !== "idle" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {progress.state === "uploading" && <UploadCloud className="h-4 w-4" />}
-                  {progress.state === "processing" && <Loader2 className="h-4 w-4 animate-spin" />}
-                  <span className="text-sm font-medium">{progress.message}</span>
-                </div>
-                <span className="text-sm text-slate-500">{Math.round(progress.progress)}%</span>
-              </div>
-              <Progress value={progress.progress} className="w-full h-2" />
-            </div>
-          )}
-
-          {dubbedResult && (
-            <div className="space-y-2">
-              <Label>Dubbed Media</Label>
-              <div className="flex items-center gap-4">
-                {isVideo ? (
-                  <video controls src={dubbedResult.dubbedUrl} className="w-full max-w-md h-32 rounded-lg">
-                    Your browser does not support the video element.
-                  </video>
-                ) : (
-                  <audio controls src={dubbedResult.dubbedUrl} className="w-full max-w-md">
-                    Your browser does not support the audio element.
-                  </audio>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                >
-                  <a
-                    href={dubbedResult.dubbedUrl}
-                    download={`dubbed_${isVideo ? "video" : "audio"}_${dubbedResult.targetLanguage}.${isVideo ? "mp4" : "mp3"}`}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </a>
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button
-            onClick={handleDubMedia}
-            className="bg-slate-950 hover:bg-slate-900 text-white"
-            disabled={isLoading || !mediaFile || !targetLanguage || progress.state === "completed"}
+      <AnimatePresence mode="wait">
+        {filteredDubbings.length > 0 ? (
+          <motion.div
+            key="dubbing-list"
+            className="grid grid-cols-1 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Dub
-              </>
-            )}
-          </Button>
-        </CardFooter>
-
-      </Card>
-    </div>
-  );
+            {filteredDubbings.map((dubbing) => (
+              <ContentCard
+                key={dubbing.project_id}
+                id={dubbing.project_id}
+                title={formatTitle(dubbing)}
+                created_at={dubbing.created_at}
+                onDelete={handleDeleteDubbing}
+                setToDelete={setDubbingToDelete}
+                type="dubbing"
+              />
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty-state-illustrated"
+            variants={emptyStateVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <div className="text-center py-16">
+              <div className="flex flex-col items-center">
+                <EmptySvg className="h-32 w-auto mb-6 text-slate-300 dark:text-slate-700" />
+                <h3 className="font-semibold text-xl text-slate-800 dark:text-slate-200 mb-2">
+                  No dubbed media yet
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+                  {searchQuery
+                    ? `We couldn't find a dubbing matching "${searchQuery}".`
+                    : "Dub your first audio or video into another language with AI."}
+                </p>
+                {!searchQuery && (
+                  <Link href="/dashboard/dubbing/new">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Dubbing
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
 }
+

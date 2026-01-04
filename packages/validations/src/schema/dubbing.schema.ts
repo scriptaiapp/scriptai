@@ -10,6 +10,12 @@ export const CreateDubSchema = z.object({
 export const DubResponseSchema = z.object({
   projectId: z.string(),
   dubbedUrl: z.string().optional(),
+  originalMediaUrl: z.string().optional(),
+  status: z.enum(['dubbing', 'dubbed']),
+  creditsConsumed: z.number().optional(),
+  isVideo: z.boolean(),
+  createdAt: z.string(),
+  targetLanguage: z.string()
 });
 
 export type CreateDubInput = z.infer<typeof CreateDubSchema>;
