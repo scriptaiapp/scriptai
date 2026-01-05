@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DubbingService } from './dubbing.service';
 import { DubbingController } from './dubbing.controller';
-import { SupabaseModule } from 'src/supabase/supabase.module';
+import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
   imports: [SupabaseModule],
