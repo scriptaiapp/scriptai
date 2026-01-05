@@ -153,7 +153,7 @@ export class DubbingService {
                 state: 'completed',
                 progress: 100,
                 message: 'Dubbing complete!',
-                creditsUsed: credits_used,
+                creditsUsed: credits_used * 10,
                 finished: true,
               });
               observer.complete();
@@ -256,7 +256,7 @@ export class DubbingService {
       .update({
         dubbed_url: publicUrl,
         status: 'dubbed',
-        credits_consumed: creditsUsed,
+        credits_consumed: creditsUsed * 10,
       })
       .eq('project_id', projectId);
 
@@ -264,7 +264,7 @@ export class DubbingService {
     if (creditsUsed > 0) {
       await this.supabase.rpc('update_user_credits', {
         user_uuid: userId,
-        credit_change: -creditsUsed,
+        credit_change: -creditsUsed * 10,
       });
     }
   }

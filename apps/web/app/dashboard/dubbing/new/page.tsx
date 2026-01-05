@@ -127,9 +127,6 @@ export default function NewDubbing() {
                   disabled={isLoading}
                   maxLength={100}
                 />
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Give your dubbing a descriptive name.
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -181,9 +178,6 @@ export default function NewDubbing() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Choose the language to dub your media into.
-                </p>
               </div>
 
               {progress.state !== "idle" && (
