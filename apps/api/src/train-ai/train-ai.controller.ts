@@ -1,12 +1,11 @@
 import { Body, Controller, Post, Req, Sse, Param, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { Queue, Job } from 'bullmq';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { trainAiSchema, type TrainAiDto } from '@repo/validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { Request } from 'express';
-import { Observable, throwError } from 'rxjs';
-import { Job } from 'bullmq';
+import type { Request } from 'express';
+import { Observable } from 'rxjs';
 
 interface AuthRequest extends Request {
   user?: { id: string };

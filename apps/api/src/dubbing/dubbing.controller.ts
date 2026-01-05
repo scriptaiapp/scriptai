@@ -1,9 +1,9 @@
 import { Controller, Post, Body, Get, Delete, Param, Query, UseGuards, Req, Sse } from '@nestjs/common';
 import { DubbingService } from './dubbing.service';
-import { CreateDubInput } from '@repo/validation';
+import type { CreateDubInput } from '@repo/validation';
 import { SupabaseAuthGuard } from 'src/guards/auth.guard';
-import { Observable } from 'rxjs';
-import { Request } from 'express';
+import type { Observable } from 'rxjs';
+import type { Request } from 'express';
 
 interface AuthRequest extends Request {
   user?: { id: string };
