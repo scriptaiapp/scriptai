@@ -46,6 +46,7 @@ export function useDubbing() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [isVideo, setIsVideo] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("");
+  const [mediaName, setMediaName] = useState("");
   const [dubbedResult, setDubbedResult] = useState<DubbedResult | null>(null);
 
   const [progress, setProgress] = useState<DubbingProgress>({
@@ -84,15 +85,17 @@ export function useDubbing() {
   const resetForm = useCallback(() => {
     setMediaFile(null);
     setTargetLanguage("");
+    setMediaName("");
     setDubbedResult(null);
     setProgress({ state: "idle", progress: 0, message: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   const handleDubMedia = useCallback(async () => {
-    if (!mediaFile || !targetLanguage) {
+    if (!mediaFile || !targetLanguage || !mediaName.trim()) {
       if (!mediaFile) toast.error("No file uploaded");
       if (!targetLanguage) toast.error("No target language selected");
+      if (!mediaName.trim()) toast.error("Please enter a name for your media");
       return;
     }
 
@@ -124,6 +127,7 @@ export function useDubbing() {
           mediaUrl: data.publicUrl,
           targetLanguage,
           isVideo,
+          mediaName: mediaName.trim(),
         },
         {
           requireAuth: true,
@@ -186,7 +190,7 @@ export function useDubbing() {
       updateProgress("failed", 0, message);
       toast.error("Error dubbing media", { description: message });
     }
-  }, [mediaFile, targetLanguage, isVideo, supabase, session, updateProgress]);
+  }, [mediaFile, targetLanguage, isVideo, mediaName, supabase, session, updateProgress]);
 
   const isLoading =
     progress.state === "uploading" || progress.state === "processing";
@@ -197,6 +201,8 @@ export function useDubbing() {
     isVideo,
     targetLanguage,
     setTargetLanguage,
+    mediaName,
+    setMediaName,
     dubbedResult,
     progress,
     isLoading,

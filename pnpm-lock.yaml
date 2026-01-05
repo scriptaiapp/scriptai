@@ -117,9 +117,6 @@ importers:
       '@repo/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
-      '@repo/train-ai-worker':
-        specifier: workspace:*
-        version: link:../../packages/train-ai-worker
       '@repo/validation':
         specifier: workspace:*
         version: link:../../packages/validations

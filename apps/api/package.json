@@ -28,7 +28,6 @@
     "@repo/api": "workspace:*",
     "@repo/email-templates": "workspace:*",
     "@repo/supabase": "workspace:*",
-    "@repo/train-ai-worker": "workspace:*",
     "@repo/validation": "workspace:*",
     "@supabase/supabase-js": "^2.53.0",
     "@tabler/icons-react": "^3.34.1",

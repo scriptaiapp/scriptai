@@ -4,6 +4,7 @@ export const CreateDubSchema = z.object({
   mediaUrl: z.string().url({ message: 'Invalid media URL' }),
   targetLanguage: z.string().min(1, { message: 'Target language is required' }),
   isVideo: z.boolean(),
+  mediaName: z.string().min(1, { message: 'Media name is required' }).max(100),
 });
 
 // Output/response schema
@@ -15,7 +16,8 @@ export const DubResponseSchema = z.object({
   creditsConsumed: z.number().optional(),
   isVideo: z.boolean(),
   createdAt: z.string(),
-  targetLanguage: z.string()
+  targetLanguage: z.string(),
+  mediaName: z.string().optional(),
 });
 
 export type CreateDubInput = z.infer<typeof CreateDubSchema>;

@@ -12,6 +12,7 @@ export interface DubbingProject {
   dubbedUrl?: string
   credits_consumed?: number
   created_at: string
+  media_name?: string
 }
 
 export async function getDubbings(accessToken?: string): Promise<DubbingProject[]> {

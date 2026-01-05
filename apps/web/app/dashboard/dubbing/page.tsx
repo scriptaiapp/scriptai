@@ -38,6 +38,7 @@ function getLanguageLabel(code: string): string {
 }
 
 function formatTitle(project: DubbingProject): string {
+  if (project.media_name) return project.media_name
   const lang = getLanguageLabel(project.target_language)
   const type = project.is_video ? "Video" : "Audio"
   return `${type} dubbed to ${lang}`
@@ -86,8 +87,9 @@ export default function DubbingList() {
   }
 
   const filteredDubbings = dubbings.filter((d) => {
+    const query = searchQuery.toLowerCase()
     const title = formatTitle(d).toLowerCase()
-    return title.includes(searchQuery.toLowerCase()) || d.target_language.toLowerCase().includes(searchQuery.toLowerCase())
+    return title.includes(query) || d.target_language.toLowerCase().includes(query) || (d.media_name?.toLowerCase().includes(query) ?? false)
   })
 
   return (
@@ -118,7 +120,7 @@ export default function DubbingList() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <Input
-            placeholder="Search dubbings by language..."
+            placeholder="Search dubbings by name or language..."
             className="pl-10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

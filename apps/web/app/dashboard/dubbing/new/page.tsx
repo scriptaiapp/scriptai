@@ -36,6 +36,8 @@ export default function NewDubbing() {
     isVideo,
     targetLanguage,
     setTargetLanguage,
+    mediaName,
+    setMediaName,
     dubbedResult,
     progress,
     isLoading,
@@ -115,6 +117,22 @@ export default function NewDubbing() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
+                <Label htmlFor="media-name">Media Name</Label>
+                <Input
+                  id="media-name"
+                  type="text"
+                  placeholder="Enter a name for your dubbed media"
+                  value={mediaName}
+                  onChange={(e) => setMediaName(e.target.value)}
+                  disabled={isLoading}
+                  maxLength={100}
+                />
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Give your dubbing a descriptive name.
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="media-upload">Upload Audio or Video File</Label>
                   {progress.state === "failed" && (
@@ -188,7 +206,7 @@ export default function NewDubbing() {
               <Button
                 onClick={handleDubMedia}
                 className="bg-slate-950 hover:bg-slate-900 text-white"
-                disabled={isLoading || !mediaFile || !targetLanguage || progress.state === "completed"}
+                disabled={isLoading || !mediaFile || !targetLanguage || !mediaName.trim() || progress.state === "completed"}
               >
                 {isLoading ? (
                   <>

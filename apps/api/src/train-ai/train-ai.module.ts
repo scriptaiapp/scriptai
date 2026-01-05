@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { TrainAiProcessor } from '@repo/train-ai-worker';
 
 @Module({
   imports: [
@@ -8,6 +7,5 @@ import { TrainAiProcessor } from '@repo/train-ai-worker';
       name: 'train-ai'
     }),
   ],
-  providers: [TrainAiProcessor],
 })
 export class TrainAiModule { }

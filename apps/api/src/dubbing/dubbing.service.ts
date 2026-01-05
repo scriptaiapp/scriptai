@@ -95,6 +95,7 @@ export class DubbingService {
         target_language: dto.targetLanguage,
         status: 'dubbing',
         is_video: dto.isVideo,
+        media_name: dto.mediaName,
       });
 
     if (insertErr) {
@@ -286,7 +287,7 @@ export class DubbingService {
   async getDub(userId: string, projectId: string): Promise<DubResponse> {
     const { data, error } = await this.supabase
       .from('dubbing_projects')
-      .select('project_id, dubbed_url, original_media_url, target_language, status, credits_consumed, is_video, created_at')
+      .select('project_id, dubbed_url, original_media_url, target_language, status, credits_consumed, is_video, created_at, media_name')
       .eq('user_id', userId)
       .eq('project_id', projectId)
       .single();
@@ -304,6 +305,7 @@ export class DubbingService {
       isVideo: data.is_video,
       createdAt: data.created_at,
       targetLanguage: data.target_language,
+      mediaName: data.media_name,
     };
   }
 

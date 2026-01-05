@@ -105,7 +105,8 @@ export default function DubbingDetailPage() {
     setIsDownloading(true)
     try {
       const ext = dubbing.isVideo ? "mp4" : "mp3"
-      const filename = `dubbed_${dubbing.isVideo ? "video" : "audio"}_${dubbing.targetLanguage}.${ext}`
+      const baseName = dubbing.mediaName || `dubbed_${dubbing.isVideo ? "video" : "audio"}_${dubbing.targetLanguage}`
+      const filename = `${baseName}.${ext}`
       await downloadFile(dubbing.dubbedUrl, filename)
       toast.success("Download started")
     } catch {
@@ -160,7 +161,7 @@ export default function DubbingDetailPage() {
                 ) : (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 )}
-                {isCompleted ? "Dubbing Complete" : "Processing..."}
+                {dubbing.mediaName || (isCompleted ? "Dubbing Complete" : "Processing...")}
               </CardTitle>
               <CardDescription>
                 {isCompleted
@@ -170,22 +171,44 @@ export default function DubbingDetailPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {isCompleted && dubbing.dubbedUrl ? (
-                <div className="space-y-4">
-                  <Label>Preview</Label>
-                  <div className="rounded-lg border bg-slate-50 dark:bg-slate-900/40 p-4">
-                    {dubbing.isVideo ? (
-                      <video
-                        controls
-                        src={dubbing.dubbedUrl}
-                        className="w-full max-h-[400px] rounded-lg"
-                      >
-                        Your browser does not support the video element.
-                      </video>
-                    ) : (
-                      <audio controls src={dubbing.dubbedUrl} className="w-full">
-                        Your browser does not support the audio element.
-                      </audio>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {dubbing.originalMediaUrl && (
+                    <div className="space-y-4">
+                      <Label>Original Media</Label>
+                      <div className="rounded-lg border bg-slate-50 dark:bg-slate-900/40 p-4">
+                        {dubbing.isVideo ? (
+                          <video
+                            controls
+                            src={dubbing.originalMediaUrl}
+                            className="w-full max-h-[300px] rounded-lg"
+                          >
+                            Your browser does not support the video element.
+                          </video>
+                        ) : (
+                          <audio controls src={dubbing.originalMediaUrl} className="w-full">
+                            Your browser does not support the audio element.
+                          </audio>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="space-y-4">
+                    <Label>Dubbed Media ({languageLabel})</Label>
+                    <div className="rounded-lg border bg-slate-50 dark:bg-slate-900/40 p-4">
+                      {dubbing.isVideo ? (
+                        <video
+                          controls
+                          src={dubbing.dubbedUrl}
+                          className="w-full max-h-[300px] rounded-lg"
+                        >
+                          Your browser does not support the video element.
+                        </video>
+                      ) : (
+                        <audio controls src={dubbing.dubbedUrl} className="w-full">
+                          Your browser does not support the audio element.
+                        </audio>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
