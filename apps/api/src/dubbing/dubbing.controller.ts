@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Delete, Param, Query, UseGuards, Req, Sse } from '@nestjs/common';
 import { DubbingService } from './dubbing.service';
 import type { CreateDubInput } from '@repo/validation';
-import { SupabaseAuthGuard } from 'src/guards/auth.guard';
+import { SupabaseAuthGuard } from '../guards/auth.guard';
 import type { Observable } from 'rxjs';
 import type { Request } from 'express';
 
