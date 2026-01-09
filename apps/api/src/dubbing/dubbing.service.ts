@@ -11,6 +11,14 @@ import FormData from 'form-data';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
 
+interface PendingProject {
+  userId: string;
+  originalMediaUrl: string;
+  targetLanguage: string;
+  isVideo: boolean;
+  mediaName: string;
+}
+
 @Injectable()
 export class DubbingService {
   private readonly supabase = createSupabaseClient(
@@ -20,6 +28,7 @@ export class DubbingService {
 
   private readonly murfApiKey: string;
   private readonly baseURL = 'https://api.murf.ai/v1/murfdub';
+  private readonly pendingProjects = new Map<string, PendingProject>();
 
   constructor() {
     const apiKey = process.env.MURF_API_KEY;
@@ -85,24 +94,15 @@ export class DubbingService {
 
     console.log('Created Murf dubbing job:', projectId);
 
-    // Save to database with isVideo flag for later use
-    const { error: insertErr } = await this.supabase
-      .from('dubbing_projects')
-      .insert({
-        user_id: userId,
-        project_id: projectId,
-        original_media_url: dto.mediaUrl,
-        target_language: dto.targetLanguage,
-        status: 'dubbing',
-        is_video: dto.isVideo,
-        media_name: dto.mediaName,
-      });
+    // Store pending project data in memory - will save to DB on completion
+    this.pendingProjects.set(projectId, {
+      userId,
+      originalMediaUrl: dto.mediaUrl,
+      targetLanguage: dto.targetLanguage,
+      isVideo: dto.isVideo,
+      mediaName: dto.mediaName,
+    });
 
-    if (insertErr) {
-      throw new InternalServerErrorException('Failed to save dubbing project');
-    }
-
-    // Return immediately - SSE endpoint handles polling
     return { projectId };
   }
 
@@ -120,8 +120,9 @@ export class DubbingService {
       const pollStatus = async () => {
         const start = Date.now();
         let delay = 5_000;
+        const TIMEOUT = 600_000; // 10 minutes
 
-        while (!closed && Date.now() - start < 300_000) {
+        while (!closed && Date.now() - start < TIMEOUT) {
           try {
             const statusResponse = await axios.get(
               `${this.baseURL}/jobs/${projectId}/status`,
@@ -132,6 +133,7 @@ export class DubbingService {
             console.log(`Dubbing status: ${status}`, statusResponse.data);
 
             if (status === 'FAILED') {
+              this.pendingProjects.delete(projectId);
               sendEvent({
                 state: 'failed',
                 progress: 0,
@@ -162,7 +164,7 @@ export class DubbingService {
 
             // Still processing - send progress update
             const elapsed = Date.now() - start;
-            const progress = Math.min(20 + Math.floor((elapsed / 300_000) * 80), 90);
+            const progress = Math.min(20 + Math.floor((elapsed / TIMEOUT) * 80), 90);
             sendEvent({
               state: 'processing',
               progress,
@@ -174,6 +176,7 @@ export class DubbingService {
             delay = Math.min(delay * 1.5, 20_000);
           } catch (err: any) {
             console.error('Status check failed:', err.message);
+            this.pendingProjects.delete(projectId);
             sendEvent({
               state: 'failed',
               progress: 0,
@@ -187,6 +190,7 @@ export class DubbingService {
 
         // Timeout
         if (!closed) {
+          this.pendingProjects.delete(projectId);
           sendEvent({ state: 'failed', progress: 0, message: 'Dubbing timeout', finished: true });
           observer.complete();
         }
@@ -197,6 +201,7 @@ export class DubbingService {
       // Cleanup on disconnect
       req.on('close', () => {
         closed = true;
+        this.pendingProjects.delete(projectId);
         observer.complete();
       });
     });
@@ -207,18 +212,12 @@ export class DubbingService {
     dubbedUrl: string,
     creditsUsed: number,
   ): Promise<void> {
-    // Get project to determine userId and isVideo
-    const { data: project } = await this.supabase
-      .from('dubbing_projects')
-      .select('user_id, is_video')
-      .eq('project_id', projectId)
-      .single();
-
-    if (!project) {
-      throw new InternalServerErrorException('Project not found');
+    const pending = this.pendingProjects.get(projectId);
+    if (!pending) {
+      throw new InternalServerErrorException('Pending project not found');
     }
 
-    const { user_id: userId, is_video: isVideo } = project;
+    const { userId, isVideo, originalMediaUrl, targetLanguage, mediaName } = pending;
 
     // Download the dubbed media from Murf.ai
     console.log('Downloading dubbed file from Murf.ai');
@@ -250,15 +249,27 @@ export class DubbingService {
 
     console.log('Dubbed file uploaded:', publicUrl);
 
-    // Update database with completed status and credits used
-    await this.supabase
+    // Insert completed project to database
+    const { error: insertErr } = await this.supabase
       .from('dubbing_projects')
-      .update({
+      .insert({
+        user_id: userId,
+        project_id: projectId,
+        original_media_url: originalMediaUrl,
+        target_language: targetLanguage,
+        is_video: isVideo,
+        media_name: mediaName,
         dubbed_url: publicUrl,
         status: 'dubbed',
         credits_consumed: creditsUsed * 10,
-      })
-      .eq('project_id', projectId);
+      });
+
+    if (insertErr) {
+      throw new InternalServerErrorException('Failed to save dubbing project');
+    }
+
+    // Cleanup pending data
+    this.pendingProjects.delete(projectId);
 
     // Deduct credits from user profile
     if (creditsUsed > 0) {
