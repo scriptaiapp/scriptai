@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { TrainAiController } from './train-ai/train-ai.controller';
 import { TrainAiModule } from './train-ai/train-ai.module';
 import { AuthModule } from './auth/auth.module';
+import { SubtitleModule } from './subtitle/subtitle.module';
 import { DubbingModule } from './dubbing/dubbing.module';
 
 @Module({
@@ -36,6 +37,8 @@ import { DubbingModule } from './dubbing/dubbing.module';
     }),
     SupabaseModule,
     TrainAiModule,
+    AuthModule,
+    SubtitleModule,
     AuthModule,
     DubbingModule
   ],
