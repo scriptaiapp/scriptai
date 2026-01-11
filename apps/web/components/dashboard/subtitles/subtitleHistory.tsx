@@ -110,7 +110,7 @@ export function SubtitleHistory({ subtitles, isLoading, error, onDelete }: Subti
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Subtitle?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete <span className="font-bold text-gray-900">{getFilename(itemToDelete?.video_path)}</span>.
+                            This will permanently delete <span className="font-bold text-gray-900">{itemToDelete?.filename}</span>.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -139,7 +139,7 @@ function SubtitleRow({ item, onDeleteClick }: { item: SubtitleResponse, onDelete
 
             const subtitles = JSON.parse(res.subtitle.subtitles_json || "[]");
             const content = format === "srt" ? convertJsonToSrt(subtitles as SubtitleLine[]) : convertJsonToVTT(subtitles as SubtitleLine[]);
-            triggerFileDownload(content, `${getFilename(item.video_path)}.${format}`);
+            triggerFileDownload(content, `${item.filename}.${format}`);
 
             toast.success(`Downloaded .${format}`);
         } catch (e) {
@@ -169,7 +169,7 @@ function SubtitleRow({ item, onDeleteClick }: { item: SubtitleResponse, onDelete
             onClick={handleRowClick}
             className="group cursor-pointer border-b border-gray-50 hover:bg-purple-50/40 transition-colors"
         >
-            <TableCell className="font-medium text-gray-900">{getFilename(item.video_path)}</TableCell>
+            <TableCell className="font-medium text-gray-900">{item.filename}</TableCell>
             <TableCell className="text-gray-500">{new Date(item.created_at).toLocaleDateString()}</TableCell>
             <TableCell><StatusBadge status={item.status} /></TableCell>
             <TableCell className="uppercase text-xs font-bold text-gray-500">{item.language}</TableCell>
@@ -248,8 +248,7 @@ const EmptyState = () => (
     </TableRow>
 );
 
-// --- Utilities ---
-const getFilename = (path: string | undefined) => path?.split("/").pop() || "Unknown Video";
+
 
 const triggerFileDownload = (content: string, filename: string) => {
     const blob = new Blob([content], { type: "text/plain" });

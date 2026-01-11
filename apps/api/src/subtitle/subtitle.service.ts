@@ -395,6 +395,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     file: Express.Multer.File,
     uploadVideoDto: UploadVideoDto,
     userId: string,
+    filename: string,
   ) {
     const { duration } = uploadVideoDto;
 
@@ -463,6 +464,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
           video_path: publicUrl,
           video_url: publicUrl,
           duration: parsedDuration,
+          filename: filename,
         })
         .select()
         .single();

@@ -133,6 +133,7 @@ export default function SubtitleEditorPage() {
             <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-50/50 via-transparent to-purple-50/50 blur-3xl -z-10" />
                 <SubtitleHeader
+                    filename={subtitleData?.filename || 'Loading...'}
                     videoPath={subtitleData?.video_path || 'Loading...'}
                     isSaving={isSaving}
                     hasSubtitles={subtitles.length > 0}

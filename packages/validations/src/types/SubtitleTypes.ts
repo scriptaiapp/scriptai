@@ -12,6 +12,7 @@ export type SubtitleResponse = {
     error_message: string;
     created_at: string;
     updated_at: string;
+    filename: string;
 };
 
 export type SubtitleLine = {

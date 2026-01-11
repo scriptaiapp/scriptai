@@ -56,7 +56,8 @@ export class SubtitleController {
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    return this.subtitleService.upload(file, uploadVideoDto, userId);
+    const filename = file.originalname;
+    return this.subtitleService.upload(file, uploadVideoDto, userId, filename);
   }
 
 

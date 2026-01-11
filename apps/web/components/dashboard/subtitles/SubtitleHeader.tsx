@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Save, Download, Loader2, ArrowLeft } from 'lucide-react';
 
 type SubtitleHeaderProps = {
+    filename: string;
     videoPath: string;
     isSaving: boolean;
     hasSubtitles: boolean;
@@ -27,14 +28,13 @@ const buttonVariants = {
     tap: { scale: 0.98 }
 };
 
-export function SubtitleHeader({ videoPath, isSaving, hasSubtitles, onSave, onDownload }: SubtitleHeaderProps) {
-    const fileName = videoPath.split("/").pop() || 'Untitled';
+export function SubtitleHeader({ filename, videoPath, isSaving, hasSubtitles, onSave, onDownload }: SubtitleHeaderProps) {
 
     return (
         <motion.div
             className="relative border-b border-purple-100/50 px-6 py-5 bg-gradient-to-b from-white to-purple-50/20"
             variants={headerVariants}
-            transition= {{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             initial="hidden"
             animate="visible"
         >
@@ -43,12 +43,12 @@ export function SubtitleHeader({ videoPath, isSaving, hasSubtitles, onSave, onDo
                     <div className="min-w-0 flex-1">
                         <motion.h1
                             className="truncate text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent"
-                            title={fileName}
+                            title={filename}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1, duration: 0.4 }}
                         >
-                            Editing: {fileName}
+                            Editing: {filename}
                         </motion.h1>
                         <motion.p
                             className="mt-1 text-sm text-muted-foreground"

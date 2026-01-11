@@ -56,7 +56,7 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                         <Button
                             variant="outline"
                             size="lg"
-                            className="w-full bg-black/80 hover:bg-black text-white  border-white/10 hover:border-white/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
+                            className="w-full bg-black/80 hover:bg-black text-white hover:text-white  border-white/10 hover:border-white/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
                             onClick={onDownloadVideo}
                             disabled={isDownloadDisabled || downloadVideoLoading}
                         >
