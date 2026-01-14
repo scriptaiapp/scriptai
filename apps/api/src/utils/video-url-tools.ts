@@ -41,4 +41,3 @@ export function getMimeTypeFromUrl(url: string): string {
             return "application/octet-stream";
     }
 }
-

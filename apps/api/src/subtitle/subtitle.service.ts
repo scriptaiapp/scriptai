@@ -1,21 +1,26 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, PayloadTooLargeException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CreateSubtitleDto } from './dto/create-subtitle.dto';
-import { UpdateSubtitleDto } from './dto/update-subtitle.dto';
-import { UploadVideoDto } from './dto/upload-video.dto';
-import { BurnSubtitleDto } from './dto/burn-subtitle.dto';
-import { GoogleGenAI } from '@google/genai';
+import {
+  type CreateSubtitleInput,
+  type UpdateSubtitleInput,
+  type UploadVideoInput,
+  type BurnSubtitleInput,
+} from '@repo/validation';
+import {
+  createGoogleAI,
+  type GoogleAIInstance,
+  fetchVideoAsBuffer,
+  getFileNameFromUrl,
+  getMimeTypeFromUrl,
+  convertJsonToSrt,
+  configureFFmpeg,
+} from '../utils';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs/promises';
-import { fetchVideoAsBuffer, getFileNameFromUrl, getMimeTypeFromUrl } from './utils/video-url-tools';
-import { convertJsonToSrt } from './utils/srt-converter';
-import { configureFFmpeg } from './utils/ffmpeg-config';
-import { createReadStream } from 'fs';
-import { unlink } from 'fs/promises';
 
-async function waitForFileActive(ai: GoogleGenAI, fileName: string, maxWaitTime = 120000) {
+async function waitForFileActive(ai: GoogleAIInstance, fileName: string, maxWaitTime = 120000) {
   const startTime = Date.now();
   const pollInterval = 3000;
 
@@ -64,8 +69,8 @@ export class SubtitleService {
     }
   }
 
-  async create(createSubtitleDto: CreateSubtitleDto, userId: string) {
-    const { subtitleId, language, targetLanguage, duration } = createSubtitleDto;
+  async create(input: CreateSubtitleInput, userId: string) {
+    const { subtitleId, language, targetLanguage, duration } = input;
     let tempFilePath: string | null = null;
     console.log('started')
 
@@ -104,12 +109,7 @@ export class SubtitleService {
       }
 
       const video_url = subtitle.video_url;
-      const apiKey = this.configService.get<string>('GOOGLE_GENERATIVE_AI_API_KEY');
-      if (!apiKey) {
-        throw new InternalServerErrorException('Server configuration error');
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = await createGoogleAI(this.configService);
 
       const isAutoDetect = !language || language.toLowerCase() === 'auto detect' || language.toLowerCase() === 'auto';
       const languageInstruction = isAutoDetect
@@ -302,8 +302,8 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     }
   }
 
-  async update(updateSubtitleDto: UpdateSubtitleDto, userId: string) {
-    const { subtitle_json, subtitle_id } = updateSubtitleDto;
+  async update(input: UpdateSubtitleInput, userId: string) {
+    const { subtitle_json, subtitle_id } = input;
 
     if (!Array.isArray(subtitle_json)) {
       throw new BadRequestException('Invalid subtitle format');
@@ -367,9 +367,8 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
   }
 
-  async updateSubtitles(id: string, updateSubtitleDto: UpdateSubtitleDto, userId: string) {
-    const { subtitle_json } = updateSubtitleDto;
-    console.log(subtitle_json);
+  async updateSubtitles(id: string, input: UpdateSubtitleInput, userId: string) {
+    const { subtitle_json } = input;
     if (!Array.isArray(subtitle_json)) {
       throw new BadRequestException('Invalid subtitle format');
     }
@@ -393,11 +392,11 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
   async upload(
     file: Express.Multer.File,
-    uploadVideoDto: UploadVideoDto,
+    input: UploadVideoInput,
     userId: string,
     filename: string,
   ) {
-    const { duration } = uploadVideoDto;
+    const { duration } = input;
 
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -441,8 +440,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     } catch (err) {
       throw new InternalServerErrorException('Failed to upload video');
     } finally {
-      // Always remove temp file
-      await unlink(file.path).catch(() => null);
+      await fs.unlink(file.path).catch(() => null);
     }
 
     // Get public URL
@@ -481,12 +479,8 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     };
   }
 
-  async burnSubtitle(burnSubtitleDto: BurnSubtitleDto): Promise<Buffer> {
-    const { videoUrl, subtitles } = burnSubtitleDto;
-
-    if (!videoUrl || !subtitles || !Array.isArray(subtitles)) {
-      throw new BadRequestException('Missing videoUrl or subtitles');
-    }
+  async burnSubtitle(input: BurnSubtitleInput): Promise<Buffer> {
+    const { videoUrl, subtitles } = input;
 
     console.log('Starting burnSubtitle process...');
     console.log(' Video URL:', videoUrl);

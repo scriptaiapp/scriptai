@@ -11,4 +11,3 @@ export const configureFFmpeg = () => {
 
     return (input?: string) => ffmpeg(input);
 };
-

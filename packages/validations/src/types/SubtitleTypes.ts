@@ -1,4 +1,3 @@
-
 export type SubtitleResponse = {
     id: string;
     user_id: string;
@@ -15,8 +14,4 @@ export type SubtitleResponse = {
     filename: string;
 };
 
-export type SubtitleLine = {
-    start: string;
-    end: string;
-    text: string;
-};
+// SubtitleLine is now exported from schema/subtitle.schema.ts

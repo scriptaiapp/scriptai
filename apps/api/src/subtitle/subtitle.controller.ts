@@ -1,12 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards, UnauthorizedException, BadRequestException, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards, UnauthorizedException, BadRequestException, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, UsePipes } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubtitleService } from './subtitle.service';
-import { CreateSubtitleDto } from './dto/create-subtitle.dto';
-import { UpdateSubtitleDto } from './dto/update-subtitle.dto';
-import { BurnSubtitleDto } from './dto/burn-subtitle.dto';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { Request, Response } from 'express';
-import { UploadVideoDto } from './dto/upload-video.dto';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  CreateSubtitleSchema,
+  UpdateSubtitleSchema,
+  UploadVideoSchema,
+  BurnSubtitleSchema,
+  type CreateSubtitleInput,
+  type UpdateSubtitleInput,
+  type UploadVideoInput,
+  type BurnSubtitleInput,
+} from '@repo/validation';
 
 interface AuthRequest extends Request {
   user?: { id: string };
@@ -18,13 +25,13 @@ export class SubtitleController {
   constructor(private readonly subtitleService: SubtitleService) { }
 
   @Post()
-  create(@Body() createSubtitleDto: CreateSubtitleDto, @Req() req: AuthRequest) {
+  @UsePipes(new ZodValidationPipe(CreateSubtitleSchema))
+  create(@Body() body: CreateSubtitleInput, @Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    console.log("working")
-    return this.subtitleService.create(createSubtitleDto, userId);
+    return this.subtitleService.create(body, userId);
   }
 
   @Get()
@@ -49,26 +56,26 @@ export class SubtitleController {
       }),
     )
     file: Express.Multer.File,
-    @Body() uploadVideoDto: UploadVideoDto,
+    @Body(new ZodValidationPipe(UploadVideoSchema)) body: UploadVideoInput,
     @Req() req: AuthRequest,
   ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    const filename = file.originalname;
-    return this.subtitleService.upload(file, uploadVideoDto, userId, filename);
+    return this.subtitleService.upload(file, body, userId, file.originalname);
   }
 
 
 
   @Patch()
-  update(@Body() updateSubtitleDto: UpdateSubtitleDto, @Req() req: AuthRequest) {
+  @UsePipes(new ZodValidationPipe(UpdateSubtitleSchema))
+  update(@Body() body: UpdateSubtitleInput, @Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    return this.subtitleService.update(updateSubtitleDto, userId);
+    return this.subtitleService.update(body, userId);
   }
 
   @Get(':id')
@@ -90,24 +97,31 @@ export class SubtitleController {
   }
 
   @Patch(':id')
-  updateSubtitles(@Param('id') id: string, @Body() updateSubtitleDto: UpdateSubtitleDto, @Req() req: AuthRequest) {
+  updateSubtitles(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(UpdateSubtitleSchema)) body: UpdateSubtitleInput,
+    @Req() req: AuthRequest,
+  ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    // console.log(updateSubtitleDto);
-    return this.subtitleService.updateSubtitles(id, updateSubtitleDto, userId);
+    return this.subtitleService.updateSubtitles(id, body, userId);
   }
 
   @Post('burn')
-  async burnSubtitle(@Body() burnSubtitleDto: BurnSubtitleDto, @Res() res: Response, @Req() req: AuthRequest) {
+  async burnSubtitle(
+    @Body(new ZodValidationPipe(BurnSubtitleSchema)) body: BurnSubtitleInput,
+    @Res() res: Response,
+    @Req() req: AuthRequest,
+  ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
 
     try {
-      const videoBuffer = await this.subtitleService.burnSubtitle(burnSubtitleDto);
+      const videoBuffer = await this.subtitleService.burnSubtitle(body);
 
       res.setHeader('Content-Type', 'video/mp4');
       res.setHeader('Content-Disposition', 'attachment; filename=video_with_subtitles.mp4');
