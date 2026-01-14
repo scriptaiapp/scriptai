@@ -1,8 +1,4 @@
-interface SubtitleLine {
-    start: string;
-    end: string;
-    text: string;
-}
+import { SubtitleLine } from '@repo/validation';
 
 export function convertJsonToSrt(subtitles: SubtitleLine[]): string {
     if (!subtitles || !Array.isArray(subtitles) || subtitles.length === 0) {
@@ -20,4 +16,3 @@ export function convertJsonToSrt(subtitles: SubtitleLine[]): string {
         })
         .join('\n\n');
 }
-
