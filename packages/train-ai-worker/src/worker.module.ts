@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
+import * as path from 'path';
 import { TrainAiProcessor } from './processor/train-ai.processor';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [
+        '.env',
+        '.env.local',
+        path.resolve(process.cwd(), '../../.env'),
+        path.resolve(process.cwd(), '../../.env.local'),
+      ],
     }),
     BullModule.forRoot({
       connection: {

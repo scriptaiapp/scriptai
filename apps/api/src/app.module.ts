@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import * as path from 'path';
 import redisConfig from './config/redis.config';
 import { SupabaseModule } from './supabase/supabase.module';
 
@@ -16,7 +17,13 @@ import { DubbingModule } from './dubbing/dubbing.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [redisConfig]
+      load: [redisConfig],
+      envFilePath: [
+        '.env',
+        '.env.local',
+        path.resolve(process.cwd(), '../../.env'),
+        path.resolve(process.cwd(), '../../.env.local'),
+      ],
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
