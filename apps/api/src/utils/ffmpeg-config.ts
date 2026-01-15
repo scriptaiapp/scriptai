@@ -1,13 +1,10 @@
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import ffprobeInstaller from '@ffprobe-installer/ffprobe';
+import ffmpegPath from 'ffmpeg-static';
+import ffprobePath from 'ffprobe-static';
 
 export const configureFFmpeg = () => {
-    const ffmpegPath = ffmpegInstaller.path;
-    const ffprobePath = ffprobeInstaller.path;
-
-    ffmpeg.setFfmpegPath(ffmpegPath);
-    ffmpeg.setFfprobePath(ffprobePath);
+    if (ffmpegPath) ffmpeg.setFfmpegPath(ffmpegPath);
+    if (ffprobePath.path) ffmpeg.setFfprobePath(ffprobePath.path);
 
     return (input?: string) => ffmpeg(input);
 };
