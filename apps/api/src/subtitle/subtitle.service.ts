@@ -4,6 +4,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import {
   type CreateSubtitleInput,
   type UpdateSubtitleInput,
+  type UpdateSubtitleByIdInput,
   type UploadVideoInput,
   type BurnSubtitleInput,
   calculateCreditsFromTokens,
@@ -389,7 +390,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
   }
 
-  async updateSubtitles(id: string, input: UpdateSubtitleInput, userId: string) {
+  async updateSubtitles(id: string, input: UpdateSubtitleByIdInput, userId: string) {
     const { subtitle_json } = input;
     if (!Array.isArray(subtitle_json)) {
       throw new BadRequestException('Invalid subtitle format');

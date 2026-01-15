@@ -7,12 +7,14 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateSubtitleSchema,
   UpdateSubtitleSchema,
+  UpdateSubtitleByIdSchema,
   UploadVideoSchema,
   BurnSubtitleSchema,
 } from '@repo/validation';
 import type {
   CreateSubtitleInput,
   UpdateSubtitleInput,
+  UpdateSubtitleByIdInput,
   UploadVideoInput,
   BurnSubtitleInput,
 } from '@repo/validation';
@@ -101,7 +103,7 @@ export class SubtitleController {
   @Patch(':id')
   updateSubtitles(
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(UpdateSubtitleSchema)) body: UpdateSubtitleInput,
+    @Body(new ZodValidationPipe(UpdateSubtitleByIdSchema)) body: UpdateSubtitleByIdInput,
     @Req() req: AuthRequest,
   ) {
     const userId = req.user?.id;
