@@ -2,17 +2,19 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubtitleService } from './subtitle.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateSubtitleSchema,
   UpdateSubtitleSchema,
   UploadVideoSchema,
   BurnSubtitleSchema,
-  type CreateSubtitleInput,
-  type UpdateSubtitleInput,
-  type UploadVideoInput,
-  type BurnSubtitleInput,
+} from '@repo/validation';
+import type {
+  CreateSubtitleInput,
+  UpdateSubtitleInput,
+  UploadVideoInput,
+  BurnSubtitleInput,
 } from '@repo/validation';
 
 interface AuthRequest extends Request {
