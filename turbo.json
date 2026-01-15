@@ -1,9 +1,9 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [
+    ".env",
     "**/.env.*local"
   ],
-  "globalDotEnv": [".env"],
   "globalEnv": [
     "NODE_ENV",
     "SUPABASE_URL",
