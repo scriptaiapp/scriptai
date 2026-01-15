@@ -13,7 +13,9 @@ async function bootstrap() {
     console.log('Worker initialized successfully');
   } else {
     // Initialize API server mode
-    app.setGlobalPrefix('api/v1');
+    app.setGlobalPrefix('api/v1', {
+      exclude: ['/'],
+    });
 
     const allowedOrigins = [
       process.env.FRONTEND_DEV_URL, // Local frontend

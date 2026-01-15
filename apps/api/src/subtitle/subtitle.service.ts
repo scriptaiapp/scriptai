@@ -4,8 +4,12 @@ import { SupabaseService } from '../supabase/supabase.service';
 import {
   type CreateSubtitleInput,
   type UpdateSubtitleInput,
+  type UpdateSubtitleByIdInput,
   type UploadVideoInput,
   type BurnSubtitleInput,
+  calculateCreditsFromTokens,
+  hasEnoughCredits,
+  getMinimumCreditsForGemini,
 } from '@repo/validation';
 import {
   createGoogleAI,
@@ -91,7 +95,8 @@ export class SubtitleService {
         throw new ForbiddenException('AI training and YouTube connection are required');
       }
 
-      if (profileData.credits < 1) {
+      const minCredits = getMinimumCreditsForGemini();
+      if (!hasEnoughCredits(profileData.credits, minCredits)) {
         await this.logErrorToDB('Insufficient credits', subtitleId);
         throw new ForbiddenException('Insufficient credits. Please upgrade your plan or earn more credits.');
       }
@@ -240,20 +245,38 @@ Your task is to transcribe the provided audio file and generate precise, time-st
         throw new InternalServerErrorException('Failed to update subtitles');
       }
 
+      const totalTokens = result?.usageMetadata?.totalTokenCount ?? 0;
+      const creditsConsumed = calculateCreditsFromTokens({ totalTokens });
+
+      console.log(`Tokens used: ${totalTokens}, Credits to deduct: ${creditsConsumed}`);
+
+      if (!hasEnoughCredits(profileData.credits, creditsConsumed)) {
+        await this.logErrorToDB('Insufficient credits for token usage', subtitleId);
+        throw new ForbiddenException('Insufficient credits for this operation.');
+      }
+
       const { error: updateError } = await this.supabaseService.getClient()
-        .from('profiles')
-        .update({ credits: profileData.credits - 1 })
-        .eq('user_id', userId);
+        .rpc('update_user_credits', {
+          user_uuid: userId,
+          credit_change: -creditsConsumed,
+        });
 
       if (updateError) {
         console.error('Error updating credits:', updateError);
         throw new InternalServerErrorException('Failed to update credits');
       }
 
+      await this.supabaseService.getClient()
+        .from('subtitle_jobs')
+        .update({ credits_consumed: creditsConsumed })
+        .eq('id', subtitleId);
+
       return {
         success: true,
         detected_language: detectedLanguage,
-        target_language: hasTargetLanguage ? targetLanguage : detectedLanguage
+        target_language: hasTargetLanguage ? targetLanguage : detectedLanguage,
+        creditsConsumed,
+        totalTokens,
       };
     } catch (error) {
       if (tempFilePath) {
@@ -367,7 +390,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
   }
 
-  async updateSubtitles(id: string, input: UpdateSubtitleInput, userId: string) {
+  async updateSubtitles(id: string, input: UpdateSubtitleByIdInput, userId: string) {
     const { subtitle_json } = input;
     if (!Array.isArray(subtitle_json)) {
       throw new BadRequestException('Invalid subtitle format');
