@@ -19,9 +19,8 @@
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.21.0",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@ffprobe-installer/ffprobe": "^2.1.2",
-    "@ffprobe-installer/linux-x64": "^5.2.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
     "@google/genai": "^1.12.0",
     "@nestjs/bullmq": "^10.2.1",
     "@nestjs/common": "^10.0.0",
