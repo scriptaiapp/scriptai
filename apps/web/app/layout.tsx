@@ -44,7 +44,6 @@ export default function RootLayout({
         </ThemeProvider>
         <SpeedInsights />
         <Analytics />
-
       </body>
     </html>
   )

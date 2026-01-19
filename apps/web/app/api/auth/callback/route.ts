@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 
-const CREDITS_PER_REFERRAL = 10;
+const CREDITS_PER_REFERRAL = 250;
 
 async function sendWelcomeEmail(
   full_name: string,
