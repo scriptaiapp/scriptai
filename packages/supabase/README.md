@@ -2,7 +2,7 @@
 
 **Application:** Creator AI - Personalized YouTube Creator Tool  
 **Database:** PostgreSQL (Supabase)  
-**Last Updated:** 2026-02-12
+**Last Updated:** 2026-02-28
 
 ---
 
@@ -317,6 +317,8 @@ Available subscription tiers.
 | `credits_monthly` | integer | Monthly credits (≥0) |
 | `features` | jsonb | Feature list |
 | `is_active` | boolean | Available for purchase |
+| `daily_limit` | integer | Max feature uses per day for this plan |
+| `cooldown_minutes` | integer | Required minutes between feature uses |
 
 ---
 
@@ -375,6 +377,13 @@ Connected YouTube channels.
 | `is_linked` | boolean | Active connection |
 | `text_color` | text | Branding color |
 | `background_color` | text | Branding color |
+| `top_videos` | jsonb | Cached top-performing channel videos for analytics |
+| `recent_videos` | jsonb | Cached recently published videos |
+| `last_synced_at` | timestamptz | When channel stats were last synced from YouTube |
+| `last_used_at` | timestamptz | When the user last consumed a quota-limited feature |
+| `usage_count` | integer | Number of feature uses counted for the current day |
+| `usage_reset_date` | date | Date boundary for `usage_count` daily reset |
+| `youtube_trained_videos` | jsonb | Videos used to train Creator AI on this channel |
 
 **Constraint:** `unique_user_channel` (user_id, channel_id)
 
@@ -490,6 +499,34 @@ User preferences.
 **Actions:**
 - Updates credits (+/- credit_change)
 - Updates timestamp
+
+---
+
+### Usage Limits & Feature Access
+
+#### `use_feature(p_user_id uuid)`
+**Returns:** json  
+**Purpose:** Atomically enforce plan-based daily limits and cooldowns when a user consumes a quota-limited feature  
+**Logic:**
+- Resolves the user's active subscription and plan from `subscriptions` and `plans`, falling back to the `starter` plan when needed
+- Reads `usage_count`, `last_used_at`, and `usage_reset_date` from `youtube_channels`
+- Resets `usage_count` when `usage_reset_date` is before the current date
+- Blocks usage when the time since `last_used_at` is less than the plan's `cooldown_minutes`, returning `allowed = false` with a cooldown reason and remaining minutes
+- Blocks usage when `usage_count` has reached the plan's `daily_limit`, returning `allowed = false` with a daily limit reason
+- On success, increments `usage_count`, updates `usage_reset_date` to `CURRENT_DATE`, and sets `last_used_at = NOW()`, returning a JSON payload that includes `allowed`, `plan`, `usage_count`, `remaining`, `daily_limit`, `cooldown_minutes`, and a user-facing message
+
+---
+
+#### `get_feature_usage(p_user_id uuid)`
+**Returns:** json  
+**Purpose:** Read-only summary of the user's current feature usage, remaining daily quota, and cooldown state  
+**Logic:**
+- Resolves the active plan for the user in the same way as `use_feature`
+- Reads `usage_count`, `last_used_at`, and `usage_reset_date` from `youtube_channels`
+- Treats usage as zero when `usage_reset_date` is null or before the current date
+- Computes remaining quota as `GREATEST(daily_limit - usage_count, 0)`
+- Computes `cooldown_remaining` in minutes based on `cooldown_minutes` and time elapsed since `last_used_at`
+- Returns a JSON object containing `plan`, `usage_count`, `remaining`, `daily_limit`, `cooldown_minutes`, `cooldown_remaining`, and a boolean `can_use_now` flag indicating if the feature can be used immediately
 
 ---
 

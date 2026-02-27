@@ -14,7 +14,7 @@ export class StoryBuilderService {
   constructor(
     private readonly supabaseService: SupabaseService,
     @InjectQueue('story-builder') private readonly queue: Queue,
-  ) {}
+  ) { }
 
   async createJob(userId: string, input: CreateStoryBuilderInput) {
     const {
