@@ -80,7 +80,7 @@ export function StoryBuilderHistory({ jobs, isLoading, onView, onDelete }: Story
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{job.video_topic}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant={config.variant} className="text-xs">{config.label}</Badge>
+                    <Badge variant={config?.variant} className="text-xs">{config?.label}</Badge>
                     <span className="text-xs text-slate-500">
                       {CONTENT_TYPE_LABELS[job.content_type] || job.content_type}
                       {' · '}
