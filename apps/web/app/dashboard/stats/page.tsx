@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "motion/react";
 import {
     Eye,
@@ -10,14 +11,15 @@ import {
     TrendingUp,
     Youtube,
     RefreshCw,
-    AlertCircle,
     Activity,
     ShieldAlert,
     Unplug,
     MapPin,
-    Globe
+    Globe,
+    Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSupabase } from "@/components/supabase-provider";
 import { useChannelStats } from "@/hooks/useChannelStats";
 import { StatCard } from "@/components/dashboard/stats/StatCard";
 import { EngagementChart } from "@/components/dashboard/stats/EngagementChart";
@@ -38,16 +40,47 @@ const itemVariants = {
 };
 
 export default function StatsPage() {
+    const { profile, profileLoading } = useSupabase();
     const { stats, loading, error, fetchStats } = useChannelStats();
+    const isYtConnected = profile?.youtube_connected === true;
 
     useEffect(() => {
-        fetchStats();
-    }, [fetchStats]);
+        if (isYtConnected) fetchStats();
+    }, [isYtConnected, fetchStats]);
 
-    if (loading) {
+    if (profileLoading || (isYtConnected && loading)) {
         return (
             <div className="w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 <StatsPageSkeleton />
+            </div>
+        );
+    }
+
+    if (!profileLoading && !isYtConnected) {
+        return (
+            <div className="w-full min-h-[80vh] flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="w-full max-w-lg flex flex-col items-center justify-center text-center bg-white dark:bg-brand-dark rounded-[2rem] border border-brand-gray-200 dark:border-brand-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-12 sm:p-16 min-h-[70vh]"
+                >
+                    <div className="h-20 w-20 bg-[#347AF9]/10 rounded-full flex items-center justify-center mb-6 border border-[#347AF9]/20">
+                        <Lock className="h-10 w-10 text-[#347AF9]" />
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                        Connect YouTube to continue
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-base mb-10 leading-relaxed max-w-sm mx-auto">
+                        Link your YouTube channel to view your channel statistics and performance insights.
+                    </p>
+                    <Link href="/dashboard">
+                        <Button className="bg-brand-primary hover:bg-brand-primary-hover active:bg-brand-primary-hover transition-all text-white shadow-sm shrink-0 rounded-xl">
+                            <Youtube className="mr-2 h-5 w-5" />
+                            Connect Channel
+                        </Button>
+                    </Link>
+                </motion.div>
             </div>
         );
     }
