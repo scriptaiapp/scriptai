@@ -262,7 +262,9 @@ const config: Config = {
 					'0%, 100%': { opacity: '0.5' },
 					'50%': { opacity: '1' },
 				},
-				'clap-snap': {
+				'scroll': {
+					to: { transform: 'translate(calc(-50% - 0.5rem))' },
+				}, 'clap-snap': {
 					'0%, 100%': { transform: 'rotate(0deg)' },
 					'30%': { transform: 'rotate(-8deg)' },
 					'60%': { transform: 'rotate(16deg)' },
@@ -301,11 +303,11 @@ const config: Config = {
 				'twinkle': 'twinkle 4s ease-in-out infinite',
 				'clap-snap': 'clap-snap 0.8s ease-in-out infinite',
 				'bar-bounce': 'bar-bounce 1s ease-in-out infinite',
-
+				'scroll': 'scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite',
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+	plugins: [require("tailwindcss-animate")],
 }
 
 export default config

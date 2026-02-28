@@ -2,10 +2,10 @@ import {
   Controller, Post, Get, Delete,
   Body, Req, Res, Param, Sse, UseGuards, Query,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { getUserId } from '../common/get-user-id';

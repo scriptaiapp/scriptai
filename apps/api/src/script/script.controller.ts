@@ -5,8 +5,8 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Response } from 'express';
-import { Observable } from 'rxjs';
+import type { Response } from 'express';
+import type { Observable } from 'rxjs';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CreateScriptSchema, type CreateScriptInput } from '@repo/validation';
