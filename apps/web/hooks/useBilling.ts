@@ -3,29 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
+import { Plan, BillingInfo } from "@repo/validation";
 
-interface Plan {
-  id: string;
-  name: string;
-  price_monthly: number;
-  credits_monthly: number;
-  features: string[];
-  is_active: boolean;
-  stripe_price_id: string | null;
-}
 
-interface SubscriptionInfo {
-  id: string;
-  status: string;
-  currentPeriodEnd: string | null;
-  stripeSubscriptionId: string | null;
-}
-
-interface BillingInfo {
-  currentPlan: Plan | null;
-  subscription: SubscriptionInfo | null;
-  credits: number;
-}
 
 export function useBilling() {
   const [plans, setPlans] = useState<Plan[]>([]);

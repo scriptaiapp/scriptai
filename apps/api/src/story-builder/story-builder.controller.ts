@@ -16,7 +16,7 @@ export class StoryBuilderController {
   constructor(
     @InjectQueue('story-builder') private readonly queue: Queue,
     private readonly storyBuilderService: StoryBuilderService,
-  ) {}
+  ) { }
 
   @Post('generate')
   async generate(

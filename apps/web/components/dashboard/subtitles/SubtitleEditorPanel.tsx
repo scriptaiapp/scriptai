@@ -58,7 +58,7 @@ export function SubtitleEditorPanel({
         : [];
 
     return (
-        <div className="h-full flex flex-col bg-white dark:bg-slate-950">
+        <div className="flex flex-col h-full rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1338] shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden relative">
             {!hasSubtitles ? (
                 <div className="flex-1 overflow-y-auto">
                     <SubtitleEmptyState
@@ -71,59 +71,68 @@ export function SubtitleEditorPanel({
                 </div>
             ) : (
                 <>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
-                                Editor
-                            </h1>
-                            <p className="text-xs sm:text-sm font-medium text-slate-400 dark:text-slate-500 font-mono tracking-widest">
-                                {subtitles.length} {subtitles.length === 1 ? 'LINE' : 'LINES'}
-                            </p>
+
+                    <div className="pb-4 pt-6 px-6 border-b border-slate-100 dark:border-slate-800/50 bg-white/95 dark:bg-[#0E1338]/95 backdrop-blur-md z-10 shrink-0">
+
+
+                        <div className="flex items-center justify-between mb-5">
+                            <div>
+                                <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                    Editor
+                                </h2>
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                                    {subtitles.length} {subtitles.length === 1 ? 'LINE' : 'LINES'}
+                                </p>
+                            </div>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                        <MoreVertical className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl dark:bg-[#0f172a] border-slate-200 dark:border-slate-700/50 p-1">
+                                    <DropdownMenuItem
+                                        className="text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/20 focus:text-red-600 dark:focus:text-red-400 cursor-pointer font-bold rounded-lg py-2.5"
+                                        onClick={onClear}
+                                    >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Clear All Subtitles
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
-                        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                            <div className="relative group flex-1 sm:flex-initial sm:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-violet-600 dark:group-focus-within:text-violet-400 transition-colors" />
+                        {/* Bottom Row: Actions */}
+                        <div className="flex items-center gap-3 w-full">
+
+                            {/* Search Bar */}
+                            <div className="relative group flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-brand-primary transition-colors" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search subtitles..."
-                                    className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-violet-600 dark:focus:ring-violet-500 focus:border-violet-600 dark:focus:border-violet-500 transition-all placeholder-slate-400 dark:text-slate-200 shadow-sm"
+                                    className="w-full pl-9 pr-4 h-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder-slate-400 dark:text-slate-500 shadow-sm focus:bg-white dark:focus:bg-[#0E1338]"
                                 />
                             </div>
+
+
                             <Button
-                                size="sm"
                                 onClick={onAddLine}
-                                className="h-9 sm:h-10 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white px-4 sm:px-6 shadow-lg hover:shadow-xl active:scale-95 whitespace-nowrap text-xs sm:text-sm"
+                                className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold h-10 px-5 rounded-xl shrink-0 shadow-sm transition-all active:scale-95"
                             >
-                                <Plus className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Add</span>
+                                <Plus className="h-4 w-4 mr-1.5" /> Add
                             </Button>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-9 sm:h-10 w-9 sm:w-10 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                    >
-                                        <MoreVertical className="h-4 w-4 text-slate-400" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem
-                                        className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-                                        onClick={onClear}
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                        Clear All
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-hidden relative">
                         <SubtitleList
                             subtitles={filteredSubtitles.map(({ sub }) => sub)}
                             originalIndices={filteredSubtitles.map(({ idx }) => idx)}

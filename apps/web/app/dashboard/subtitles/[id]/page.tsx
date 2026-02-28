@@ -2,9 +2,10 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { X, ArrowLeft } from 'lucide-react';
+import { X, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'motion/react';
 import Link from 'next/link';
 
 import { SubtitleHeader } from '@/components/dashboard/subtitles/SubtitleHeader';
@@ -20,8 +21,6 @@ import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { convertJsonToVTT } from "@/utils/vttHelper";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SubtitleEditorSkeleton } from "@/components/dashboard/subtitles/skeleton/SubtitleEditorSkeleton";
-
-
 
 export default function SubtitleEditorPage() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -85,75 +84,91 @@ export default function SubtitleEditorPage() {
     }, [debouncedSubtitles]);
 
     if (isLoading) {
-        return (
-            <SubtitleEditorSkeleton />
-        );
+        return <SubtitleEditorSkeleton />;
     }
 
     if (error) {
         return (
-            <div className="h-screen flex items-center justify-center p-8">
-                <Card className="p-8 border-slate-200 dark:border-slate-800 max-w-md">
-                    <X className="w-12 h-12 mx-auto text-slate-400" />
-                    <h2 className="mt-4 text-xl font-semibold text-center">Error Loading Job</h2>
-                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 text-center">{error}</p>
-                    <Button asChild className="mt-6 w-full bg-slate-900 hover:bg-slate-800">
-                        <Link href="/dashboard/subtitles">
-                            <ArrowLeft className="w-4 h-4 mr-2" /> Go Back
-                        </Link>
-                    </Button>
-                </Card>
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-slate-50 dark:bg-[#0B0F19]">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+                    <Card className="max-w-md border border-red-200 dark:border-red-900/30 rounded-[2rem] shadow-xl shadow-red-500/5 bg-white dark:bg-[#0E1338] overflow-hidden">
+                        <CardContent className="p-8 sm:p-10 text-center flex flex-col items-center">
+                            <div className="h-20 w-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mb-6">
+                                <AlertTriangle className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Error Loading Workspace</h2>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                                {error || "We couldn't load this subtitle job. Please try again or return to your dashboard."}
+                            </p>
+                            <Button asChild className="w-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-xl h-12 font-bold shadow-md transition-all active:scale-95">
+                                <Link href="/dashboard/subtitles">
+                                    <ArrowLeft className="w-4 h-4 mr-2" /> Return to Subtitles
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
-            <SubtitleHeader
-                filename={subtitleData?.filename || 'Loading...'}
-                videoPath={subtitleData?.video_path || 'Loading...'}
-                isSaving={isSaving}
-                hasSubtitles={subtitles.length > 0}
-                onSave={handleSave}
-                onDownload={handleDownload}
-                onUndo={undo}
-                onRedo={redo}
-                canUndo={canUndo}
-                canRedo={canRedo}
-            />
+        <div className="min-h-[100dvh] lg:h-[100dvh] flex flex-col bg-slate-50 dark:bg-[#0B0F19] overflow-x-hidden lg:overflow-hidden">
 
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden border-t border-slate-200 dark:border-slate-800">
-                <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-3 sm:p-4 lg:p-6 overflow-y-auto bg-white dark:bg-slate-950 h-1/2 lg:h-full">
-                    <VideoPlayer
-                        ref={videoRef}
-                        videoUrl={subtitleData?.video_url || ''}
-                        subtitleUrl={subtitleUrl}
-                        title={subtitleData?.video_path || 'Video Player'}
-                        onDownloadVideo={handleDownloadVideo}
-                        isDownloadDisabled={!subtitles.length || isSaving}
-                        downloadVideoLoading={downloadVideoLoading}
-                        detectedLanguage={subtitleData?.detected_language}
-                        targetLanguage={subtitleData?.language}
-                        language={subtitleData?.language}
-                    />
-                </div>
+            <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 flex flex-col flex-1 lg:min-h-0">
 
-                <div className="w-full lg:w-1/2 h-1/2 lg:h-full">
-                    <SubtitleEditorPanel
-                        subtitles={subtitles}
-                        currentSub={currentSubtitle}
-                        editingIndex={editingIndex}
-                        isGenerating={isGenerating}
-                        videoDuration={videoDuration}
-                        onAddLine={handleAddLine}
-                        onUpdate={updateSubtitle}
-                        onDelete={handleDeleteLine}
-                        onClear={handleClear}
-                        onSetEditing={setEditingIndex}
-                        onSeek={seekTo}
-                        onGenerate={handleGenerate}
-                        onFileChange={handleFileUpload}
-                    />
+                {/* Header Section */}
+                <SubtitleHeader
+                    filename={subtitleData?.filename || 'Loading...'}
+                    videoPath={subtitleData?.video_path || 'Loading...'}
+                    isSaving={isSaving}
+                    hasSubtitles={subtitles.length > 0}
+                    onSave={handleSave}
+                    onDownload={handleDownload}
+                    onUndo={undo}
+                    onRedo={redo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                />
+
+
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 flex-1 lg:min-h-0">
+
+
+                    <div className="w-full lg:w-7/12 flex flex-col shrink-0 lg:shrink lg:min-h-0">
+                        <VideoPlayer
+                            ref={videoRef}
+                            videoUrl={subtitleData?.video_url || ''}
+                            subtitleUrl={subtitleUrl}
+                            title={subtitleData?.video_path || 'Video Player'}
+                            onDownloadVideo={handleDownloadVideo}
+                            isDownloadDisabled={!subtitles.length || isSaving}
+                            downloadVideoLoading={downloadVideoLoading}
+                            detectedLanguage={subtitleData?.detected_language}
+                            targetLanguage={subtitleData?.language}
+                            language={subtitleData?.language}
+                        />
+                    </div>
+
+
+                    <div className="w-full lg:w-5/12 flex flex-col min-h-[500px] h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-0 flex-1 mt-4 lg:mt-0">
+                        <SubtitleEditorPanel
+                            subtitles={subtitles}
+                            currentSub={currentSubtitle}
+                            editingIndex={editingIndex}
+                            isGenerating={isGenerating}
+                            videoDuration={videoDuration}
+                            onAddLine={handleAddLine}
+                            onUpdate={updateSubtitle}
+                            onDelete={handleDeleteLine}
+                            onClear={handleClear}
+                            onSetEditing={setEditingIndex}
+                            onSeek={seekTo}
+                            onGenerate={handleGenerate}
+                            onFileChange={handleFileUpload}
+                        />
+                    </div>
+
                 </div>
             </div>
         </div>

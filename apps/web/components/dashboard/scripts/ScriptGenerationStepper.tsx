@@ -1,67 +1,81 @@
 "use client"
 
 import { motion } from "motion/react"
+import { Check } from "lucide-react"
+import React from "react"
 
-interface StepperProps {
-    steps: { id: number; name: string }[]
+interface Step {
+    id: number
+    name: string
+}
+
+interface ScriptGenerationStepperProps {
+    steps: Step[]
     currentStep: number
 }
 
-export default function ScriptGenerationStepper({
-    steps,
-    currentStep,
-}: StepperProps) {
+export default function ScriptGenerationStepper({ steps, currentStep }: ScriptGenerationStepperProps) {
     return (
-        <div className="flex w-full items-center px-2">
-            {steps.map((s, index) => (
-                <motion.div
-                    key={s.id}
-                    // - The `w-full` was removed here; it's not needed as the inner `flex-1` line handles width.
-                    className="flex items-center flex-1"
-                >
-                    <div className="flex flex-col items-center text-center">
-                        <motion.div
-                            animate={currentStep >= s.id ? { scale: 1.1 } : { scale: 1 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-white transition-colors ${currentStep >= s.id
-                                ? "bg-purple-600 dark:bg-purple-500"
-                                : "bg-slate-300 dark:bg-slate-700"
-                                }`}
-                        >
-                            {currentStep > s.id ? "✓" : s.id}
-                        </motion.div>
-                        <p
-                            className={`mt-2 text-xs font-normal transition-colors md:font-medium md:text-sm truncate max-w-[150px] ${
-                                // - Step names are now hidden on mobile and appear on small screens and up.
-                                "hidden sm:block"
-                                } ${currentStep >= s.id
-                                    ? "text-slate-800 dark:text-slate-200"
-                                    : "text-slate-400"
-                                }`}
-                        >
-                            {s.name}
-                        </p>
-                    </div>
+        <div className="w-full max-w-4xl mx-auto mb-10 px-4">
+            <div className="flex items-center justify-between relative">
+                {steps.map((step, index) => {
+                    const isCompleted = currentStep > step.id
+                    const isActive = currentStep === step.id
+                    const isLast = index === steps.length - 1
 
-                    {index < steps.length - 1 && (
-                        <div className="flex-1 h-0.5 mx-2 rounded-full bg-slate-300 dark:bg-slate-700 relative overflow-hidden">
-                            <motion.div
-                                className="h-0.5 bg-purple-600 dark:bg-purple-500 absolute left-0 top-0"
-                                initial={{ width: "0%" }}
-                                animate={{
-                                    width:
-                                        currentStep >= s.id + 1
-                                            ? "100%"
-                                            : currentStep === s.id
-                                                ? "50%"
-                                                : "0%",
-                                }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
-                            />
-                        </div>
-                    )}
-                </motion.div>
-            ))}
+                    return (
+                        <React.Fragment key={step.id}>
+                            {/* Step Node */}
+                            <div className="relative z-10 flex flex-col items-center gap-3">
+                                <motion.div
+                                    initial={false}
+                                    animate={{
+                                        scale: isActive ? 1.15 : 1,
+                                        backgroundColor: isCompleted || isActive ? "#347AF9" : "var(--bg-empty)",
+                                    }}
+                                    className={`
+                    flex items-center justify-center w-10 h-10 rounded-full border-[3px] transition-all duration-300 shadow-sm
+                    ${isActive
+                                            ? "border-[#347AF9]/30 bg-[#347AF9] text-white ring-4 ring-[#347AF9]/10"
+                                            : isCompleted
+                                                ? "border-[#347AF9] bg-[#347AF9] text-white"
+                                                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400"
+                                        }
+                  `}
+                                    style={{ '--bg-empty': 'transparent' } as any}
+                                >
+                                    {isCompleted ? (
+                                        <Check className="h-5 w-5 text-white stroke-[3px]" />
+                                    ) : (
+                                        <span className={`font-bold text-sm ${isActive ? "text-white" : ""}`}>
+                                            {step.id}
+                                        </span>
+                                    )}
+                                </motion.div>
+
+                                {/* Step Label */}
+                                <span className={`absolute -bottom-7 text-[11px] font-bold tracking-wide uppercase whitespace-nowrap ${isActive ? "text-[#347AF9]" : isCompleted ? "text-slate-700 dark:text-slate-300" : "text-slate-400 dark:text-slate-600"
+                                    }`}
+                                >
+                                    {step.name}
+                                </span>
+                            </div>
+
+                            {/* Connecting Line */}
+                            {!isLast && (
+                                <div className="flex-1 h-1.5 mx-4 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
+                                    <motion.div
+                                        className="absolute top-0 left-0 h-full bg-[#347AF9]"
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: isCompleted ? "100%" : "0%" }}
+                                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                                    />
+                                </div>
+                            )}
+                        </React.Fragment>
+                    )
+                })}
+            </div>
         </div>
     )
 }

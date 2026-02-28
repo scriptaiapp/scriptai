@@ -5,7 +5,9 @@ import { useDropzone } from "react-dropzone"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { UploadCloud, X, File as FileIcon, Plus, Link } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
+import { UploadCloud, X, FileText, Plus, Link2, Trash2, Image as ImageIcon } from "lucide-react"
+import {formatFileSize} from "@/utils/toolsUtil";
 
 interface FormStep3Props {
   references: string[]
@@ -14,13 +16,7 @@ interface FormStep3Props {
   setFiles: React.Dispatch<React.SetStateAction<File[]>>
 }
 
-const formatFileSize = (bytes?: number): string => {
-  if (!bytes) return "0 Bytes"
-  const k = 1024
-  const sizes = ["Bytes", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-}
+
 
 export default function FormStep3({ references, setReferences, files, setFiles }: FormStep3Props) {
   const [currentLink, setCurrentLink] = useState("")
@@ -31,7 +27,7 @@ export default function FormStep3({ references, setReferences, files, setFiles }
     try {
       new URL(trimmed)
     } catch {
-      return
+      return // In a real app, you might want to show a toast error here for invalid URLs
     }
     if (!references.includes(trimmed)) {
       setReferences([...references, trimmed])
@@ -75,107 +71,159 @@ export default function FormStep3({ references, setReferences, files, setFiles }
   }
 
   return (
-    <div className="space-y-8">
-      <h3 className="text-xl font-semibold">Step 3: Add sources and generate.</h3>
+    <motion.div
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-10"
+    >
+      <div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Step 3: Add Sources</h2>
+        <p className="text-sm font-medium text-slate-500">Provide reference material for the AI to analyze.</p>
+      </div>
 
-      <div className="space-y-3">
-        <Label>Reference Links (Optional)</Label>
-        <p className="text-sm text-muted-foreground">Add URLs one by one as reference sources.</p>
+      <div className="space-y-4">
+        <div>
+          <Label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Link2 className="h-4 w-4 text-[#347AF9]" /> Web References
+          </Label>
+          <p className="text-xs font-medium text-slate-500 mt-1">Paste URLs to articles, blogs, or competitor videos.</p>
+        </div>
+
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 bg-slate-200/50 dark:bg-slate-800 rounded-md">
+              <Link2 className="h-3.5 w-3.5 text-slate-500" />
+            </div>
             <Input
               value={currentLink}
               onChange={(e) => setCurrentLink(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="https://example.com/article"
-              className="pl-9 focus-visible:ring-purple-500"
+              className="h-12 pl-12 bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-4 focus:ring-[#347AF9]/10 focus:border-[#347AF9] transition-all text-base"
             />
           </div>
           <Button
             type="button"
-            variant="outline"
-            size="icon"
             onClick={addReference}
             disabled={!currentLink.trim()}
-            className="shrink-0"
+            className="h-12 px-6 bg-[#347AF9] hover:bg-blue-600 text-white font-bold rounded-xl border-b-[3px] border-blue-800 hover:border-b-0 hover:translate-y-[3px] active:border-b-0 active:translate-y-[3px] transition-all shrink-0 shadow-sm disabled:opacity-50 disabled:translate-y-0 disabled:border-b-0"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
           </Button>
         </div>
 
         {references.length > 0 && (
-          <ul className="space-y-2 mt-2">
-            {references.map((ref, index) => (
-              <li
-                key={index}
-                className="flex items-center justify-between p-2.5 border rounded-lg bg-muted/50 gap-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Link className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-sm truncate">{ref}</span>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0"
-                  onClick={() => removeReference(index)}
+          <ul className="space-y-2 mt-4">
+            <AnimatePresence>
+              {references.map((ref, index) => (
+                <motion.li
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                  key={index}
+                  className="flex items-center justify-between p-3.5 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm group hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
                 >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </li>
-            ))}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 bg-[#347AF9]/10 text-[#347AF9] rounded-lg shrink-0">
+                      <Link2 className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-4">{ref}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeReference(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </motion.li>
+              ))}
+            </AnimatePresence>
           </ul>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label>Or upload files</Label>
-        <p className="text-sm text-muted-foreground">Supports PDF, DOCX, TXT, and image files.</p>
+      <div className="h-px w-full bg-slate-100 dark:bg-slate-800" />
+
+      <div className="space-y-4">
+        <div>
+          <Label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <FileText className="h-4 w-4 text-[#347AF9]" /> Upload Documents
+          </Label>
+          <p className="text-xs font-medium text-slate-500 mt-1">Supports PDF, DOCX, TXT, and images.</p>
+        </div>
+
         <div
           {...getRootProps()}
-          className={`flex flex-col items-center justify-center w-full p-8 mt-2 border-2 border-dashed rounded-lg cursor-pointer
-            border-input bg-background hover:bg-muted transition-colors
-            ${isDragActive ? "border-primary" : ""}`}
+          className={`flex flex-col items-center justify-center w-full p-10 mt-2 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all duration-200
+            ${isDragActive
+              ? "border-[#347AF9] bg-[#347AF9]/5 scale-[0.99]"
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700"
+            }`}
         >
           <input {...getInputProps()} />
-          <UploadCloud className="w-10 h-10 mb-4 text-muted-foreground" />
+          <div className={`p-4 rounded-full mb-4 transition-colors ${isDragActive ? "bg-[#347AF9]/10" : "bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700"}`}>
+            <UploadCloud className={`w-8 h-8 ${isDragActive ? "text-[#347AF9]" : "text-slate-400"}`} />
+          </div>
           {isDragActive ? (
-            <p>Drop the files here ...</p>
+            <p className="font-bold text-[#347AF9]">Drop your files here...</p>
           ) : (
-            <p className="text-center">
-              Drag & drop files here, or{" "}
-              <span className="font-semibold text-primary">click to browse</span>
-            </p>
+            <div className="text-center">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Drag & drop files here
+              </p>
+              <p className="text-xs text-slate-500">
+                or <span className="text-[#347AF9] hover:underline">click to browse</span> from your computer
+              </p>
+            </div>
           )}
         </div>
       </div>
 
       {files.length > 0 && (
-        <div className="space-y-3">
-          <Label>Uploaded Files</Label>
-          <ul className="space-y-2">
-            {files.map(file => (
-              <li
-                key={file.name}
-                className="flex items-center justify-between p-3 border rounded-lg bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  <FileIcon className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium truncate max-w-xs">{file.name}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">{formatFileSize(file.size)}</span>
-                  <Button type="button" variant="ghost" size="icon" className="w-6 h-6" onClick={() => removeFile(file.name)}>
-                    <X className="w-4 h-4" />
+        <div className="space-y-3 pt-2">
+          <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Attached Files</Label>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <AnimatePresence>
+              {files.map(file => (
+                <motion.li
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  key={file.name}
+                  className="flex items-center justify-between p-3.5 border-2 border-slate-100 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm group hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg shrink-0 border border-slate-100 dark:border-slate-700">
+                      {file.type.includes('image') ? (
+                        <ImageIcon className="w-5 h-5 text-[#347AF9]" />
+                      ) : (
+                        <FileText className="w-5 h-5 text-[#347AF9]" />
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate leading-tight mb-0.5">{file.name}</span>
+                      <span className="text-[10px] font-semibold text-slate-400">{formatFileSize(file.size)}</span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 shrink-0 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeFile(file.name)}
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </div>
-              </li>
-            ))}
+                </motion.li>
+              ))}
+            </AnimatePresence>
           </ul>
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

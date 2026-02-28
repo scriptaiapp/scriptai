@@ -2,10 +2,10 @@
 
 import { motion } from "motion/react"
 import { SuccessDialog } from "@/components/success-dialog"
-import { PenTool, Search, Volume2, ImageIcon, Subtitles, BookOpen } from "lucide-react"
+import { PenTool, Search, Volume2, ImageIcon, Subtitles, BookOpen, Youtube, Bot } from "lucide-react"
 
 import { useAITraining } from "@/hooks/useAITraining"
-import { HowItWorksGuide } from "@/components/dashboard/train/HowItWorksGuide"
+import { StepperGuide } from "@/components/dashboard/common/StepperGuide"
 import { TrainAIHeader } from "@/components/dashboard/train/TrainAIHeader"
 import { TrainAIPageSkeleton } from "@/components/dashboard/train/skeleton/TrainAIPageSkeleton"
 import { ChannelVideoGrid } from "@/components/dashboard/train/ChannelVideoGrid"
@@ -38,6 +38,23 @@ export default function TrainAIPage() {
   if (!profile) {
     return <TrainAIPageSkeleton />;
   }
+  const aiTrainingSteps = [
+    {
+      title: "Select Videos",
+      desc: "Pick 3-5 videos from your channel that best represent your style.",
+      icon: Youtube
+    },
+    {
+      title: "AI Analysis",
+      desc: "Our AI analyzes your tone, vocabulary, and delivery style.",
+      icon: Bot
+    },
+    {
+      title: "Start Creating",
+      desc: "Generate personalized scripts that match your unique voice.",
+      icon: PenTool
+    },
+  ]
 
   return (
     <div className="container py-8 h-full">
@@ -54,7 +71,11 @@ export default function TrainAIPage() {
         transition={{ duration: 0.5 }}
       >
         <div className="lg:col-span-4 lg:sticky lg:top-8">
-          <HowItWorksGuide />
+          <StepperGuide
+            title="How does model training work?"
+            steps={aiTrainingSteps}
+            accordionValue="ai-training-guide"
+          />
         </div>
 
         <div className="lg:col-span-8">

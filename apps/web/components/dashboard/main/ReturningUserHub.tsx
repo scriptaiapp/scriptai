@@ -2,21 +2,26 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
-  ArrowRight, FileText, Sparkles, Youtube, Image, MessageSquare,
-  Search, Clapperboard, TrendingUp, Clock, Zap, Globe, Crown,
-  Activity, BarChart3, Lightbulb, ChevronRight, CircleDot,
+  FileText, Image as ImageIcon, MessageSquare,
+  TrendingUp, Clock, Crown, BarChart3, Lightbulb,
+  ChevronRight, CircleDot, Languages, LinkIcon,
+  BrainCircuit, Youtube, Sparkles
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
 import type { DashboardData } from "@/app/dashboard/page";
+import type {BillingInfo, ChannelStats } from "@repo/validation";
+
+
+
 
 interface ReturningUserHubProps {
   profile: {
@@ -28,8 +33,11 @@ interface ReturningUserHubProps {
     youtube_connected?: boolean;
   } | null;
   data: DashboardData;
+  youtubeChannel?: ChannelStats | null;
   disconnectYoutubeChannel: () => void;
   disconnectingYoutube: boolean;
+  billingInfo?: BillingInfo | null;
+  billingLoading?: boolean;
 }
 
 const containerVariants = {
@@ -39,10 +47,14 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { y: 16, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" as const } },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
-const CHART_COLORS = ["#a855f7", "#6366f1", "#ec4899", "#f59e0b", "#10b981"];
+// Colors for Recharts
+const BRAND_BLUE = "#347AF9";
+const CHART_COLORS = [BRAND_BLUE, "#8b5cf6", "#ec4899", "#f59e0b"];
+
+// --- HELPER FUNCTIONS ---
 
 function buildWeeklyData(data: DashboardData) {
   const now = new Date();
@@ -85,25 +97,19 @@ function buildRecentActivity(data: DashboardData) {
   data.subtitles.forEach((s) => items.push({ id: s.id, title: s.title || s.filename || "Subtitle", type: "subtitle", date: s.created_at, status: s.status }));
   data.dubbings.forEach((d) => items.push({ id: d.id, title: d.media_name || "Dubbing", type: "dubbing", date: d.created_at, status: d.status }));
 
-  return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
+  return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
 }
 
-const ACTIVITY_ICONS: Record<string, { icon: typeof FileText; color: string }> = {
-  script: { icon: FileText, color: "text-purple-500" },
-  ideation: { icon: Lightbulb, color: "text-amber-500" },
-  thumbnail: { icon: Image, color: "text-pink-500" },
-  subtitle: { icon: MessageSquare, color: "text-blue-500" },
-  dubbing: { icon: Globe, color: "text-emerald-500" },
-};
-
-const QUICK_ACTIONS = [
-  { label: "New Script", href: "/dashboard/scripts/new", icon: FileText, color: "from-purple-500/10 to-purple-600/5", iconColor: "text-purple-600", border: "hover:border-purple-300 dark:hover:border-purple-700" },
-  { label: "Ideation", href: "/dashboard/research/new", icon: Search, color: "from-amber-500/10 to-amber-600/5", iconColor: "text-amber-600", border: "hover:border-amber-300 dark:hover:border-amber-700" },
-  { label: "Thumbnails", href: "/dashboard/thumbnails", icon: Image, color: "from-pink-500/10 to-pink-600/5", iconColor: "text-pink-600", border: "hover:border-pink-300 dark:hover:border-pink-700" },
-  { label: "Subtitles", href: "/dashboard/subtitles", icon: MessageSquare, color: "from-blue-500/10 to-blue-600/5", iconColor: "text-blue-600", border: "hover:border-blue-300 dark:hover:border-blue-700" },
-  { label: "Story Builder", href: "/dashboard/story-builder", icon: Clapperboard, color: "from-indigo-500/10 to-indigo-600/5", iconColor: "text-indigo-600", border: "hover:border-indigo-300 dark:hover:border-indigo-700" },
-  { label: "AI Studio", href: "/dashboard/train", icon: Sparkles, color: "from-emerald-500/10 to-emerald-600/5", iconColor: "text-emerald-600", border: "hover:border-emerald-300 dark:hover:border-emerald-700" },
-];
+function getActivityMeta(type: string) {
+  switch (type) {
+    case "script": return { icon: FileText, color: "text-brand-primary", bg: "bg-brand-primary/10", href: "/dashboard/scripts" };
+    case "ideation": return { icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-500/10", href: "/dashboard/research" };
+    case "thumbnail": return { icon: ImageIcon, color: "text-pink-500", bg: "bg-pink-500/10", href: "/dashboard/thumbnails" };
+    case "subtitle": return { icon: MessageSquare, color: "text-indigo-500", bg: "bg-indigo-500/10", href: "/dashboard/subtitles" };
+    case "dubbing": return { icon: Languages, color: "text-emerald-500", bg: "bg-emerald-500/10", href: "/dashboard/dubbing" };
+    default: return { icon: CircleDot, color: "text-slate-500", bg: "bg-slate-500/10", href: "/dashboard" };
+  }
+}
 
 function formatTimeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -117,7 +123,24 @@ function formatTimeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en", { month: "short", day: "numeric" });
 }
 
-export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disconnectingYoutube }: ReturningUserHubProps) {
+const QUICK_ACTIONS = [
+  { label: "New Script", href: "/dashboard/scripts/new", icon: FileText },
+  { label: "Ideation", href: "/dashboard/research/new", icon: Lightbulb },
+  { label: "Thumbnails", href: "/dashboard/thumbnails", icon: ImageIcon },
+  { label: "Subtitles", href: "/dashboard/subtitles", icon: MessageSquare },
+];
+
+
+export function ReturningUserHub({
+  profile,
+  data,
+  youtubeChannel,
+  disconnectYoutubeChannel,
+  disconnectingYoutube,
+  billingInfo,
+  billingLoading
+}: ReturningUserHubProps) {
+
   const weeklyData = useMemo(() => buildWeeklyData(data), [data]);
   const recentActivity = useMemo(() => buildRecentActivity(data), [data]);
 
@@ -126,110 +149,121 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
       arr.filter((i) => statuses.includes(i.status || "")).length;
 
     return [
-      { label: "Scripts", count: data.scripts.length, completed: completed(data.scripts, ["completed", "done"]), icon: FileText, color: "text-purple-500", bg: "bg-purple-500/10" },
-      { label: "Ideas", count: data.ideations.length, completed: completed(data.ideations, ["completed"]), icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-500/10" },
-      { label: "Thumbnails", count: data.thumbnails.length, completed: completed(data.thumbnails as any[], ["completed", "done"]), icon: Image, color: "text-pink-500", bg: "bg-pink-500/10" },
-      { label: "Subtitles", count: data.subtitles.length, completed: completed(data.subtitles, ["done"]), icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
-      { label: "Stories", count: data.dubbings.length, completed: completed(data.dubbings, ["dubbed", "completed"]), icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+      { label: "Scripts", count: data.scripts.length, completed: completed(data.scripts, ["completed", "done"]), icon: FileText },
+      { label: "Ideas", count: data.ideations.length, completed: completed(data.ideations, ["completed"]), icon: Lightbulb },
+      { label: "Thumbnails", count: data.thumbnails.length, completed: completed(data.thumbnails as any[], ["completed", "done"]), icon: ImageIcon },
+      { label: "Subtitles", count: data.subtitles.length, completed: completed(data.subtitles, ["done"]), icon: MessageSquare },
     ];
   }, [data]);
 
   const pieData = useMemo(() => {
-    return stats
-      .filter((s) => s.count > 0)
-      .map((s) => ({ name: s.label, value: s.count }));
+    return stats.filter((s) => s.count > 0).map((s) => ({ name: s.label, value: s.count }));
   }, [stats]);
 
   const totalContent = stats.reduce((a, s) => a + s.count, 0);
-  const creditsUsed = [
-    ...data.scripts.map((s) => s.credits_consumed || 0),
-    ...data.ideations.map((i) => i.credits_consumed || 0),
-  ].reduce((a, b) => a + b, 0);
+
+  // ✨ BILLING LOGIC & DATA
+  const displayCredits = billingInfo?.credits ?? profile?.credits ?? 0;
+  const isPremium = billingInfo?.currentPlan && billingInfo.currentPlan.name.toLowerCase() !== "free";
+  const planName = billingInfo?.currentPlan?.name || "Free Tier";
+
+  const formattedRenewalDate = billingInfo?.subscription?.currentPeriodEnd
+    ? new Date(billingInfo.subscription.currentPeriodEnd).toLocaleDateString("en", { month: "long", day: "numeric", year: "numeric" })
+    : null;
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-      {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {profile?.full_name?.split(" ")[0] || "Creator"}
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Here&apos;s an overview of your content creation activity
-          </p>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6 max-w-7xl mx-auto pb-10">
+
+      {/* 1. The Premium Hero Section */}
+      <motion.div variants={itemVariants} className="relative overflow-hidden rounded-3xl bg-white dark:bg-dark-brand-primary border border-slate-100 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+              Welcome back, <span className="bg-gradient-to-r from-brand-primary to-purple-500 bg-clip-text text-transparent">{profile?.full_name?.split(" ")[0] || "Creator"}</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">
+              Ready to create your next viral hit?
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 bg-white/50 dark:bg-white/5 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 dark:border-white/10">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalContent}</p>
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Assets</p>
+            </div>
+            <div className="w-px h-10 bg-slate-200 dark:bg-slate-700" />
+            <div className="text-center">
+              {/* Uses unified billing credits */}
+              <p className="text-2xl font-bold text-brand-primary">{displayCredits}</p>
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Credits</p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Stats Row */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="relative overflow-hidden group hover:shadow-md transition-shadow border-slate-200/80 dark:border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-lg ${stat.bg}`}>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-                {stat.count > 0 && (
-                  <span className="text-xs text-slate-400">{stat.completed} done</span>
-                )}
-              </div>
-              <div className="text-2xl font-bold tracking-tight">{stat.count}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</div>
-            </CardContent>
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity`} />
-          </Card>
-        ))}
-      </motion.div>
+      {/* Main Bento Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Activity Chart */}
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-8 space-y-6">
+
+          {/* Stats Page Aesthetic (Brand Blue Hover) */}
+          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:border-brand-primary/40 hover:shadow-[0_8px_30px_rgba(52,122,249,0.12)] transition-all duration-300 rounded-2xl bg-white dark:bg-dark-brand-primary overflow-hidden group hover:-translate-y-1">
+                <CardContent className="p-5 flex flex-col justify-between h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-brand-primary/10 text-brand-primary transition-all duration-300 group-hover:bg-brand-primary group-hover:text-white group-hover:shadow-md">
+                      <stat.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-1">{stat.count}</div>
+                    <div className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{stat.label}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </motion.div>
+
+          {/* Activity Area Chart */}
           <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800">
-              <CardHeader className="pb-2">
+            <Card className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] rounded-[2rem] bg-white dark:bg-dark-brand-primary overflow-hidden">
+              <CardHeader className="pb-4 pt-6 px-6 sm:px-8 border-b border-slate-100 dark:border-slate-800/50">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-purple-500" />
-                    Weekly Activity
+                  <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                    <TrendingUp className="h-5 w-5 text-brand-primary" />
+                    Weekly Output
                   </CardTitle>
-                  <Badge variant="outline" className="text-xs font-normal">Last 7 days</Badge>
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 font-bold bg-slate-100 dark:bg-slate-800/50 text-slate-500 uppercase tracking-wider text-[10px]">
+                    Last 7 days
+                  </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pb-4">
-                <div className="h-[220px] mt-2">
+              <CardContent className="pb-6 px-4 sm:px-8">
+                <div className="h-[280px] w-full mt-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <AreaChart data={weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="fillScripts" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#a855f7" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#a855f7" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="fillIdeas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="fillThumbnails" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#ec4899" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#ec4899" stopOpacity={0} />
+                        <linearGradient id="colorBrand" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={BRAND_BLUE} stopOpacity={0.5} />
+                          <stop offset="95%" stopColor={BRAND_BLUE} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} allowDecimals={false} />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 600 }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 600 }} allowDecimals={false} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "rgba(15, 23, 42, 0.9)",
-                          border: "none",
-                          borderRadius: "8px",
-                          color: "#e2e8f0",
-                          fontSize: "12px",
-                          padding: "8px 12px",
+                          backgroundColor: "rgba(14, 19, 56, 0.95)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px",
+                          color: "#fff", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)",
                         }}
+                        itemStyle={{ color: "#fff", fontSize: "14px", fontWeight: "bold" }}
+                        cursor={{ stroke: "rgba(148,163,184,0.1)" }}
                       />
-                      <Area type="monotone" dataKey="scripts" stroke="#a855f7" strokeWidth={2} fill="url(#fillScripts)" name="Scripts" />
-                      <Area type="monotone" dataKey="ideas" stroke="#f59e0b" strokeWidth={2} fill="url(#fillIdeas)" name="Ideas" />
-                      <Area type="monotone" dataKey="thumbnails" stroke="#ec4899" strokeWidth={2} fill="url(#fillThumbnails)" name="Thumbnails" />
+                      <Area type="monotone" dataKey="scripts" stroke={BRAND_BLUE} strokeWidth={3} fill="url(#colorBrand)" name="Created" activeDot={{ r: 6, fill: BRAND_BLUE, stroke: "#fff", strokeWidth: 2 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -239,24 +273,15 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
 
           {/* Quick Actions */}
           <motion.div variants={itemVariants}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold flex items-center gap-2">
-                <Zap className="h-4 w-4 text-purple-500" />
-                Quick Actions
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {QUICK_ACTIONS.map((action) => (
                 <Link key={action.label} href={action.href}>
-                  <Card className={`group cursor-pointer transition-all hover:shadow-md border-slate-200/80 dark:border-slate-800 ${action.border}`}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${action.color}`}>
-                        <action.icon className={`h-4 w-4 ${action.iconColor}`} />
+                  <Card className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:border-brand-primary/40 hover:shadow-[0_8px_30px_rgba(52,122,249,0.12)] transition-all duration-300 hover:-translate-y-1 rounded-2xl bg-white dark:bg-dark-brand-primary group h-full cursor-pointer">
+                    <CardContent className="p-5 flex flex-col items-center text-center gap-3 h-full justify-center">
+                      <div className="p-3.5 rounded-xl bg-brand-primary/10 text-brand-primary transition-all duration-300 group-hover:bg-brand-primary group-hover:text-white group-hover:shadow-md">
+                        <action.icon className="h-6 w-6" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium">{action.label}</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-primary transition-colors">{action.label}</span>
                     </CardContent>
                   </Card>
                 </Link>
@@ -264,258 +289,276 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
             </div>
           </motion.div>
 
-          {/* Recent Activity */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-purple-500" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {recentActivity.length > 0 ? (
-                  <div className="space-y-1">
-                    {recentActivity.map((item, i) => {
-                      const cfg = ACTIVITY_ICONS[item.type] ?? ACTIVITY_ICONS.script!;
-                      const Icon = cfg!.icon;
+          {/* Recent Activity List */}
+          {recentActivity.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <Card className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] rounded-[2rem] bg-white dark:bg-dark-brand-primary overflow-hidden">
+                <CardHeader className="pb-4 pt-6 px-6 sm:px-8 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                      <Clock className="h-5 w-5 text-slate-400" />
+                      Recent Activity
+                    </CardTitle>
+                    <Link href="/dashboard/scripts" className="text-sm font-bold text-brand-primary hover:text-brand-primary-hover transition-colors flex items-center">
+                      View all <ChevronRight className="h-4 w-4 ml-0.5" />
+                    </Link>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {recentActivity.map((item) => {
+                      const meta = getActivityMeta(item.type);
+                      const Icon = meta.icon;
+                      const isCompleted = ["completed", "done"].includes(item.status?.toLowerCase() || "");
+
                       return (
-                        <motion.div
-                          key={item.id + i}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                        <Link
+                          key={item.id}
+                          href={`${meta.href}/${item.id}`}
+                          className="flex items-center justify-between px-6 sm:px-8 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
                         >
-                          <div className={`p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 ${cfg!.color}`}>
-                            <Icon className="h-3.5 w-3.5" />
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className={`p-2.5 rounded-xl shrink-0 ${meta.bg} transition-transform group-hover:scale-110`}>
+                              <Icon className={`h-4 w-4 ${meta.color}`} />
+                            </div>
+
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-brand-primary transition-colors mb-0.5">
+                                {item.title}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                <span className="capitalize">{item.type}</span>
+                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                <span>{formatTimeAgo(item.date)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{item.title}</p>
-                            <p className="text-xs text-slate-400 capitalize">{item.type}</p>
+
+                          <div className="ml-4 shrink-0 hidden sm:block">
+                            {isCompleted ? (
+                              <Badge className="bg-[#10B981]/10 text-[#10B981] hover:bg-[#10B981]/20 border-none shadow-none text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                                Completed
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-amber-200 text-amber-600 dark:border-amber-900/50 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                                {item.status || "Draft"}
+                              </Badge>
+                            )}
                           </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs text-slate-400">{formatTimeAgo(item.date)}</span>
-                          </div>
-                        </motion.div>
+                        </Link>
                       );
                     })}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <Clock className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">No activity yet. Start creating!</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* YouTube Channel Card */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-red-500 via-red-400 to-orange-400" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Youtube className="h-4 w-4 text-red-500" />
-                  YouTube Channel
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="font-semibold text-lg truncate">
-                    {profile?.youtube_channel_name || "Connected Channel"}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className="mt-1.5 text-green-600 border-green-600/30 bg-green-500/10"
-                  >
-                    <CircleDot className="h-2.5 w-2.5 mr-1.5 text-green-500 animate-pulse" />
-                    Connected
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Globe className="h-3 w-3 text-slate-400" />
-                      <span className="text-xs text-slate-500">Language</span>
-                    </div>
-                    <p className="text-sm font-semibold capitalize">{profile?.language || "English"}</p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Sparkles className="h-3 w-3 text-slate-400" />
-                      <span className="text-xs text-slate-500">AI Model</span>
-                    </div>
-                    <p className="text-sm font-semibold">
-                      {profile?.ai_trained ? "Trained" : "Pending"}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                  onClick={disconnectYoutubeChannel}
-                  disabled={disconnectingYoutube}
-                >
-                  {disconnectingYoutube ? "Disconnecting..." : "Disconnect Channel"}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Credits Card */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-purple-500 via-purple-400 to-indigo-400" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-purple-500" />
-                  Credits
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                      {profile?.credits || 0}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">Available credits</p>
-                  </div>
-                  {creditsUsed > 0 && (
-                    <div className="text-right">
-                      <span className="text-sm text-slate-500">{creditsUsed}</span>
-                      <p className="text-xs text-slate-400">Used</p>
-                    </div>
-                  )}
-                </div>
-
-                {creditsUsed > 0 && (
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                      <span>Usage</span>
-                      <span>{Math.min(100, Math.round((creditsUsed / (creditsUsed + (profile?.credits || 0))) * 100))}%</span>
-                    </div>
-                    <Progress
-                      value={Math.min(100, (creditsUsed / (creditsUsed + (profile?.credits || 0))) * 100)}
-                      className="h-2 bg-slate-100 dark:bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-indigo-500"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Content Distribution */}
-          {totalContent > 0 && (
-            <motion.div variants={itemVariants}>
-              <Card className="border-slate-200/80 dark:border-slate-800">
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-purple-500" />
-                    Content Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[160px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={65}
-                          paddingAngle={3}
-                          dataKey="value"
-                          strokeWidth={0}
-                        >
-                          {pieData.map((_, index) => (
-                            <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(15, 23, 42, 0.9)",
-                            border: "none",
-                            borderRadius: "8px",
-                            color: "#e2e8f0",
-                            fontSize: "12px",
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 -mt-2">
-                    {pieData.map((d, i) => (
-                      <div key={d.name} className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i] }} />
-                        <span className="text-xs text-slate-500">{d.name} ({d.value})</span>
-                      </div>
-                    ))}
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           )}
 
-          {/* Subscription Card */}
+        </div>
+
+        {/* RIGHT COLUMN (Sticky on large screens) */}
+        <div className="lg:col-span-4 space-y-6 flex flex-col lg:sticky lg:top-6 h-fit pb-10">
+
+          {/* 1. ✨ Dynamic Billing Upgrade/Manage Card */}
           <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-amber-500" />
-                  Subscription
+            <Card className="bg-dark-brand-primary border-white/10 shadow-[0_0_20px_rgba(52,122,249,0.15)] overflow-hidden rounded-[2rem] relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/20 rounded-full blur-2xl pointer-events-none" />
+              <CardHeader className="pb-2 pt-8 px-8">
+                <CardTitle className="text-sm font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                  {isPremium ? (
+                    <Sparkles className="h-5 w-5 text-brand-primary" />
+                  ) : (
+                    <Crown className="h-5 w-5 text-amber-400" />
+                  )}
+                  Current Plan
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold mb-3">Free Plan</div>
-                <Link href="#upgrade">
-                  <Button variant="outline" className="w-full gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/20">
-                    <Crown className="h-4 w-4" />
-                    Upgrade to Pro
+              <CardContent className="relative z-10 px-8 pb-8">
+                <div className="text-3xl font-black text-white mb-1.5 capitalize">{planName}</div>
+
+                {/* Show renewal date if premium */}
+                {isPremium && formattedRenewalDate && (
+                  <div className="text-xs font-bold text-brand-primary mb-3">
+                    Renews on {formattedRenewalDate}
+                  </div>
+                )}
+
+                <p className="text-slate-400 font-medium text-sm mb-8 leading-relaxed mt-2">
+                  {isPremium
+                    ? "You have full access to advanced AI features, custom styles, and high-res exports."
+                    : "Unlock infinite AI generation, custom styles, and 4K exporting."}
+                </p>
+
+                {/* <Link href={isPremium ? "/dashboard/billing" : "/dashboard/billing/upgrade"}> */}
+                <Link href="#">
+                  <Button
+                    disabled={billingLoading}
+                    className={`w-full font-bold rounded-xl transition-all h-12 shadow-[0_4px_14px_0_rgba(52,122,249,0.39)] hover:shadow-[0_6px_20px_rgba(52,122,249,0.23)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-base border-b-[3px] hover:border-b-0 ${isPremium
+                      ? "bg-white text-dark-brand-primary hover:bg-slate-100 border-slate-300"
+                      : "bg-brand-primary text-white hover:bg-brand-primary-hover border-blue-800"
+                      }`}
+                  >
+                    {billingLoading ? "Loading..." : isPremium ? "Manage Subscription" : "Upgrade to Pro"}
                   </Button>
                 </Link>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Feature Links */}
+          {/* 2. Sleek Donut Chart */}
+          {totalContent > 0 && (
+            <motion.div variants={itemVariants}>
+              <Card className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] rounded-[2rem] bg-white dark:bg-dark-brand-primary overflow-hidden">
+                <CardHeader className="pb-0 pt-6 px-6 sm:px-8">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-brand-primary" />
+                      Content Mix
+                    </CardTitle>
+                    <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold bg-slate-100 dark:bg-slate-800/50 px-2.5 py-1 rounded-md">{totalContent} items</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 sm:px-8 pb-8">
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="relative h-[180px] w-[180px] flex-shrink-0 mt-2">
+                      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-brand-primary/5 via-purple-500/5 to-pink-500/5 blur-sm" />
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={58}
+                            outerRadius={78}
+                            paddingAngle={4}
+                            dataKey="value"
+                            strokeWidth={0}
+                            cornerRadius={4}
+                          >
+                            {pieData.map((_, index) => (
+                              <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{totalContent}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Total</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full space-y-3 pt-2">
+                      {pieData.map((d, i) => {
+                        const pct = Math.round((d.value / totalContent) * 100);
+                        return (
+                          <div key={d.name} className="group">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <div className="h-3 w-3 rounded-md" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{d.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white">{d.value}</span>
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500">{pct}%</span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full rounded-full"
+                                style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${pct}%` }}
+                                transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] as const }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* 3. YouTube Channel Card */}
           <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Explore Features
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {[
-                  { label: "All Scripts", href: "/dashboard/scripts", icon: FileText },
-                  { label: "All Ideas", href: "/dashboard/research", icon: Search },
-                  { label: "Thumbnails", href: "/dashboard/thumbnails", icon: Image },
-                  { label: "Subtitles", href: "/dashboard/subtitles", icon: MessageSquare },
-                  { label: "Story Builder", href: "/dashboard/story-builder", icon: Clapperboard },
-                ].map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-2.5 py-2 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm group"
-                  >
-                    <link.icon className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="flex-1">{link.label}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
-                  </Link>
-                ))}
-              </CardContent>
+            <Card className="border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgb(0,0,0,0.02)] rounded-[2rem] bg-white dark:bg-dark-brand-primary flex flex-col p-6 sm:p-8 transition-all hover:shadow-md">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700">
+                    {youtubeChannel?.thumbnail ? (
+                      <Image
+                        src={youtubeChannel?.thumbnail || "https://via.placeholder.com/150"}
+                        alt={youtubeChannel?.channelName || "Creator Channel"}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-black text-red-500">
+                        {(youtubeChannel?.channelName || profile?.youtube_channel_name || "C").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-base text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[180px]">
+                      {youtubeChannel?.channelName || profile?.youtube_channel_name || "Creator Channel"}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-green-500">Connected</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2 bg-red-500/10 rounded-lg">
+                  <Youtube className="h-5 w-5 text-red-500 opacity-90" />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-5 border border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/50">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <Languages className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Language</span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white capitalize">
+                    {profile?.language || "English"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <BrainCircuit className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">AI Profile</span>
+                  </div>
+                  {profile?.ai_trained ? (
+                    <Badge className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 border-none shadow-none text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                      Trained ✓
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-amber-200 text-amber-600 dark:border-amber-900/50 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                      Pending
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                variant="ghost"
+                className="w-full mt-6 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold h-11"
+                onClick={disconnectYoutubeChannel}
+                disabled={disconnectingYoutube}
+              >
+                <LinkIcon className="h-4 w-4 mr-2" />
+                {disconnectingYoutube ? "Disconnecting..." : "Unlink Channel"}
+              </Button>
             </Card>
           </motion.div>
+
         </div>
       </div>
     </motion.div>

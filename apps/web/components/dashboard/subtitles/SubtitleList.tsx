@@ -89,7 +89,7 @@ export function SubtitleList({
     };
 
     return (
-        <div className="relative h-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 overflow-hidden">
+        <div className="relative h-full flex flex-col bg-transparent w-full">
 
             {/* SCROLLABLE AREA */}
             <div
@@ -133,15 +133,18 @@ export function SubtitleList({
 
 
             {!autoScrollEnabled && subtitles.length > 0 && (
-                <div className="absolute bottom-16 left-0 right-0 flex justify-center pointer-events-none z-30">
+                <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none z-30">
                     <Button
                         variant="secondary"
                         size="sm"
                         onClick={handleResumeAutoScroll}
-                        className="pointer-events-auto shadow-lg bg-slate-900/90 text-white hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white border-none rounded-full px-4 py-2 transition-all animate-in fade-in slide-in-from-bottom-2"
-                    >
-                        <ArrowDownCircle className="w-4 h-4 mr-2" />
+                        className="pointer-events-auto rounded-full bg-white/80 dark:bg-[#0f172a]/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 hover:text-brand-primary dark:hover:text-brand-primary hover:bg-white dark:hover:bg-slate-900 shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_20px_rgba(52,122,249,0.2)] hover:border-brand-primary/40 transition-colors duration-300 text-[11px] font-bold tracking-wide">
+                        <span className="relative flex h-2 w-2 mr-0.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-60" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary" />
+                        </span>
                         Resume Auto-Scroll
+                        <ArrowDownCircle className="w-4 h-4 mr-2" />
                     </Button>
                 </div>
             )}

@@ -1,8 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, XCircle, Youtube, Bot, Coins } from "lucide-react"
+import { Youtube, Sparkles, Zap } from "lucide-react"
 
 interface TrainAIHeaderProps {
   isYtConnected: boolean
@@ -13,60 +12,55 @@ interface TrainAIHeaderProps {
 export function TrainAIHeader({ isYtConnected, isAiTrained, lastCreditsConsumed }: TrainAIHeaderProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="mb-8 w-full flex flex-col md:flex-row md:items-end justify-between gap-5 border-b border-slate-100 dark:border-slate-800 pb-6"
     >
+      {/* Title Section */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">AI Studio</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Train your model on your unique content style.
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+          AI Studio
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 text-base">
+          Train your custom AI model on your unique vocabulary, tone, and pacing.
         </p>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <Badge
-          variant={isYtConnected ? "default" : "secondary"}
-          className={`gap-1.5 py-1 px-2.5 ${
-            isYtConnected
-              ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-slate-100 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400"
-          }`}
-        >
+      {/* Status Pills */}
+      <div className="flex items-center gap-3 flex-wrap">
+
+        {/* YouTube Status Pill */}
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${isYtConnected
+          ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400"
+          : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-400"
+          }`}>
           {isYtConnected ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span className="relative flex h-2 w-2 mr-0.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
           ) : (
-            <XCircle className="h-3.5 w-3.5" />
+            <Youtube className="h-4 w-4 opacity-70" />
           )}
-          <Youtube className="h-3.5 w-3.5" />
-          {isYtConnected ? "Connected" : "Not Connected"}
-        </Badge>
+          {isYtConnected ? "YouTube Connected" : "YouTube Pending"}
+        </div>
 
-        <Badge
-          variant={isAiTrained ? "default" : "secondary"}
-          className={`gap-1.5 py-1 px-2.5 ${
-            isAiTrained
-              ? "bg-purple-100 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400"
-              : "bg-slate-100 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400"
-          }`}
-        >
-          {isAiTrained ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
-          ) : (
-            <XCircle className="h-3.5 w-3.5" />
-          )}
-          <Bot className="h-3.5 w-3.5" />
-          {isAiTrained ? "Trained" : "Not Trained"}
-        </Badge>
+        {/* AI Training Status Pill */}
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${isAiTrained
+          ? "bg-[#347AF9]/10 border-[#347AF9]/20 text-[#347AF9]"
+          : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-400"
+          }`}>
+          <Sparkles className={`h-4 w-4 ${isAiTrained ? "text-[#347AF9]" : "opacity-70"}`} />
+          {isAiTrained ? "Model Trained" : "Untrained"}
+        </div>
 
+        {/* Credits Used Pill */}
         {isAiTrained && lastCreditsConsumed !== null && (
-          <Badge
-            variant="outline"
-            className="gap-1.5 py-1 px-2.5 text-slate-600 dark:text-slate-400"
-          >
-            <Coins className="h-3.5 w-3.5" />
-            {lastCreditsConsumed} credit{lastCreditsConsumed !== 1 ? "s" : ""} used
-          </Badge>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-400 text-sm font-semibold">
+            <Zap className="h-4 w-4 text-amber-500" />
+            {lastCreditsConsumed} credit{lastCreditsConsumed !== 1 ? "s" : ""}
+          </div>
         )}
       </div>
     </motion.div>

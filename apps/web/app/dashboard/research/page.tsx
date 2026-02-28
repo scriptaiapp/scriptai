@@ -92,14 +92,14 @@ export default function IdeationListPage() {
     <div className="container py-8 md:py-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Ideation</h1>
+          <h1 className="text-3xl font-bold tracking-tight">My Ideation</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
             AI-powered video idea generation with trend intelligence
           </p>
         </div>
         {!showTrainingOverlay && (
           <Link href="/dashboard/research/new">
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10">
+            <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
               <Plus className="mr-2 h-4 w-4" />
               Generate Ideas
             </Button>
