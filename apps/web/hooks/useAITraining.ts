@@ -98,6 +98,12 @@ export function useAITraining() {
         (v) => `https://www.youtube.com/watch?v=${v.id}`,
       )
 
+      try {
+        await api.post("/api/v1/youtube/trained-videos", { videos: selectedVideos }, { requireAuth: true })
+      } catch (error) {
+        console.error("Failed to save trained videos", error)
+      }
+
       const { jobId } = await api.post<TrainAiResponse>("/api/v1/train-ai", {
         videoUrls,
         isRetraining: profile?.ai_trained ?? false,
