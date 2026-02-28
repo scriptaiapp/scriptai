@@ -13,6 +13,10 @@ import { getDubbings, type DubbingProject } from "@/lib/api/getDubbings"
 import { api } from "@/lib/api-client"
 import { GmailPromptDialog } from "@/components/dashboard/gmail-prompt-dialog"
 import type { IdeationJob, SubtitleResponse } from "@repo/validation"
+import { useChannelStats } from "@/hooks/useChannelStats"
+import { useBilling } from "@/hooks/useBilling"
+
+
 
 export interface DashboardData {
   scripts: Script[];
@@ -28,6 +32,8 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData>({
     scripts: [], thumbnails: [], dubbings: [], ideations: [], subtitles: [],
   });
+  const { stats, loading, fetchStats } = useChannelStats();
+  const { billingInfo, loading: billingLoading, refresh: refreshBilling } = useBilling();
   const [isLoading, setIsLoading] = useState(true);
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false);
   const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false);
@@ -52,6 +58,7 @@ export default function Dashboard() {
           ideations: ideationRes.status === "fulfilled" ? (ideationRes.value?.data ?? []) : [],
           subtitles: subtitles.status === "fulfilled" ? (subtitles.value ?? []) : [],
         })
+
       } catch {
         toast.error("Failed to load dashboard data")
       } finally {
@@ -59,7 +66,10 @@ export default function Dashboard() {
       }
     }
 
+
     fetchAll()
+    fetchStats()
+    refreshBilling()
   }, [])
 
   const handleConnectYoutube = () => {
@@ -113,8 +123,11 @@ export default function Dashboard() {
         <ReturningUserHub
           profile={profile}
           data={data}
+          youtubeChannel={stats}
           disconnectYoutubeChannel={handleDisconnectYoutube}
           disconnectingYoutube={isDisconnectingYoutube}
+          billingInfo={billingInfo}
+          billingLoading={billingLoading}
         />
       ) : (
         <NewUserOnboarding

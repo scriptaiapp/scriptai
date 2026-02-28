@@ -102,7 +102,7 @@ export function GmailPromptDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-brand-primary hover:bg-brand-primary-hover active:bg-brand-primary-hover transition-all text-white shadow-sm shrink-0 rounded-xl">
               {isLoading ? "Connecting..." : "Continue with Google"}
             </Button>
           </DialogFooter>
