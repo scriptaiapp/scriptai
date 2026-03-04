@@ -1,7 +1,9 @@
+"use client"
 
 import React from 'react';
 import Image from "next/image";
 import Link from 'next/link';
+import { motion } from "motion/react";
 import logo from "@/public/dark-logo.png";
 import { IconBrandDiscordFilled as Discord, IconBrandInstagram as Instagram, IconBrandLinkedin as Linkedin, IconBrandX as Twitter, IconBrandGithub as Github, IconBrandFacebook as Facebook } from '@tabler/icons-react';
 import { footerItems } from '@repo/ui';
@@ -22,9 +24,21 @@ type FooterLink = { name: string; href: string };
 const Footer = () => {
   return (
     <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+      <motion.div
+        className="max-w-7xl mx-auto px-6 lg:px-8 py-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-          <div className="col-span-2 space-y-4">
+          <motion.div
+            className="col-span-2 space-y-4"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
             <div className="flex items-center gap-3">
               <Image src={logo} alt="Creator AI Logo" width={40} height={40} />
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">Creator AI</span>
@@ -40,10 +54,16 @@ const Footer = () => {
                 href: item.href,
               }))}
             />
-          </div>
+          </motion.div>
 
-          {Object.entries(footerItems).map(([section, items]) => (
-            <div key={section}>
+          {Object.entries(footerItems).map(([section, items], i) => (
+            <motion.div
+              key={section}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.05 * (i + 2) }}
+            >
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-4">
                 {section}
               </h3>
@@ -64,16 +84,22 @@ const Footer = () => {
                   </li>
                 )}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 text-center">
+        <motion.div
+          className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <p className="text-sm text-slate-600 dark:text-slate-400">
             &copy; {new Date().getFullYear()} Creator AI. All rights reserved.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </footer>
   );
 };

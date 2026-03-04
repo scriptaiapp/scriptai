@@ -41,9 +41,9 @@ export class BillingController {
 
   @Post('portal')
   @UseGuards(SupabaseAuthGuard)
-  createPortalSession(@Req() req: AuthRequest) {
+  getCustomerPortal(@Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedException();
-    return this.billingService.createPortalSession(userId);
+    return this.billingService.getCustomerPortalUrl(userId);
   }
 }

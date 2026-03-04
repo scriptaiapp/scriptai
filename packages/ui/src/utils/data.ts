@@ -2,12 +2,14 @@ export const navItem = [
   { name: "Features", href: "/#features" },
   { name: "How It Works", href: "/#how-it-works" },
   { name: "Pricing", href: "/#pricing" },
+  { name: "FAQ", href: "/#faq" },
 ]
 
 export const footerItems: FooterSection = {
   "Product": [
     { name: "Features", href: "./#features" },
     { name: "Pricing", href: "./#pricing" },
+    { name: "FAQ", href: "./#faq" },
     { name: "Contact Us", href: "/contact-us" },
   ],
   "Company": [

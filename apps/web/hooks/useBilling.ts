@@ -11,14 +11,14 @@ interface Plan {
   credits_monthly: number;
   features: string[];
   is_active: boolean;
-  stripe_price_id: string | null;
+  ls_variant_id: string | null;
 }
 
 interface SubscriptionInfo {
   id: string;
   status: string;
   currentPeriodEnd: string | null;
-  stripeSubscriptionId: string | null;
+  lsSubscriptionId: string | null;
 }
 
 interface BillingInfo {
@@ -91,7 +91,8 @@ export function useBilling() {
       );
       if (url) window.location.href = url;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to open billing portal";
+      const message =
+        err instanceof Error ? err.message : "Failed to open billing portal";
       toast.error(message);
     } finally {
       setPortalLoading(false);

@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
-import Stripe from 'stripe';
+import {
+  lemonSqueezySetup,
+  createCheckout,
+  getSubscription,
+  type NewCheckout,
+} from '@lemonsqueezy/lemonsqueezy.js';
+import * as crypto from 'crypto';
 
 export interface PlanRecord {
   id: string;
@@ -15,42 +21,50 @@ export interface PlanRecord {
   credits_monthly: number;
   features: unknown;
   is_active: boolean;
-  stripe_price_id?: string;
+  ls_variant_id?: string;
 }
 
 interface SubscriptionRecord {
   id: string;
   user_id: string;
   plan_id: string;
-  stripe_subscription_id: string | null;
-  stripe_customer_id: string | null;
+  ls_subscription_id: string | null;
+  ls_customer_id: string | null;
+  ls_order_id: string | null;
   status: string;
   current_period_start: string | null;
   current_period_end: string | null;
   plans: PlanRecord;
 }
 
+export interface LsWebhookEvent {
+  meta: {
+    event_name: string;
+    custom_data?: { user_id?: string; plan_id?: string };
+  };
+  data: {
+    id: string;
+    type: string;
+    attributes: Record<string, unknown>;
+  };
+}
+
 @Injectable()
 export class BillingService {
-  private stripeInstance: Stripe | null = null;
   private readonly logger = new Logger(BillingService.name);
+  private lsInitialized = false;
 
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly configService: ConfigService,
   ) {}
 
-  private getStripe(): Stripe {
-    if (!this.stripeInstance) {
-      const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-      if (!secretKey) {
-        throw new BadRequestException('Stripe is not configured');
-      }
-      this.stripeInstance = new Stripe(secretKey, {
-        apiVersion: '2026-01-28.clover',
-      });
-    }
-    return this.stripeInstance;
+  private initLemonSqueezy() {
+    if (this.lsInitialized) return;
+    const apiKey = this.configService.get<string>('LEMONSQUEEZY_API_KEY');
+    if (!apiKey) throw new BadRequestException('Lemon Squeezy not configured');
+    lemonSqueezySetup({ apiKey });
+    this.lsInitialized = true;
   }
 
   async getPlans(): Promise<PlanRecord[]> {
@@ -72,7 +86,7 @@ export class BillingService {
       .from('subscriptions')
       .select('*, plans(*)')
       .eq('user_id', userId)
-      .in('status', ['active', 'trialing', 'past_due'])
+      .in('status', ['active', 'on_trial', 'past_due'])
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -92,7 +106,10 @@ export class BillingService {
             id: subscription.id,
             status: subscription.status,
             currentPeriodEnd: subscription.current_period_end,
-            stripeSubscriptionId: subscription.stripe_subscription_id,
+            lsSubscriptionId: subscription.ls_subscription_id,
+            customerPortalUrl:
+              (subscription as SubscriptionRecord & { customer_portal_url?: string })
+                .customer_portal_url ?? null,
           }
         : null,
       credits: profile?.credits ?? 0,
@@ -100,6 +117,7 @@ export class BillingService {
   }
 
   async createCheckoutSession(userId: string, planId: string) {
+    this.initLemonSqueezy();
     const supabase = this.supabaseService.getClient();
 
     const { data: plan, error: planError } = await supabase
@@ -110,103 +128,116 @@ export class BillingService {
       .single();
 
     if (planError || !plan) throw new NotFoundException('Plan not found');
-    if (plan.price_monthly === 0) {
+    if (plan.price_monthly === 0)
       throw new BadRequestException('Cannot purchase the free plan');
-    }
-    if (!plan.stripe_price_id) {
+    if (!plan.ls_variant_id)
       throw new BadRequestException('Plan is not configured for payments');
-    }
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, full_name')
       .eq('user_id', userId)
       .single();
 
     if (!profile?.email) throw new BadRequestException('User email not found');
 
-    let customerId = await this.getOrCreateStripeCustomer(userId, profile.email);
+    const storeId = this.configService.get<string>('LEMONSQUEEZY_STORE_ID');
+    if (!storeId) throw new BadRequestException('Store not configured');
 
     const frontendUrl =
       this.configService.get<string>('FRONTEND_PROD_URL') ||
       this.configService.get<string>('FRONTEND_DEV_URL') ||
       'http://localhost:3000';
 
-    const session = await this.getStripe().checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      line_items: [{ price: plan.stripe_price_id, quantity: 1 }],
-      success_url: `${frontendUrl}/dashboard/settings?tab=billing&status=success`,
-      cancel_url: `${frontendUrl}/dashboard/settings?tab=billing&status=cancelled`,
-      metadata: { userId, planId },
-      subscription_data: { metadata: { userId, planId } },
-    });
+    const checkoutData: NewCheckout = {
+      productOptions: {
+        redirectUrl: `${frontendUrl}/dashboard/settings?tab=billing&status=success`,
+      },
+      checkoutData: {
+        email: profile.email,
+        name: profile.full_name ?? undefined,
+        custom: { user_id: userId, plan_id: planId },
+      },
+    };
 
-    return { url: session.url };
+    const { data, error } = await createCheckout(
+      storeId,
+      plan.ls_variant_id,
+      checkoutData,
+    );
+
+    if (error) {
+      this.logger.error(`Checkout creation failed: ${JSON.stringify(error)}`);
+      throw new BadRequestException('Failed to create checkout');
+    }
+
+    return { url: data?.data.attributes.url };
   }
 
-  async createPortalSession(userId: string) {
-    const customerId = await this.getStripeCustomerId(userId);
-    if (!customerId) {
+  async getCustomerPortalUrl(userId: string) {
+    this.initLemonSqueezy();
+    const supabase = this.supabaseService.getClient();
+
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('ls_subscription_id')
+      .eq('user_id', userId)
+      .in('status', ['active', 'on_trial', 'past_due'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!subscription?.ls_subscription_id) {
       throw new BadRequestException('No active subscription found');
     }
 
-    const frontendUrl =
-      this.configService.get<string>('FRONTEND_PROD_URL') ||
-      this.configService.get<string>('FRONTEND_DEV_URL') ||
-      'http://localhost:3000';
+    const { data, error } = await getSubscription(
+      subscription.ls_subscription_id,
+    );
 
-    const session = await this.getStripe().billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${frontendUrl}/dashboard/settings?tab=billing`,
-    });
+    if (error) {
+      this.logger.error(`Failed to fetch subscription: ${JSON.stringify(error)}`);
+      throw new BadRequestException('Failed to get portal URL');
+    }
 
-    return { url: session.url };
+    const urls = data?.data.attributes.urls;
+    return {
+      url: urls?.customer_portal ?? null,
+    };
   }
 
   // --- Webhook handlers ---
 
-  async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-    if (session.mode !== 'subscription') return;
+  async handleSubscriptionCreated(event: LsWebhookEvent) {
+    const attrs = event.data.attributes;
+    const userId = event.meta.custom_data?.user_id;
+    const planId = event.meta.custom_data?.plan_id;
 
-    const userId = session.metadata?.userId;
-    const planId = session.metadata?.planId;
-    const subscriptionId =
-      typeof session.subscription === 'string'
-        ? session.subscription
-        : session.subscription?.id;
-    const customerId =
-      typeof session.customer === 'string'
-        ? session.customer
-        : session.customer?.id;
-
-    if (!userId || !planId || !subscriptionId) {
-      this.logger.warn('Missing metadata in checkout session');
+    if (!userId || !planId) {
+      this.logger.warn('Missing custom_data in subscription_created');
       return;
     }
 
     const supabase = this.supabaseService.getClient();
-    const stripeSubscription =
-      await this.getStripe().subscriptions.retrieve(subscriptionId);
-    const item = stripeSubscription.items.data[0];
 
     await supabase
       .from('subscriptions')
       .update({ status: 'canceled' })
       .eq('user_id', userId)
-      .in('status', ['active', 'trialing', 'past_due']);
+      .in('status', ['active', 'on_trial', 'past_due']);
 
     await supabase.from('subscriptions').insert({
       user_id: userId,
       plan_id: planId,
-      stripe_subscription_id: subscriptionId,
-      stripe_customer_id: customerId,
-      status: 'active',
-      current_period_start: item
-        ? new Date(item.current_period_start * 1000).toISOString()
+      ls_subscription_id: String(event.data.id),
+      ls_customer_id: String(attrs.customer_id ?? ''),
+      ls_order_id: String(attrs.order_id ?? ''),
+      status: this.mapLsStatus(String(attrs.status ?? 'active')),
+      current_period_start: attrs.created_at
+        ? new Date(attrs.created_at as string).toISOString()
         : null,
-      current_period_end: item
-        ? new Date(item.current_period_end * 1000).toISOString()
+      current_period_end: attrs.renews_at
+        ? new Date(attrs.renews_at as string).toISOString()
         : null,
     });
 
@@ -223,43 +254,49 @@ export class BillingService {
         .eq('user_id', userId);
     }
 
-    this.logger.log(`Subscription activated for user ${userId}`);
+    this.logger.log(`Subscription created for user ${userId}`);
   }
 
-  async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  async handleSubscriptionUpdated(event: LsWebhookEvent) {
+    const attrs = event.data.attributes;
     const supabase = this.supabaseService.getClient();
-    const stripeSubId = subscription.id;
-    const item = subscription.items.data[0];
-
-    const status = this.mapStripeStatus(subscription.status);
+    const lsSubId = String(event.data.id);
 
     await supabase
       .from('subscriptions')
       .update({
-        status,
-        current_period_start: item
-          ? new Date(item.current_period_start * 1000).toISOString()
-          : null,
-        current_period_end: item
-          ? new Date(item.current_period_end * 1000).toISOString()
+        status: this.mapLsStatus(String(attrs.status ?? '')),
+        current_period_end: attrs.renews_at
+          ? new Date(attrs.renews_at as string).toISOString()
           : null,
       })
-      .eq('stripe_subscription_id', stripeSubId);
+      .eq('ls_subscription_id', lsSubId);
   }
 
-  async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  async handleSubscriptionCancelled(event: LsWebhookEvent) {
     const supabase = this.supabaseService.getClient();
-
-    const { data: sub } = await supabase
-      .from('subscriptions')
-      .select('user_id')
-      .eq('stripe_subscription_id', subscription.id)
-      .single();
+    const lsSubId = String(event.data.id);
 
     await supabase
       .from('subscriptions')
       .update({ status: 'canceled' })
-      .eq('stripe_subscription_id', subscription.id);
+      .eq('ls_subscription_id', lsSubId);
+  }
+
+  async handleSubscriptionExpired(event: LsWebhookEvent) {
+    const supabase = this.supabaseService.getClient();
+    const lsSubId = String(event.data.id);
+
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('ls_subscription_id', lsSubId)
+      .single();
+
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'expired' })
+      .eq('ls_subscription_id', lsSubId);
 
     if (sub?.user_id) {
       await supabase
@@ -269,21 +306,17 @@ export class BillingService {
     }
   }
 
-  async handleInvoicePaid(invoice: Stripe.Invoice) {
-    const subDetails = invoice.parent?.subscription_details;
-    if (!subDetails?.subscription) return;
-
-    const subscriptionId =
-      typeof subDetails.subscription === 'string'
-        ? subDetails.subscription
-        : subDetails.subscription.id;
+  async handleSubscriptionPaymentSuccess(event: LsWebhookEvent) {
+    const attrs = event.data.attributes;
+    const lsSubId = String(attrs.subscription_id ?? '');
+    if (!lsSubId) return;
 
     const supabase = this.supabaseService.getClient();
 
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('user_id, plan_id')
-      .eq('stripe_subscription_id', subscriptionId)
+      .eq('ls_subscription_id', lsSubId)
       .single();
 
     if (!sub) return;
@@ -302,49 +335,23 @@ export class BillingService {
     }
   }
 
+  // --- Webhook signature verification ---
+
+  verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
+    const secret = this.configService.get<string>(
+      'LEMONSQUEEZY_WEBHOOK_SECRET',
+    );
+    if (!secret) throw new Error('LEMONSQUEEZY_WEBHOOK_SECRET not configured');
+
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = hmac.update(rawBody).digest('hex');
+    return crypto.timingSafeEqual(
+      Buffer.from(digest),
+      Buffer.from(signature),
+    );
+  }
+
   // --- Helpers ---
-
-  private async getOrCreateStripeCustomer(
-    userId: string,
-    email: string,
-  ): Promise<string> {
-    const supabase = this.supabaseService.getClient();
-
-    const { data: existingSub } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .not('stripe_customer_id', 'is', null)
-      .limit(1)
-      .maybeSingle();
-
-    if (existingSub?.stripe_customer_id) {
-      return existingSub.stripe_customer_id;
-    }
-
-    const customer = await this.getStripe().customers.create({
-      email,
-      metadata: { supabase_user_id: userId },
-    });
-
-    return customer.id;
-  }
-
-  private async getStripeCustomerId(
-    userId: string,
-  ): Promise<string | null> {
-    const supabase = this.supabaseService.getClient();
-
-    const { data } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .not('stripe_customer_id', 'is', null)
-      .limit(1)
-      .maybeSingle();
-
-    return data?.stripe_customer_id ?? null;
-  }
 
   private async getStarterPlan(): Promise<PlanRecord | null> {
     const supabase = this.supabaseService.getClient();
@@ -356,29 +363,16 @@ export class BillingService {
     return data;
   }
 
-  private mapStripeStatus(status: Stripe.Subscription.Status): string {
+  private mapLsStatus(status: string): string {
     const map: Record<string, string> = {
       active: 'active',
+      on_trial: 'on_trial',
       past_due: 'past_due',
-      canceled: 'canceled',
-      unpaid: 'unpaid',
-      trialing: 'trialing',
-      incomplete: 'incomplete',
-      incomplete_expired: 'canceled',
       paused: 'paused',
+      cancelled: 'canceled',
+      expired: 'expired',
+      unpaid: 'unpaid',
     };
     return map[status] ?? 'canceled';
-  }
-
-  constructWebhookEvent(payload: Buffer, signature: string): Stripe.Event {
-    const webhookSecret = this.configService.get<string>(
-      'STRIPE_WEBHOOK_SECRET',
-    );
-    if (!webhookSecret) throw new Error('STRIPE_WEBHOOK_SECRET not configured');
-    return this.getStripe().webhooks.constructEvent(
-      payload,
-      signature,
-      webhookSecret,
-    );
   }
 }

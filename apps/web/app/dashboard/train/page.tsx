@@ -33,6 +33,7 @@ export default function TrainAIPage() {
     setShowModal,
     handleToggleVideo,
     handleStartTraining,
+    handleStopTraining,
   } = useAITraining();
 
   if (!profile) {
@@ -59,7 +60,7 @@ export default function TrainAIPage() {
 
         <div className="lg:col-span-8">
           {isTraining ? (
-            <TrainingProgress progress={progress} statusMessage={statusMessage} />
+            <TrainingProgress progress={progress} statusMessage={statusMessage} onStop={handleStopTraining} />
           ) : (
             <ChannelVideoGrid
               isYtConnected={profile?.youtube_connected}

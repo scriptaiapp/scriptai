@@ -1,9 +1,10 @@
+"use client"
+
 import { cn } from "@/lib/utils";
 import { AlertCircle, TrendingUp, Clock, Target } from "lucide-react";
-import {MotionDiv} from "@/components/MotionComponents/MotionDiv";
+import { motion } from "motion/react";
 
 const ProblemSection = () => {
-
     const problems = [
         {
             title: "Writer's Block Nightmare",
@@ -30,51 +31,36 @@ const ProblemSection = () => {
             color: "text-blue-500"
         }
     ]
-    const entries = problems.map((p) => ({
-        title: p.title,
-        content: (
-            <div className="flex items-start gap-4">
-                <div
-                    className={cn(
-                        "flex-shrink-0 p-3 rounded-md border bg-white shadow-sm",
-                        // use border tinted from primary palette
-                        {
-                            "border-blue-300": p.color === "text-blue-500",
-                            "border-indigo-300": p.color === "text-indigo-500",
-                            "border-orange-300": p.color === "text-orange-500",
-                            "border-green-300": p.color === "text-green-500",
-                        }
-                    )}
-                >
-                    <p.icon className={cn("w-6 h-6", p.color)} />
-                </div>
-                <p className="text-base leading-relaxed text-slate-800">
-                    {p.description}
-                </p>
-            </div>
-        ),
-    }));
 
     return (
 
         <div className="container max-w-5xl mx-auto px-4">
-            <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-slate-900">
+            <motion.div
+                className="text-center mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+            >
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-50">
                     What’s Holding You Back?
                 </h2>
-                <p className="mt-4 text-lg text-slate-600">
+                <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
                     These are the most common roadblocks content creators face — and the reason we built this.
                 </p>
-            </div>
+            </motion.div>
 
-            <div className="space-y-10">
+            <motion.div
+                className="space-y-10"
+                variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } }}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+            >
                 {problems.map((p, i) => (
-                    <MotionDiv
+                    <motion.div
                         key={p.title}
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        viewport={{ once: true }}
+                        variants={{ hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100, damping: 14 } } }}
                         className="relative pl-14 group"
                     >
                         <div className="absolute left-0 top-1">
@@ -87,14 +73,14 @@ const ProblemSection = () => {
                         </div>
 
                         <div>
-                            <h3 className="text-xl font-semibold text-slate-800 group-hover:underline">{p.title}</h3>
-                            <p className="mt-1 text-slate-600">{p.description}</p>
+                            <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{p.title}</h3>
+                            <p className="mt-1 text-slate-600 dark:text-slate-400">{p.description}</p>
                         </div>
 
-                        <div className="mt-6 border-l-2 border-dashed border-slate-200 ml-[20px] h-10" />
-                    </MotionDiv>
+                        <div className="mt-6 border-l-2 border-dashed border-slate-200 dark:border-slate-700 ml-[20px] h-10" />
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </div>
     );
 };

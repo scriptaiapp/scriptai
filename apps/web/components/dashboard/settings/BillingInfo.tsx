@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { useBilling } from "@/hooks/useBilling";
 import {
   Check,
-  CreditCard,
   ExternalLink,
   Loader2,
   Sparkles,

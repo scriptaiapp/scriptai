@@ -20,6 +20,7 @@
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.21.0",
     "@google/genai": "^1.12.0",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@nestjs/bullmq": "^10.2.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.2",
@@ -48,7 +49,6 @@
     "reflect-metadata": "^0.2.0",
     "resend": "^4.8.0",
     "rxjs": "^7.8.1",
-    "stripe": "^20.3.1",
     "tailwind-merge": "^2.6.0",
     "ytdl-core": "^4.11.5",
     "zod": "^3.23.8"

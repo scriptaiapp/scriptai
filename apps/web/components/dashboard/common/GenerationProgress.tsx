@@ -3,7 +3,8 @@
 import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Bot, CheckCircle2, Loader2, Sparkles, Upload, type LucideIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Bot, CheckCircle2, Loader2, Sparkles, Square, Upload, type LucideIcon } from "lucide-react"
 
 export interface GenerationProgressStep {
   label: string
@@ -19,6 +20,7 @@ interface GenerationProgressProps {
   icon?: LucideIcon
   hint?: string
   compact?: boolean
+  onStop?: () => void
 }
 
 const DEFAULT_STEPS: GenerationProgressStep[] = [
@@ -37,6 +39,7 @@ export function GenerationProgress({
   icon: Icon = Bot,
   hint,
   compact = false,
+  onStop,
 }: GenerationProgressProps) {
   const resolvedSteps = steps.length > 0 ? steps : DEFAULT_STEPS
 
@@ -119,6 +122,18 @@ export function GenerationProgress({
 
       {hint && (
         <p className="text-xs text-slate-500 text-center">{hint}</p>
+      )}
+
+      {onStop && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onStop}
+          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-950/30"
+        >
+          <Square className="mr-1.5 h-3.5 w-3.5 fill-current" />
+          Stop Training
+        </Button>
       )}
     </>
   )

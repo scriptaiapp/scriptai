@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { motion } from "motion/react"
 import { navItem } from "@repo/ui"
 import Image from "next/image"
 import Link from "next/link"
@@ -21,7 +22,7 @@ import { useRouter } from "next/navigation"
 
 const Logo = () => (
   <Link
-    href="#"
+    href="/"
     className="flex items-center space-x-2 px-2 py-1 text-sm font-medium text-black dark:text-white"
   >
     <Image src={logo} alt="Logo" width={30} height={30} />
@@ -33,7 +34,12 @@ const LandingPageNavbar = () => {
   const router = useRouter();
 
   return (
-    <div className="relative w-full">
+    <motion.div
+      className="relative w-full"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <Navbar>
         <NavBody>
           <Link
@@ -75,11 +81,11 @@ const LandingPageNavbar = () => {
               </Link>
             ))}
             <div className="flex flex-col gap-4 mt-4">
-              <NavbarButton
-                variant="secondary"
-                className="w-full"
-              >
-                <ShimmerButton className="text-sm h-9" onClick={() => router.push("https://cal.com/afrin/30min")}>
+              <ShimmerButton className="text-sm h-9 w-full" onClick={() => { router.push("/signup"); setIsMobileMenuOpen(false); }}>
+                Get Started
+              </ShimmerButton>
+              <NavbarButton variant="secondary" className="w-full">
+                <ShimmerButton className="text-sm h-9" onClick={() => { router.push("https://cal.com/afrin/30min"); setIsMobileMenuOpen(false); }}>
                   Book a Call
                 </ShimmerButton>
               </NavbarButton>
@@ -87,8 +93,7 @@ const LandingPageNavbar = () => {
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
-
-    </div>
+    </motion.div>
   )
 }
 

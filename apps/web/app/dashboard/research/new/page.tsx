@@ -46,45 +46,28 @@ export default function NewIdeationPage() {
     handleGenerate,
   } = useIdeation();
 
-  if (isLoadingProfile) {
-    return (
-      <div className="container py-8 space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-6 w-96" />
-        <Skeleton className="h-[500px] rounded-lg mt-8" />
-      </div>
-    );
-  }
-
-  if (!aiTrained) {
-    return <AITrainingRequired />;
-  }
-
   useEffect(() => {
     if (generatedResult && activeJobDbId) {
       router.push(`/dashboard/research/${activeJobDbId}`);
     }
   }, [generatedResult, activeJobDbId, router]);
 
-  if (generatedResult && activeJobDbId) return null;
+  let content: React.ReactNode;
 
-  return (
-    <motion.div
-      className="container py-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="mb-8">
-        <Link href="/dashboard/research" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Ideation
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Generate Ideas</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          AI analyzes trends, your channel DNA, and niche gaps to generate high-potential video ideas
-        </p>
+  if (isLoadingProfile) {
+    content = (
+      <div className="container py-8 space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-6 w-96" />
+        <Skeleton className="h-[500px] rounded-lg mt-8" />
       </div>
-
+    );
+  } else if (!aiTrained) {
+    content = <AITrainingRequired />;
+  } else if (generatedResult && activeJobDbId) {
+    content = null;
+  } else {
+    content = (
       <AnimatePresence mode="wait">
         {isGenerating ? (
           <motion.div
@@ -225,9 +208,13 @@ export default function NewIdeationPage() {
                       className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900"
                     >
                       {isGenerating ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                        </>
                       ) : (
-                        <><Sparkles className="mr-2 h-4 w-4" /> Generate Ideas</>
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" /> Generate Ideas
+                        </>
                       )}
                     </Button>
                   </div>
@@ -237,6 +224,27 @@ export default function NewIdeationPage() {
           </motion.div>
         )}
       </AnimatePresence>
+    );
+  }
+
+  return (
+    <motion.div
+      className="container py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="mb-8">
+        <Link href="/dashboard/research" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4">
+          <ArrowLeft className="h-4 w-4" /> Back to Ideation
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight">Generate Ideas</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-1">
+          AI analyzes trends, your channel DNA, and niche gaps to generate high-potential video ideas
+        </p>
+      </div>
+
+      {content}
     </motion.div>
   );
 }

@@ -44,11 +44,13 @@ export default function HowItWorks() {
                         // On large screens (lg), we switch to a row layout, align items to the start, and align text to the left.
                         className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-6 sm:p-8 md:p-10 lg:p-12 
                                    flex flex-col items-center text-center 
-                                   lg:flex-row lg:items-start lg:text-left lg:gap-8"
+                                   lg:flex-row lg:items-start lg:text-left lg:gap-8
+                                   border border-slate-200 dark:border-slate-700
+                                   hover:shadow-purple-500/10 dark:hover:shadow-purple-400/5 transition-shadow duration-300"
                     // --- KEY CHANGES END HERE ---
                     >
                         {/* The number circle remains largely the same, but we add flex-shrink-0 */}
-                        <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white text-xl sm:text-2xl font-bold flex items-center justify-center mb-6 lg:mb-0">
+                        <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xl sm:text-2xl font-bold flex items-center justify-center mb-6 lg:mb-0">
                             {index + 1}
                         </div>
 
