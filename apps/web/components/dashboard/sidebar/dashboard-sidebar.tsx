@@ -128,11 +128,19 @@ export function Nav({ links, isCollapsed, onLinkClick }: NavProps) {
 interface DashboardSidebarProps {
   collapsed: boolean
   setCollapsed: (collapsed: boolean) => void
+  pinned?: boolean
+  setPinned?: (pinned: boolean) => void
 }
 
-export function DashboardSidebar({ collapsed, setCollapsed }: DashboardSidebarProps) {
+export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }: DashboardSidebarProps) {
   const [open, setOpen] = useState(false)
   const isMobile = useMobile()
+
+  const effectiveOpen = pinned ? true : open
+  const handleSetOpen = (val: boolean) => {
+    if (pinned) return
+    setOpen(val)
+  }
 
   const links: ReadonlyArray<NavLink> = [
     { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
@@ -167,10 +175,10 @@ export function DashboardSidebar({ collapsed, setCollapsed }: DashboardSidebarPr
   const pathname = usePathname();
 
   return (
-    <Sidebar open={open} setOpen={setOpen} animate={true}>
+    <Sidebar open={effectiveOpen} setOpen={handleSetOpen} animate={!pinned}>
       <SidebarBody className="justify-between gap-10">
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-          {open ? <Logo showText={true} /> : <Logo showText={false} />}
+          {effectiveOpen ? <Logo showText={true} /> : <Logo showText={false} />}
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => {
               const isActive = pathname === link.href;

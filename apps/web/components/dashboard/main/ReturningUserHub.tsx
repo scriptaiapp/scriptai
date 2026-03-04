@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  ArrowRight, FileText, Sparkles, Youtube, Image, MessageSquare,
-  Search, Clapperboard, TrendingUp, Clock, Zap, Globe, Crown,
+  FileText, Sparkles, Youtube, Image, MessageSquare,
+  Clapperboard, TrendingUp, Clock, Zap, Globe, Crown,
   Activity, BarChart3, Lightbulb, ChevronRight, CircleDot,
 } from "lucide-react";
 import {
@@ -44,35 +44,61 @@ const itemVariants = {
 
 const CHART_COLORS = ["#a855f7", "#6366f1", "#ec4899", "#f59e0b", "#10b981"];
 
-function buildWeeklyData(data: DashboardData) {
-  const now = new Date();
-  const days: { label: string; date: string; scripts: number; ideas: number; thumbnails: number; subtitles: number }[] = [];
+type ActivityPeriod = "weekly" | "monthly" | "yearly";
 
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0]!;
-    days.push({
-      label: d.toLocaleDateString("en", { weekday: "short" }),
-      date: dateStr,
-      scripts: 0, ideas: 0, thumbnails: 0, subtitles: 0,
-    });
+function buildActivityData(data: DashboardData, period: ActivityPeriod) {
+  const now = new Date();
+  type Bucket = { label: string; key: string; scripts: number; ideas: number; thumbnails: number; subtitles: number };
+  const buckets: Bucket[] = [];
+
+  if (period === "weekly") {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      buckets.push({ label: d.toLocaleDateString("en", { weekday: "short" }), key: d.toISOString().split("T")[0]!, scripts: 0, ideas: 0, thumbnails: 0, subtitles: 0 });
+    }
+  } else if (period === "monthly") {
+    for (let i = 29; i >= 0; i -= 5) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      buckets.push({ label: d.toLocaleDateString("en", { month: "short", day: "numeric" }), key: `${Math.floor(i / 5)}`, scripts: 0, ideas: 0, thumbnails: 0, subtitles: 0 });
+    }
+  } else {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ label: d.toLocaleDateString("en", { month: "short" }), key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, scripts: 0, ideas: 0, thumbnails: 0, subtitles: 0 });
+    }
   }
 
-  const bucketize = (items: { created_at: string }[], key: keyof typeof days[0]) => {
+  const assignToBucket = (items: { created_at: string }[], field: "scripts" | "ideas" | "thumbnails" | "subtitles") => {
+    const cutoff = period === "weekly" ? 7 : period === "monthly" ? 30 : 365;
     items.forEach((item) => {
-      const itemDate = new Date(item.created_at).toISOString().split("T")[0];
-      const day = days.find((d) => d.date === itemDate);
-      if (day) (day[key] as number)++;
+      const itemDate = new Date(item.created_at);
+      const daysAgo = Math.floor((now.getTime() - itemDate.getTime()) / 86400000);
+      if (daysAgo > cutoff) return;
+
+      if (period === "weekly") {
+        const dateStr = itemDate.toISOString().split("T")[0];
+        const b = buckets.find((b) => b.key === dateStr);
+        if (b) b[field]++;
+      } else if (period === "monthly") {
+        const bucketIdx = Math.floor(daysAgo / 5);
+        const b = buckets.find((b) => b.key === `${bucketIdx}`);
+        if (b) b[field]++;
+      } else {
+        const key = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, "0")}`;
+        const b = buckets.find((b) => b.key === key);
+        if (b) b[field]++;
+      }
     });
   };
 
-  bucketize(data.scripts, "scripts");
-  bucketize(data.ideations, "ideas");
-  bucketize(data.thumbnails, "thumbnails");
-  bucketize(data.subtitles, "subtitles");
+  assignToBucket(data.scripts, "scripts");
+  assignToBucket(data.ideations, "ideas");
+  assignToBucket(data.thumbnails, "thumbnails");
+  assignToBucket(data.subtitles, "subtitles");
 
-  return days;
+  return buckets;
 }
 
 function buildRecentActivity(data: DashboardData) {
@@ -96,14 +122,19 @@ const ACTIVITY_ICONS: Record<string, { icon: typeof FileText; color: string }> =
   dubbing: { icon: Globe, color: "text-emerald-500" },
 };
 
-const QUICK_ACTIONS = [
-  { label: "New Script", href: "/dashboard/scripts/new", icon: FileText, color: "from-purple-500/10 to-purple-600/5", iconColor: "text-purple-600", border: "hover:border-purple-300 dark:hover:border-purple-700" },
-  { label: "Ideation", href: "/dashboard/research/new", icon: Search, color: "from-amber-500/10 to-amber-600/5", iconColor: "text-amber-600", border: "hover:border-amber-300 dark:hover:border-amber-700" },
-  { label: "Thumbnails", href: "/dashboard/thumbnails", icon: Image, color: "from-pink-500/10 to-pink-600/5", iconColor: "text-pink-600", border: "hover:border-pink-300 dark:hover:border-pink-700" },
-  { label: "Subtitles", href: "/dashboard/subtitles", icon: MessageSquare, color: "from-blue-500/10 to-blue-600/5", iconColor: "text-blue-600", border: "hover:border-blue-300 dark:hover:border-blue-700" },
-  { label: "Story Builder", href: "/dashboard/story-builder", icon: Clapperboard, color: "from-indigo-500/10 to-indigo-600/5", iconColor: "text-indigo-600", border: "hover:border-indigo-300 dark:hover:border-indigo-700" },
-  { label: "AI Studio", href: "/dashboard/train", icon: Sparkles, color: "from-emerald-500/10 to-emerald-600/5", iconColor: "text-emerald-600", border: "hover:border-emerald-300 dark:hover:border-emerald-700" },
-];
+const STAT_LINKS: Record<string, string> = {
+  Scripts: "/dashboard/scripts",
+  Ideas: "/dashboard/research",
+  Thumbnails: "/dashboard/thumbnails",
+  Subtitles: "/dashboard/subtitles",
+  Stories: "/dashboard/story-builder",
+};
+
+const PERIOD_LABELS: Record<ActivityPeriod, string> = {
+  weekly: "Last 7 days",
+  monthly: "Last 30 days",
+  yearly: "Last 12 months",
+};
 
 function formatTimeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -118,7 +149,8 @@ function formatTimeAgo(dateStr: string) {
 }
 
 export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disconnectingYoutube }: ReturningUserHubProps) {
-  const weeklyData = useMemo(() => buildWeeklyData(data), [data]);
+  const [activityPeriod, setActivityPeriod] = useState<ActivityPeriod>("weekly");
+  const activityData = useMemo(() => buildActivityData(data, activityPeriod), [data, activityPeriod]);
   const recentActivity = useMemo(() => buildRecentActivity(data), [data]);
 
   const stats = useMemo(() => {
@@ -160,24 +192,29 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
         </div>
       </motion.div>
 
-      {/* Stats Row */}
+      {/* Stats Row — clickable quick navigation */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {stats.map((stat) => (
-          <Card key={stat.label} className="relative overflow-hidden group hover:shadow-md transition-shadow border-slate-200/80 dark:border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-lg ${stat.bg}`}>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+          <Link key={stat.label} href={STAT_LINKS[stat.label] || "/dashboard"}>
+            <Card className="relative overflow-hidden group hover:shadow-md transition-shadow border-slate-200/80 dark:border-slate-800 cursor-pointer h-full">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`p-2 rounded-lg ${stat.bg}`}>
+                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
                 </div>
-                {stat.count > 0 && (
-                  <span className="text-xs text-slate-400">{stat.completed} done</span>
-                )}
-              </div>
-              <div className="text-2xl font-bold tracking-tight">{stat.count}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</div>
-            </CardContent>
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity`} />
-          </Card>
+                <div className="text-2xl font-bold tracking-tight">{stat.count}</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</span>
+                  {stat.count > 0 && (
+                    <span className="text-xs text-slate-400">{stat.completed} done</span>
+                  )}
+                </div>
+              </CardContent>
+              <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity`} />
+            </Card>
+          </Link>
         ))}
       </motion.div>
 
@@ -185,22 +222,37 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Activity Chart */}
+          {/* Activity Chart with period filter */}
           <motion.div variants={itemVariants}>
             <Card className="border-slate-200/80 dark:border-slate-800">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-purple-500" />
-                    Weekly Activity
+                    Activity
                   </CardTitle>
-                  <Badge variant="outline" className="text-xs font-normal">Last 7 days</Badge>
+                  <div className="flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5">
+                    {(["weekly", "monthly", "yearly"] as const).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setActivityPeriod(p)}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                          activityPeriod === p
+                            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        }`}
+                      >
+                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                <p className="text-xs text-slate-400 mt-1">{PERIOD_LABELS[activityPeriod]}</p>
               </CardHeader>
               <CardContent className="pb-4">
                 <div className="h-[220px] mt-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <AreaChart data={activityData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="fillScripts" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#a855f7" stopOpacity={0.3} />
@@ -235,33 +287,6 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold flex items-center gap-2">
-                <Zap className="h-4 w-4 text-purple-500" />
-                Quick Actions
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {QUICK_ACTIONS.map((action) => (
-                <Link key={action.label} href={action.href}>
-                  <Card className={`group cursor-pointer transition-all hover:shadow-md border-slate-200/80 dark:border-slate-800 ${action.border}`}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${action.color}`}>
-                        <action.icon className={`h-4 w-4 ${action.iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium">{action.label}</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
           </motion.div>
 
           {/* Recent Activity */}
@@ -357,15 +382,23 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                   </div>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                  onClick={disconnectYoutubeChannel}
-                  disabled={disconnectingYoutube}
-                >
-                  {disconnectingYoutube ? "Disconnecting..." : "Disconnect Channel"}
-                </Button>
+                <div className="flex gap-2">
+                  <Link href="/dashboard/channel-stats" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full gap-1.5 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20">
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      View More
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                    onClick={disconnectYoutubeChannel}
+                    disabled={disconnectingYoutube}
+                  >
+                    {disconnectingYoutube ? "..." : "Disconnect"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -467,55 +500,27 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
 
           {/* Subscription Card */}
           <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-amber-500" />
-                  Subscription
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold mb-3">Free Plan</div>
-                <Link href="#upgrade">
-                  <Button variant="outline" className="w-full gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/20">
+            <Link href="/dashboard/settings?tab=subscription">
+              <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow">
+                <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-amber-500" />
+                    Subscription
+                    <ChevronRight className="h-3.5 w-3.5 ml-auto text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold mb-3">Free Plan</div>
+                  <Button variant="outline" className="w-full gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/20" tabIndex={-1}>
                     <Crown className="h-4 w-4" />
                     Upgrade to Pro
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </motion.div>
 
-          {/* Feature Links */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Explore Features
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {[
-                  { label: "All Scripts", href: "/dashboard/scripts", icon: FileText },
-                  { label: "All Ideas", href: "/dashboard/research", icon: Search },
-                  { label: "Thumbnails", href: "/dashboard/thumbnails", icon: Image },
-                  { label: "Subtitles", href: "/dashboard/subtitles", icon: MessageSquare },
-                  { label: "Story Builder", href: "/dashboard/story-builder", icon: Clapperboard },
-                ].map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-2.5 py-2 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm group"
-                  >
-                    <link.icon className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="flex-1">{link.label}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
       </div>
     </motion.div>

@@ -48,7 +48,7 @@ interface ContentCardProps {
     onDelete: () => Promise<void>;
     onExport?: (scriptId: string) => Promise<void>;
     setToDelete: (id: string | null) => void;
-    type: "scripts" | "research" | "dubbing" | "thumbnails" | "subtitles";
+    type: "scripts" | "research" | "dubbing" | "thumbnails" | "subtitles" | "story-builder";
     imagePreview?: string;
     statusBadge?: React.ReactNode;
 }
@@ -70,9 +70,9 @@ export function ContentCard({
 
     // Dynamic values based on type
     const linkHref = `/dashboard/${type}/${id}`;
-    const iconMap = { scripts: FileText, dubbing: Languages, thumbnails: ImageIcon, subtitles: Clapperboard, research: BookOpen };
+    const iconMap = { scripts: FileText, dubbing: Languages, thumbnails: ImageIcon, subtitles: Clapperboard, research: BookOpen, "story-builder": BookOpen };
     const Icon = iconMap[type] || BookOpen;
-    const labelMap = { scripts: "Delete Script", dubbing: "Delete Dubbing", thumbnails: "Delete Thumbnail", subtitles: "Delete Subtitle", research: "Delete Research" };
+    const labelMap = { scripts: "Delete Script", dubbing: "Delete Dubbing", thumbnails: "Delete Thumbnail", subtitles: "Delete Subtitle", research: "Delete Research", "story-builder": "Delete Blueprint" };
     const deleteLabel = labelMap[type];
     const descMap = {
         scripts: "This will permanently delete your script and all its associated data.",
@@ -80,6 +80,7 @@ export function ContentCard({
         thumbnails: "This will permanently delete this thumbnail job and all its generated images.",
         subtitles: "This will permanently delete this subtitle project and all its associated data.",
         research: "This will permanently delete your research and all its associated data.",
+        "story-builder": "This will permanently delete this story blueprint and all its associated data.",
     };
     const dialogDescription = descMap[type];
 
@@ -87,7 +88,7 @@ export function ContentCard({
     const handleExport = () => {
         if (!onExport) return;
         const exportPromise = onExport(id);
-        const contentTypeName = type === 'scripts' ? 'script' : type === 'dubbing' ? 'dubbing' : 'research';
+        const contentTypeName = type === 'scripts' ? 'script' : type === 'dubbing' ? 'dubbing' : type === 'story-builder' ? 'blueprint' : 'research';
 
         setIsExporting(true);
 

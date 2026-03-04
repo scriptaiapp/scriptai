@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useSupabase } from "@/components/supabase-provider"
 import { DashboardSidebar } from "@/components/dashboard/sidebar/dashboard-sidebar"
 import DashboardHeader from "@/components/dashboard-header"
@@ -12,7 +12,12 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarPinned, setSidebarPinned] = useState(false)
   const { loading } = useSupabase()
+
+  const handleTogglePin = useCallback(() => {
+    setSidebarPinned((prev) => !prev)
+  }, [])
 
   if (loading) {
     return (
@@ -24,9 +29,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+      <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} pinned={sidebarPinned} setPinned={setSidebarPinned} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
+        <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} onToggleSidebarPin={handleTogglePin} />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>

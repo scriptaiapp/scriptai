@@ -64,7 +64,11 @@ const STATUS_MESSAGES = (p: number, state: string): string => {
   return "Done!"
 }
 
-export function useStoryBuilder() {
+interface UseStoryBuilderOptions {
+  onComplete?: (recordId: string) => void
+}
+
+export function useStoryBuilder(options?: UseStoryBuilderOptions) {
   const [videoTopic, setVideoTopic] = useState("")
   const [targetAudience, setTargetAudience] = useState("")
   const [audienceLevel, setAudienceLevel] = useState<AudienceLevel>("general")
@@ -80,6 +84,7 @@ export function useStoryBuilder() {
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
+  const [recordId, setRecordId] = useState<string | null>(null)
 
   const [generatedResult, setGeneratedResult] = useState<StoryBuilderResult | null>(null)
   const [pastJobs, setPastJobs] = useState<StoryBuilderJob[]>([])
@@ -145,6 +150,9 @@ export function useStoryBuilder() {
         setGeneratedResult(result)
         toast.success("Story blueprint generated!", { description: "Your modular blueprint is ready" })
         fetchPastJobs()
+        if (recordId && options?.onComplete) {
+          options.onComplete(recordId)
+        }
       }
     },
     onFinished: () => {
@@ -181,6 +189,7 @@ export function useStoryBuilder() {
         { requireAuth: true },
       )
 
+      setRecordId(response.id)
       setJobId(response.jobId)
       toast.success(response.personalized
         ? "Generating personalized story blueprint!"
@@ -194,6 +203,7 @@ export function useStoryBuilder() {
       toast.error("Generation Failed", { description: message })
       setIsGenerating(false)
       setJobId(null)
+      setRecordId(null)
     }
   }
 
@@ -244,6 +254,7 @@ export function useStoryBuilder() {
     setSelectedIdeationId(undefined)
     setSelectedIdeaIndex(undefined)
     setGeneratedResult(null)
+    setRecordId(null)
   }
 
   return {
@@ -264,6 +275,7 @@ export function useStoryBuilder() {
     generatedResult,
     pastJobs, isLoadingJobs,
     aiTrained, credits, isLoadingProfile,
+    recordId,
     handleGenerate, handleRegenerate,
     handleViewJob, handleDeleteJob,
     handleSelectIdea,

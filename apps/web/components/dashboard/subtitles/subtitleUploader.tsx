@@ -22,6 +22,7 @@ type SubtitleUploaderProps = {
 
 export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
     const [file, setFile] = useState<File | null>(null);
+    const [title, setTitle] = useState("");
     const [duration, setDuration] = useState<number | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
@@ -71,6 +72,7 @@ export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
         const formData = new FormData();
         formData.append("video", file);
         formData.append("duration", String(duration));
+        if (title.trim()) formData.append("title", title.trim());
 
         try {
             const supabase = createClient();
@@ -93,6 +95,7 @@ export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
             router.push(`/dashboard/subtitles/${data.subtitleId}`);
 
             setFile(null);
+            setTitle("");
             setDuration(null);
         } catch (error) {
             console.error(error);
@@ -167,6 +170,26 @@ export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
                         disabled={isUploading}
                     />
                 </CardContent>
+
+                {file && (
+                    <div className="mt-6">
+                        <Label htmlFor="subtitle-title" className="text-sm font-medium text-slate-700 mb-1.5 block">
+                            Title (optional)
+                        </Label>
+                        <Input
+                            id="subtitle-title"
+                            type="text"
+                            placeholder="Enter a title for this subtitle project"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            disabled={isUploading}
+                            className="focus-visible:ring-2 focus-visible:ring-violet-500/80"
+                        />
+                        <p className="text-xs text-slate-400 mt-1">
+                            If empty, the video file name will be used
+                        </p>
+                    </div>
+                )}
 
                 <div className="mt-8 flex flex-col sm:flex-row items-center justify-end gap-4">
 

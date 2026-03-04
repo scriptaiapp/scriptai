@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bell, CreditCard, UserCircle } from "lucide-react";
+import { Bell, CreditCard, UserCircle, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { ProfileSettingsForm } from "@/components/dashboard/settings/ProfileSettingsForm";
 import { NotificationSettingsForm } from "@/components/dashboard/settings/NotificationSettingsForm";
 import { BillingInfo } from "@/components/dashboard/settings/BillingInfo";
 
-type NavItemId = "profile" | "notifications" | "billing";
+type NavItemId = "profile" | "notifications" | "billing" | "subscription";
 
 interface NavItem {
   id: NavItemId;
@@ -22,7 +22,7 @@ export default function Settings() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as NavItemId) || "profile";
   const [activeTab, setActiveTab] = useState<NavItemId>(
-    ["profile", "notifications", "billing"].includes(initialTab)
+    ["profile", "notifications", "billing", "subscription"].includes(initialTab)
       ? initialTab
       : "profile",
   );
@@ -46,6 +46,12 @@ export default function Settings() {
           icon: CreditCard,
           label: "Billing",
           description: "View subscription and payment details"
+        },
+        {
+          id: "subscription",
+          icon: Crown,
+          label: "Subscription",
+          description: "Manage your subscription plan"
         },
       ],
       []
@@ -192,6 +198,18 @@ export default function Settings() {
                   {activeTab === "billing" && (
                       <motion.div
                           key="billing"
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.25, ease: "easeOut" }}
+                      >
+                        <BillingInfo />
+                      </motion.div>
+                  )}
+
+                  {activeTab === "subscription" && (
+                      <motion.div
+                          key="subscription"
                           initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -12 }}
