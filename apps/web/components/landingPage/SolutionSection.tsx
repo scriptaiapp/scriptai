@@ -1,4 +1,3 @@
-
 "use client";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -8,26 +7,26 @@ import { Video, Zap, CheckCircle, Target } from "lucide-react";
 export default function SolutionCard() {
     const solutions = [
         {
-            title: "AI Learns Your Voice",
-            description: "Upload 3-5 videos and watch our AI master your unique style, tone, vocabulary, and pacing patterns.",
+            title: "AI That Learns Your Style",
+            description: "Connect your YouTube channel and let our AI study your videos. It picks up your tone, vocabulary, and pacing so everything it creates sounds like you.",
             icon: <Video className="h-6 w-6 text-slate-600" />,
             background: "bg-white",
         },
         {
-            title: "Instant Script Generation",
-            description: "Generate personalized scripts in minutes, not hours. Focus on what you do best - creating amazing content.",
+            title: "Scripts in Minutes, Not Hours",
+            description: "Tell the AI what your video is about, pick a tone, and get a full script that matches your voice. What used to take hours now takes minutes.",
             icon: <Zap className="h-6 w-6 text-slate-600" />,
             background: "bg-slate-50",
         },
         {
-            title: "Consistent Quality",
-            description: "Every script maintains your brand voice and quality standards, ensuring consistent audience engagement.",
+            title: "Stay Consistent, Every Video",
+            description: "No more quality dips. Every script, thumbnail, and idea keeps your brand voice intact so your audience always gets the best version of you.",
             icon: <CheckCircle className="h-6 w-6 text-slate-600" />,
             background: "bg-white",
         },
         {
-            title: "Complete Workflow",
-            description: "From scripts to thumbnails to subtitles - everything you need in one powerful, integrated platform.",
+            title: "Everything in One Place",
+            description: "Ideas, scripts, thumbnails, subtitles, story outlines — all your content creation tools in a single dashboard. No more juggling 5 different apps.",
             icon: <Target className="h-6 w-6 text-slate-600" />,
             background: "bg-slate-50",
         },
@@ -43,10 +42,10 @@ export default function SolutionCard() {
                 transition={{ duration: 0.5 }}
             >
                 <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50">
-                    Solutions for Your Content Creation Challenges
+                    How Creator AI Fixes This
                 </h2>
                 <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
-                    Creator AI addresses your pain points with powerful, tailored solutions to streamline your workflow.
+                    We built Creator AI to solve the exact problems you face as a content creator.
                 </p>
             </motion.div>
             <motion.div
@@ -68,9 +67,7 @@ export default function SolutionCard() {
                                 "border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-400/5 transition-shadow"
                             )}
                             color="#c4b5fd"
-                            // radius={50}
                             role="article"
-                        // aria-label={`Solution: ${solution.title}`}
                         >
                             <div className="relative z-10 flex flex-col items-start h-full p-6">
                                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-200 text-slate-600 dark:text-slate-600 mb-4">

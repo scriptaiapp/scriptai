@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -30,38 +30,31 @@ export function BillingInfo() {
     plans,
     billingInfo,
     loading,
-    syncing,
     checkoutLoading,
     portalLoading,
     subscribe,
     openPortal,
     refresh,
-    pollForSubscription,
   } = useBilling();
 
   const searchParams = useSearchParams();
-  const hasHandledSuccess = useRef(false);
 
   useEffect(() => {
     const status = searchParams.get("status");
-    if (status === "success" && !hasHandledSuccess.current) {
-      hasHandledSuccess.current = true;
-      toast.info("Payment received! Syncing your plan...", {
-        duration: 5000,
+    if (status === "success") {
+      toast.success("Subscription activated!", {
+        description: "Your plan has been upgraded successfully.",
       });
-      const prevCredits = billingInfo?.credits ?? 0;
-      pollForSubscription(prevCredits);
+      refresh();
     } else if (status === "cancelled") {
       toast.info("Checkout cancelled");
     }
-  }, [searchParams, billingInfo?.credits, pollForSubscription]);
+  }, [searchParams, refresh]);
 
   const currentPlanName = billingInfo?.currentPlan?.name ?? "Starter";
   const hasActiveSubscription = !!billingInfo?.subscription;
 
   if (loading) return <BillingSkeleton />;
-
-  const isSyncing = syncing || searchParams.get("status") === "success" && !billingInfo?.subscription;
 
   return (
     <div className="space-y-6">
@@ -116,15 +109,6 @@ export function BillingInfo() {
               </p>
             </div>
           </div>
-
-          {isSyncing && (
-            <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-              <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400" />
-              <p className="text-sm text-purple-700 dark:text-purple-300">
-                Syncing your subscription... This usually takes a few seconds.
-              </p>
-            </div>
-          )}
 
           {hasActiveSubscription && (
             <Button

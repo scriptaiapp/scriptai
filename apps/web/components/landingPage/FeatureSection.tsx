@@ -4,15 +4,15 @@ import { motion } from "motion/react"
 import {
   Video,
   PenTool,
-  Zap,
-  Globe,
-  BookOpen,
-  Gift,
-  ImageIcon,
-  MessageSquare,
   Lightbulb,
   Clapperboard,
-  FileText,
+  ImageIcon,
+  MessageSquare,
+  Globe,
+  Gift,
+  BookOpen,
+  Film,
+  Volume2,
 } from "lucide-react"
 import FeatureCard from "../feature-card"
 
@@ -21,67 +21,67 @@ const features = [
     title: "AI Studio",
     icon: Video,
     description:
-      "Upload 3-5 YouTube videos to train AI on your unique style, tone, vocabulary, and pacing. Powers all personalized outputs.",
+      "Connect your YouTube channel and train the AI on your videos. It learns how you talk, your style, and what makes your content unique.",
   },
   {
-    title: "Ideation",
+    title: "Video Ideas",
     icon: Lightbulb,
     description:
-      "AI-powered video idea generation with trend intelligence. Analyzes your channel DNA and niche gaps for high-potential ideas.",
+      "Stuck on what to make next? Get trending video ideas tailored to your niche and audience. No more guessing what will perform.",
   },
   {
-    title: "Script Generation",
+    title: "Script Writing",
     icon: PenTool,
     description:
-      "Generate scripts in your voice with simple prompts. Add tone, context, and language options for tailored content.",
+      "Give the AI a topic and get a full script that sounds like you wrote it. Choose your tone, add context, and pick your language.",
   },
   {
     title: "Story Builder",
     icon: Clapperboard,
     description:
-      "Create structured story blueprints with hooks, escalation, and retention scoring. Perfect for video planning.",
+      "Plan your video structure with hooks, key moments, and pacing. Get a retention score so you know if your story will keep viewers watching.",
   },
   {
-    title: "AI Thumbnails",
+    title: "Thumbnails",
     icon: ImageIcon,
     description:
-      "Generate eye-catching thumbnails that drive clicks. Upload a frame or describe your vision.",
+      "Generate click-worthy thumbnails that match your brand. Upload a frame from your video or describe what you want.",
   },
   {
-    title: "Subtitle Generator",
+    title: "Subtitles",
     icon: MessageSquare,
     description:
-      "Upload video and auto-generate accurate subtitles. Export for accessibility and SEO.",
+      "Upload your video and get accurate subtitles automatically. Edit them, style them, and export as SRT or VTT files.",
   },
   {
-    title: "Customizable Context",
-    icon: Zap,
-    description:
-      "Add specific context via text fields or dropdowns for more relevant scripts and content.",
-  },
-  {
-    title: "Multi-Language",
+    title: "Multi-Language Support",
     icon: Globe,
     description:
-      "Generate scripts in multiple languages to reach a global audience.",
+      "Create scripts and content in multiple languages to reach viewers around the world.",
   },
   {
     title: "Referral Program",
     icon: Gift,
     description:
-      "Earn free credits for premium features by referring other creators.",
+      "Invite other creators and earn free credits. The more friends you bring, the more you can create.",
+  },
+  {
+    title: "Video Generation",
+    icon: Film,
+    description:
+      "Turn your scripts into full videos with AI-generated scenes, captions, and music. Coming soon.",
   },
   {
     title: "Course Builder",
     icon: BookOpen,
     description:
-      "Break down complex topics into structured courses. Coming soon.",
+      "Break down complex topics into structured video courses with outlines and scripts. Coming soon.",
   },
   {
     title: "Audio Dubbing",
-    icon: FileText,
+    icon: Volume2,
     description:
-      "Dub audio in multiple languages with voice cloning. Coming soon.",
+      "Dub your videos into other languages while keeping your voice. Coming soon.",
   },
 ]
 
@@ -109,10 +109,10 @@ export default function FeatureSection() {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50">
-          Powerful Features for Content Creators
+          Everything You Need to Create Better Content
         </h2>
         <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
-          Everything you need to create engaging YouTube content faster—from ideas to scripts, thumbnails, and subtitles.
+          From brainstorming ideas to publishing your video — Creator AI has a tool for every step.
         </p>
       </motion.div>
 

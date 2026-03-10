@@ -3,6 +3,8 @@ import { footerItems } from "./src/utils/data";
 import EarlyAccessEmail from "./src/templates/emails/early-access"
 import { toast } from "sonner"
 
+export type { NavItemType, NavDropdownItem } from "./src/utils/data"
+
 export {
   navItem,
   footerItems,
