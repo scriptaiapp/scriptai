@@ -102,18 +102,18 @@ export default function Home() {
                     variants={itemVariants}
                     className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight"
                 >
-                  Personalized
+                  Your Personal
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-                  {" "} Creator Tool {" "}
+                  {" "} AI Assistant {" "}
                 </span>
-                  for Youtubers
+                  for YouTube
                 </motion.h1>
 
                 <motion.div
                     variants={itemVariants}
                     className="mt-4 text-lg md:text-xl text-slate-700"
                 >
-                  Generate AI-powered <FlipWords words={words} className="text-purple-600" /> that sound like you.
+                  Create AI-powered <FlipWords words={words} className="text-purple-600" /> that actually sound like you.
                 </motion.div>
 
                 <motion.div
@@ -194,10 +194,10 @@ export default function Home() {
             >
               <div className="flex flex-col items-center text-center space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">
-                  Ready to Transform Your Content Creation?
+                  Ready to Create Better Content, Faster?
                 </h2>
                 <p className="max-w-[700px] text-slate-300 md:text-lg">
-                  Join thousands of YouTubers who are saving time and creating better content with Creator AI.
+                  Join creators who are spending less time writing and more time doing what they love — making videos.
                 </p>
                 <Link href="/signup" className="z-50">
                   <MButton

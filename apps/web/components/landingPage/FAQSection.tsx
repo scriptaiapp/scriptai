@@ -10,24 +10,32 @@ import {
 
 const faqs = [
   {
-    q: "How does AI training work?",
-    a: "Connect your YouTube channel and upload 3-5 of your best videos. Our AI analyzes your unique style, tone, vocabulary, and pacing to create a personalized model. Once trained, all generated content—scripts, ideas, thumbnails—will sound and look like you.",
+    q: "What is Creator AI?",
+    a: "Creator AI is an AI-powered tool built specifically for YouTubers. It helps you write scripts, generate video ideas, create thumbnails, add subtitles, and plan your story structure — all personalized to your unique style.",
   },
   {
-    q: "What can I create with Creator AI?",
-    a: "You get access to Ideation (trend-based video ideas), Script Generation (personalized scripts), Story Builder (structured blueprints with retention scoring), AI Thumbnails, and Subtitle Generation. Course Builder, Audio Dubbing, and Video Generation are coming soon.",
+    q: "How does the AI learn my style?",
+    a: "You connect your YouTube channel and select 3-5 of your videos. The AI analyzes your speaking style, tone, vocabulary, and pacing to build a custom model. After that, everything it creates sounds like you.",
+  },
+  {
+    q: "What can I create with it?",
+    a: "You can generate video scripts, brainstorm video ideas based on trends, create eye-catching thumbnails, auto-generate subtitles from your videos, and build structured story outlines with retention scoring. Video generation, course building, and audio dubbing are coming soon.",
   },
   {
     q: "How do credits work?",
-    a: "Credits power AI operations like script generation, ideation, and thumbnails. The Starter plan includes 500 free credits monthly. Creator+ offers 5,000 credits/month. Each operation consumes credits based on complexity.",
+    a: "Credits are what power the AI. Each action (like generating a script or creating a thumbnail) uses a certain number of credits. The free Starter plan gives you 500 credits per month. Paid plans give you more.",
   },
   {
-    q: "Do I need to connect my YouTube channel?",
-    a: "Yes, for the best experience. Connecting YouTube lets our AI learn your voice and style from your existing videos. Ideation, Scripts, Story Builder, and Thumbnails all benefit from a trained model.",
+    q: "Do I need a YouTube channel to use it?",
+    a: "For the best experience, yes. Connecting your channel lets the AI learn your voice and style. However, some features like subtitles work without connecting a channel.",
+  },
+  {
+    q: "Is there a free plan?",
+    a: "Yes! The Starter plan is completely free with 500 credits per month. No credit card required. You get access to AI training, script generation, ideation, thumbnails, subtitles, and story builder.",
   },
   {
     q: "Can I export my content?",
-    a: "Yes. Scripts, ideation results (PDF), subtitles, and thumbnails can be exported. Story blueprints are viewable in-dashboard with full structure and retention scores.",
+    a: "Absolutely. You can export scripts, download generated thumbnails, export subtitles as SRT or VTT files, and save your video ideas as PDFs.",
   },
 ]
 
@@ -59,7 +67,7 @@ export default function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
-            Everything you need to know about Creator AI.
+            Got questions? We've got answers.
           </p>
         </motion.div>
 

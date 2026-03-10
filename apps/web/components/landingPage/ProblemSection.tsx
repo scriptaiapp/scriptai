@@ -7,33 +7,32 @@ import { motion } from "motion/react";
 const ProblemSection = () => {
     const problems = [
         {
-            title: "Writer's Block Nightmare",
-            description: "Staring at a blank screen for hours, struggling to come up with fresh, engaging content ideas that resonate with your audience.",
+            title: "Blank Page Syndrome",
+            description: "You sit down to write a script and nothing comes out. Hours pass, the cursor blinks, and you're still stuck on the first line.",
             icon: AlertCircle,
             color: "text-red-500"
         },
         {
-            title: "Inconsistent Content Quality",
-            description: "Your content quality varies drastically - some videos perform amazingly while others barely get any views or engagement.",
+            title: "Hit-or-Miss Videos",
+            description: "Some videos do great, others flop. Without a clear structure or data-driven approach, consistency feels impossible.",
             icon: TrendingUp,
             color: "text-orange-500"
         },
         {
-            title: "Time-Consuming Script Writing",
-            description: "Spending 3-5 hours writing a single script when you could be filming, editing, or engaging with your community instead.",
+            title: "Too Much Time on Scripts",
+            description: "Writing a single script takes 3-5 hours. That's time you could spend filming, editing, or just living your life.",
             icon: Clock,
             color: "text-yellow-500"
         },
         {
-            title: "Generic AI Tools",
-            description: "Current AI tools generate generic content that doesn't match your unique voice, style, or brand personality.",
+            title: "AI That Doesn't Sound Like You",
+            description: "You've tried ChatGPT and other tools, but the output sounds generic. It doesn't capture your style, humor, or voice.",
             icon: Target,
             color: "text-blue-500"
         }
     ]
 
     return (
-
         <div className="container max-w-5xl mx-auto px-4">
             <motion.div
                 className="text-center mb-12"
@@ -43,10 +42,10 @@ const ProblemSection = () => {
                 transition={{ duration: 0.5 }}
             >
                 <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-50">
-                    What’s Holding You Back?
+                    Sound Familiar?
                 </h2>
                 <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-                    These are the most common roadblocks content creators face — and the reason we built this.
+                    These are the struggles most YouTubers deal with every week.
                 </p>
             </motion.div>
 
@@ -57,7 +56,7 @@ const ProblemSection = () => {
                 whileInView="visible"
                 viewport={{ once: true }}
             >
-                {problems.map((p, i) => (
+                {problems.map((p) => (
                     <motion.div
                         key={p.title}
                         variants={{ hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100, damping: 14 } } }}

@@ -48,15 +48,10 @@ export class LemonSqueezyWebhookController {
     const eventName = req.headers['x-event-name'] as string;
     const event: LsWebhookEvent = req.body;
 
-    this.logger.log(
-      `Webhook received: ${eventName} | subscription_id=${event?.data?.id} | custom_data=${JSON.stringify(event?.meta?.custom_data ?? {})}`,
-    );
-
     try {
       switch (eventName) {
         case 'subscription_created':
           await this.billingService.handleSubscriptionCreated(event);
-          this.logger.log(`subscription_created processed for user ${event?.meta?.custom_data?.user_id}`);
           break;
         case 'subscription_updated':
           await this.billingService.handleSubscriptionUpdated(event);
@@ -71,12 +66,10 @@ export class LemonSqueezyWebhookController {
           await this.billingService.handleSubscriptionPaymentSuccess(event);
           break;
         default:
-          this.logger.warn(`Unhandled webhook event: ${eventName}`);
+          this.logger.log(`Unhandled event: ${eventName}`);
       }
     } catch (err) {
-      this.logger.error(
-        `Webhook handler error for ${eventName}: ${err instanceof Error ? err.message : err}`,
-      );
+      this.logger.error(`Webhook handler error: ${err}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ error: 'Handler failed' });

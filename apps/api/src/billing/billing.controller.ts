@@ -43,14 +43,6 @@ export class BillingController {
     );
   }
 
-  @Post('sync')
-  @UseGuards(SupabaseAuthGuard)
-  syncSubscription(@Req() req: AuthRequest) {
-    const userId = req.user?.id;
-    if (!userId) throw new UnauthorizedException();
-    return this.billingService.syncSubscription(userId);
-  }
-
   @Post('checkout')
   @UseGuards(SupabaseAuthGuard)
   createCheckoutSession(

@@ -10,7 +10,6 @@ import {
   lemonSqueezySetup,
   createCheckout,
   getSubscription,
-  listSubscriptions,
   type NewCheckout,
 } from '@lemonsqueezy/lemonsqueezy.js';
 import * as crypto from 'crypto';
@@ -207,121 +206,6 @@ export class BillingService {
     };
   }
 
-  // --- Direct sync with LemonSqueezy API (fallback when webhook is delayed) ---
-
-  async syncSubscription(userId: string): Promise<{ synced: boolean }> {
-    this.initLemonSqueezy();
-    const supabase = this.supabaseService.getClient();
-    const storeId = this.configService.get<string>('LEMONSQUEEZY_STORE_ID');
-    if (!storeId) return { synced: false };
-
-    const { data: existingSub } = await supabase
-      .from('subscriptions')
-      .select('ls_subscription_id')
-      .eq('user_id', userId)
-      .in('status', ['active', 'on_trial'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (existingSub?.ls_subscription_id) {
-      return { synced: true };
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('user_id', userId)
-      .single();
-
-    if (!profile?.email) return { synced: false };
-
-    try {
-      const { data: subs } = await listSubscriptions({
-        filter: { storeId, status: 'active' },
-      });
-
-      const items = subs?.data ?? [];
-      const match = items.find((sub) => {
-        const customData = (sub.attributes as Record<string, unknown>)
-          .first_order_item as Record<string, unknown> | undefined;
-        const meta = (sub as Record<string, unknown>).meta as
-          | { custom_data?: { user_id?: string } }
-          | undefined;
-
-        if (meta?.custom_data?.user_id === userId) return true;
-
-        const email = (sub.attributes as Record<string, unknown>)
-          .user_email as string | undefined;
-        return email === profile.email;
-      });
-
-      if (!match) return { synced: false };
-
-      const attrs = match.attributes as Record<string, unknown>;
-      const lsSubId = match.id;
-
-      const { data: alreadyExists } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('ls_subscription_id', lsSubId)
-        .maybeSingle();
-
-      if (alreadyExists) return { synced: true };
-
-      const variantId = String(attrs.variant_id ?? '');
-      const { data: plan } = await supabase
-        .from('plans')
-        .select('id, credits_monthly')
-        .eq('ls_variant_id', variantId)
-        .maybeSingle();
-
-      if (!plan) {
-        this.logger.warn(`Sync: No plan found for variant ${variantId}`);
-        return { synced: false };
-      }
-
-      await supabase
-        .from('subscriptions')
-        .update({ status: 'canceled' })
-        .eq('user_id', userId)
-        .in('status', ['active', 'on_trial', 'past_due']);
-
-      const { error: insertError } = await supabase
-        .from('subscriptions')
-        .insert({
-          user_id: userId,
-          plan_id: plan.id,
-          ls_subscription_id: lsSubId,
-          ls_customer_id: String(attrs.customer_id ?? ''),
-          ls_order_id: String(attrs.order_id ?? ''),
-          status: this.mapLsStatus(String(attrs.status ?? 'active')),
-          current_period_start: attrs.created_at
-            ? new Date(attrs.created_at as string).toISOString()
-            : null,
-          current_period_end: attrs.renews_at
-            ? new Date(attrs.renews_at as string).toISOString()
-            : null,
-        });
-
-      if (insertError) {
-        this.logger.error(`Sync insert failed: ${JSON.stringify(insertError)}`);
-        return { synced: false };
-      }
-
-      await supabase
-        .from('profiles')
-        .update({ credits: plan.credits_monthly })
-        .eq('user_id', userId);
-
-      this.logger.log(`Subscription synced for user ${userId} via API`);
-      return { synced: true };
-    } catch (err) {
-      this.logger.error(`Sync failed: ${err}`);
-      return { synced: false };
-    }
-  }
-
   // --- Webhook handlers ---
 
   async handleSubscriptionCreated(event: LsWebhookEvent) {
@@ -330,24 +214,11 @@ export class BillingService {
     const planId = event.meta.custom_data?.plan_id;
 
     if (!userId || !planId) {
-      this.logger.warn(
-        `Missing custom_data in subscription_created. meta: ${JSON.stringify(event.meta)}`,
-      );
+      this.logger.warn('Missing custom_data in subscription_created');
       return;
     }
 
     const supabase = this.supabaseService.getClient();
-
-    const { data: alreadyExists } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('ls_subscription_id', String(event.data.id))
-      .maybeSingle();
-
-    if (alreadyExists) {
-      this.logger.log(`Subscription ${event.data.id} already exists, skipping duplicate`);
-      return;
-    }
 
     await supabase
       .from('subscriptions')
@@ -355,7 +226,7 @@ export class BillingService {
       .eq('user_id', userId)
       .in('status', ['active', 'on_trial', 'past_due']);
 
-    const { error: insertError } = await supabase.from('subscriptions').insert({
+    await supabase.from('subscriptions').insert({
       user_id: userId,
       plan_id: planId,
       ls_subscription_id: String(event.data.id),
@@ -370,13 +241,6 @@ export class BillingService {
         : null,
     });
 
-    if (insertError) {
-      this.logger.error(
-        `Failed to insert subscription for user ${userId}: ${JSON.stringify(insertError)}`,
-      );
-      throw new Error(`Subscription insert failed: ${insertError.message}`);
-    }
-
     const { data: plan } = await supabase
       .from('plans')
       .select('credits_monthly')
@@ -388,12 +252,9 @@ export class BillingService {
         .from('profiles')
         .update({ credits: plan.credits_monthly })
         .eq('user_id', userId);
-      this.logger.log(
-        `Credits updated to ${plan.credits_monthly} for user ${userId}`,
-      );
     }
 
-    this.logger.log(`Subscription created for user ${userId}, plan ${planId}`);
+    this.logger.log(`Subscription created for user ${userId}`);
   }
 
   async handleSubscriptionUpdated(event: LsWebhookEvent) {
