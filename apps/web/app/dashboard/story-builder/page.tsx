@@ -1,167 +1,184 @@
 "use client"
 
-import { useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { useStoryBuilder } from "@/hooks/useStoryBuilder"
-import { StoryBuilderForm } from "@/components/dashboard/story-builder/StoryBuilderForm"
-import { StoryBuilderProgress } from "@/components/dashboard/story-builder/StoryBuilderProgress"
-import { StoryBuilderResults } from "@/components/dashboard/story-builder/StoryBuilderResults"
-import { StoryBuilderHistory } from "@/components/dashboard/story-builder/StoryBuilderHistory"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { useSupabase } from "@/components/supabase-provider"
+import { Plus, Search } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { ContentCard } from "@/components/dashboard/common/ContentCard"
+import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton"
+import { EmptySvg } from "@/components/dashboard/common/EmptySvg"
+import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
+import {
+  getStoryBuilderJobs,
+  deleteStoryBuilderJob,
+  type StoryBuilderJob,
+} from "@/lib/api/getStoryBuilderJobs"
 
-export default function StoryBuilderPage() {
-  const searchParams = useSearchParams()
-  const {
-    videoTopic, setVideoTopic,
-    targetAudience, setTargetAudience,
-    audienceLevel, setAudienceLevel,
-    videoDuration, setVideoDuration,
-    contentType, setContentType,
-    storyMode, setStoryMode,
-    tone, setTone,
-    additionalContext, setAdditionalContext,
-    personalized, setPersonalized,
-    selectedIdeationId, selectedIdeaIndex,
-    ideationJobs, isLoadingIdeations,
-    isGenerating, progress, statusMessage,
-    generatedResult,
-    pastJobs, isLoadingJobs,
-    aiTrained,
-    handleGenerate, handleRegenerate,
-    handleViewJob, handleDeleteJob,
-    handleSelectIdea,
-  } = useStoryBuilder()
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.07 },
+  },
+}
+
+const emptyStateVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4 },
+  },
+}
+
+export default function StoryBuilderListPage() {
+  const { profile, profileLoading } = useSupabase()
+  const [jobs, setJobs] = useState<StoryBuilderJob[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    const topic = searchParams.get("topic")
-    if (topic && !videoTopic) setVideoTopic(topic)
-  }, [searchParams])
+    const fetchJobs = async () => {
+      setLoading(true)
+      const fetched = await getStoryBuilderJobs()
+      setJobs(fetched.filter(j => j.status === "completed"))
+      setLoading(false)
+    }
+    fetchJobs()
+  }, [])
+
+  const handleDeleteJob = async () => {
+    if (!jobToDelete) return
+    const success = await deleteStoryBuilderJob(jobToDelete)
+    if (success) {
+      setJobs(jobs.filter(j => j.id !== jobToDelete))
+      toast.success("Blueprint deleted", { description: "Your story blueprint has been deleted." })
+    } else {
+      toast.error("Error deleting blueprint", { description: "Could not delete. Please try again." })
+    }
+    setJobToDelete(null)
+  }
+
+  if (profileLoading || loading) {
+    return <ContentCardSkeleton />
+  }
+
+  const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained
+
+  const filteredJobs = jobs.filter(j =>
+    j.video_topic.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Story Builder</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Build modular story blueprints with structured hooks, escalation segments, tension mapping, and retention scoring
-        </p>
+    <motion.div
+      className="container py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Story Blueprints</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Manage all your generated story blueprints
+          </p>
+        </div>
+        {!showTrainingOverlay && (
+          <Link href="/dashboard/story-builder/new">
+            <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all hover:shadow-lg hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10">
+              <Plus className="mr-2 h-4 w-4" />
+              New Blueprint
+            </Button>
+          </Link>
+        )}
       </div>
 
-      <Tabs defaultValue="generate" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="generate">Generate</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="generate" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left: Form */}
-            <div className="lg:col-span-3">
-              <StoryBuilderForm
-                videoTopic={videoTopic}
-                setVideoTopic={setVideoTopic}
-                targetAudience={targetAudience}
-                setTargetAudience={setTargetAudience}
-                audienceLevel={audienceLevel}
-                setAudienceLevel={setAudienceLevel}
-                videoDuration={videoDuration}
-                setVideoDuration={setVideoDuration}
-                contentType={contentType}
-                setContentType={setContentType}
-                storyMode={storyMode}
-                setStoryMode={setStoryMode}
-                tone={tone}
-                setTone={setTone}
-                additionalContext={additionalContext}
-                setAdditionalContext={setAdditionalContext}
-                personalized={personalized}
-                setPersonalized={setPersonalized}
-                aiTrained={aiTrained}
-                isGenerating={isGenerating}
-                onGenerate={handleGenerate}
-                ideationJobs={ideationJobs}
-                isLoadingIdeations={isLoadingIdeations}
-                onSelectIdea={handleSelectIdea}
-                selectedIdeationId={selectedIdeationId}
-                selectedIdeaIndex={selectedIdeaIndex}
-              />
-            </div>
-
-            {/* Right: Progress + Tips */}
-            <div className="lg:col-span-2 space-y-6">
-              {isGenerating && (
-                <StoryBuilderProgress
-                  progress={progress}
-                  statusMessage={statusMessage}
-                />
-              )}
-
-              <div className="rounded-lg border bg-slate-50 dark:bg-slate-800/50 p-5 space-y-3">
-                <h3 className="font-semibold text-sm">What you&apos;ll get</h3>
-                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">&#9679;</span>
-                    Structured hook with curiosity, promise &amp; stakes
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-yellow-500 mt-0.5">&#9679;</span>
-                    Context setup with problem &amp; why it matters
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-0.5">&#9679;</span>
-                    Escalation segments with micro-hooks &amp; transitions
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-500 mt-0.5">&#9679;</span>
-                    Climax with insights, twists &amp; value moments
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-500 mt-0.5">&#9679;</span>
-                    Resolution + callback with soft CTA
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5">&#128202;</span>
-                    Tension mapping: retention score, curiosity loops, drop risk
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-pink-500 mt-0.5">&#10084;&#65039;</span>
-                    Emotional arc, retention beats &amp; pattern interrupts
-                  </li>
-                </ul>
-              </div>
-
-              {aiTrained && (
-                <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/30 p-5 space-y-2">
-                  <h3 className="font-semibold text-sm flex items-center gap-1.5 text-purple-700 dark:text-purple-400">
-                    <span>&#10024;</span> Powered by your style
-                  </h3>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">
-                    Your AI is trained! Blueprints adapt to your channel&apos;s pacing, humor frequency,
-                    direct address style, stats usage, and emotional tone patterns.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Results */}
-          {generatedResult && (
-            <StoryBuilderResults
-              result={generatedResult}
-              onRegenerate={handleRegenerate}
-              isGenerating={isGenerating}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="history" className="mt-6">
-          <StoryBuilderHistory
-            jobs={pastJobs}
-            isLoading={isLoadingJobs}
-            onView={handleViewJob}
-            onDelete={handleDeleteJob}
+      <div className="mb-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+          <Input
+            placeholder="Search blueprints..."
+            className="pl-10 focus-visible:ring-2 focus-visible:ring-purple-500/80"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {showTrainingOverlay ? (
+          <motion.div
+            key="training-required"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <AITrainingRequired />
+          </motion.div>
+        ) : filteredJobs.length > 0 ? (
+          <motion.div
+            key="job-list"
+            className="grid grid-cols-1 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {filteredJobs.map(job => (
+              <ContentCard
+                key={job.id}
+                id={job.id}
+                title={job.video_topic}
+                created_at={job.created_at}
+                onDelete={handleDeleteJob}
+                setToDelete={setJobToDelete}
+                type="story-builder"
+                statusBadge={
+                  job.result?.tensionMapping ? (
+                    <Badge variant="outline" className="text-xs">
+                      Score: {job.result.tensionMapping.retentionScore}/10
+                    </Badge>
+                  ) : undefined
+                }
+              />
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty-state"
+            variants={emptyStateVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <div className="text-center py-16">
+              <div className="flex flex-col items-center">
+                <EmptySvg className="h-32 w-auto mb-6 text-slate-300 dark:text-slate-700" />
+                <h3 className="font-semibold text-xl text-slate-800 dark:text-slate-200 mb-2">
+                  Build your first story blueprint
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+                  {searchQuery
+                    ? `No blueprints matching "${searchQuery}".`
+                    : "Create structured story blueprints with hooks, escalation, and retention scoring."}
+                </p>
+                {!searchQuery && (
+                  <Link href="/dashboard/story-builder/new">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Blueprint
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }

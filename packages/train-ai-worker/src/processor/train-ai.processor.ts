@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createSupabaseClient, getSupabaseServiceEnv, SupabaseClient } from '@repo/supabase';
@@ -19,6 +19,15 @@ import {
   enrichChannelIntelligenceWithAI,
 } from './utils/train-ai';
 
+const CANCEL_PREFIX = 'train-ai:cancel:';
+
+class TrainingCancelledError extends Error {
+  constructor() {
+    super('Training cancelled by user');
+    this.name = 'TrainingCancelledError';
+  }
+}
+
 interface TrainAiJobData {
   userId: string;
   videoUrls: string[];
@@ -31,12 +40,24 @@ export class TrainAiProcessor extends WorkerHost {
   private readonly supabase: SupabaseClient;
   private readonly genAI: GoogleGenAI;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectQueue('train-ai') private readonly queue: Queue,
+  ) {
     super();
     const { url, key } = getSupabaseServiceEnv();
     this.supabase = createSupabaseClient(url, key);
 
     this.genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY! });
+  }
+
+  private async throwIfCancelled(jobId: string): Promise<void> {
+    const client = await this.queue.client;
+    const cancelled = await client.get(`${CANCEL_PREFIX}${jobId}`);
+    if (cancelled) {
+      await client.del(`${CANCEL_PREFIX}${jobId}`);
+      throw new TrainingCancelledError();
+    }
   }
 
   async process(job: Job<TrainAiJobData>): Promise<void> {
@@ -51,17 +72,20 @@ export class TrainAiProcessor extends WorkerHost {
       await validateInputs(userId, videoUrls);
       await validateEnvironment();
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(10);
       await job.log('Fetching channel and token...');
 
       const channelData = await fetchChannelData(this.supabase, userId);
       const { accessToken } = await manageYouTubeToken(this.supabase, userId, channelData);
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(20);
       await job.log('Fetching video data...');
 
       const videoData = await fetchVideoData(videoUrls, accessToken, channelData.channel_id);
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(30);
       await job.log('Processing transcripts and thumbnails...');
 
@@ -70,6 +94,7 @@ export class TrainAiProcessor extends WorkerHost {
 
       totalConsumedTokens += totalVideoTokens;
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(50);
       await job.log('Analyzing style and embedding...');
 
@@ -78,8 +103,10 @@ export class TrainAiProcessor extends WorkerHost {
 
       totalConsumedTokens += totalStyleTokens;
 
+      await this.throwIfCancelled(job.id!);
       const embedding = await generateEmbedding(this.genAI, styleAnalysis);
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(70);
       await job.log('Extracting channel intelligence...');
 
@@ -88,11 +115,13 @@ export class TrainAiProcessor extends WorkerHost {
         await enrichChannelIntelligenceWithAI(this.genAI, baseIntelligence, channelData);
       totalConsumedTokens += intelTokens;
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(80);
       await job.log('Generating topic embedding...');
 
       const topicEmbedding = await generateTopicEmbedding(this.genAI, channelIntelligence, channelData);
 
+      await this.throwIfCancelled(job.id!);
       await job.updateProgress(85);
       await job.log('Saving data...');
 
@@ -112,10 +141,11 @@ export class TrainAiProcessor extends WorkerHost {
       await job.updateProgress(100);
       this.logger.log(`Train AI completed for ${userId}, retraining: ${isRetraining}`);
     } catch (error) {
+      const isCancelled = error instanceof TrainingCancelledError;
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      await job.log(`Error: ${errorMessage}`);
-      this.logger.error(`Job ${job.id} failed: ${errorMessage}`, errorStack);
+      await job.log(isCancelled ? 'Training cancelled by user' : `Error: ${errorMessage}`);
+      this.logger.warn(`Job ${job.id} ${isCancelled ? 'cancelled' : 'failed'}: ${errorMessage}`, errorStack);
       throw error;
     }
   }

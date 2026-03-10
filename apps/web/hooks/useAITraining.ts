@@ -68,6 +68,20 @@ export function useAITraining() {
     },
   })
 
+  const handleStopTraining = async () => {
+    if (!jobId) return
+    try {
+      await api.post("/api/v1/train-ai/stop/" + jobId, undefined, { requireAuth: true })
+      sse.close()
+      setIsTraining(false)
+      setUploading(false)
+      setJobId(null)
+      toast.info("Training stopped")
+    } catch {
+      toast.error("Failed to stop training")
+    }
+  }
+
   const handleToggleVideo = useCallback((video: ChannelVideo) => {
     setSelectedVideos((prev) => {
       const exists = prev.find((v) => v.id === video.id)
@@ -138,6 +152,7 @@ export function useAITraining() {
     setShowModal,
     handleToggleVideo,
     handleStartTraining,
+    handleStopTraining,
     handleConnectYoutube,
   }
 }

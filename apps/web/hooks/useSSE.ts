@@ -29,6 +29,7 @@ interface UseSSEReturn<TResult> {
   statusMessage: string;
   result: TResult | null;
   reset: () => void;
+  close: () => void;
 }
 
 export function useSSE<TResult = unknown>(
@@ -56,6 +57,12 @@ export function useSSE<TResult = unknown>(
     setStatusMessage("");
     setResult(null);
   }, []);
+
+  const close = useCallback(() => {
+    eventSourceRef.current?.close();
+    eventSourceRef.current = null;
+    reset();
+  }, [reset]);
 
   useEffect(() => {
     if (!jobId) return;
@@ -117,5 +124,5 @@ export function useSSE<TResult = unknown>(
     };
   }, [jobId]);
 
-  return { isActive, progress, statusMessage, result, reset };
+  return { isActive, progress, statusMessage, result, reset, close };
 }

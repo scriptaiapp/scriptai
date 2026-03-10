@@ -12,6 +12,7 @@ import { BackgroundBeams } from "@/components/ui/background-beams"
 import HowItWorks from "@/components/landingPage/HowItWorks"
 import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
+import FAQSection from "@/components/landingPage/FAQSection"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
 import { useEffect } from "react"
@@ -63,7 +64,7 @@ export default function Home() {
     },
   }
 
-  const words = ["Scripts", "Thumbnails", "Subtitles", "Ideas"]
+  const words = ["Scripts", "Thumbnails", "Subtitles", "Ideas", "Story Blueprints"]
 
   return (
       <div className="flex flex-col min-h-screen">
@@ -160,7 +161,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="bg-white py-24">
+          <section className="bg-white dark:bg-slate-800 py-24">
             <ProblemSection />
           </section>
 
@@ -180,9 +181,17 @@ export default function Home() {
             <PricingSection />
           </section>
 
+          <FAQSection />
+
           <section className="relative py-20 bg-slate-900 text-white overflow-hidden">
             <BackgroundBeams className="absolute inset-0 z-0" />
-            <div className="relative z-10 container px-4 md:px-6">
+            <motion.div
+              className="relative z-10 container px-4 md:px-6"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
               <div className="flex flex-col items-center text-center space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">
                   Ready to Transform Your Content Creation?
@@ -200,10 +209,10 @@ export default function Home() {
                   </MButton>
                 </Link>
               </div>
-              <svg className="absolute bottom-0 left-0 w-full " viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg">
+            </motion.div>
+            <svg className="absolute bottom-0 left-0 w-full " viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg">
                 <path fill="#fff" fillOpacity="0.05" d="M0,0 C480,120 960,0 1440,120 L1440,0 L0,0 Z" />
               </svg>
-            </div>
           </section>
         </main>
         <Footer />

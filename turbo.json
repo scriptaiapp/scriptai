@@ -27,8 +27,9 @@
     "ELEVENLABS_API_KEY",
     "YOUTUBE_API_KEY",
     "OPENAI_API_KEY",
-    "STRIPE_SECRET_KEY",
-    "STRIPE_WEBHOOK_SECRET"
+    "LEMONSQUEEZY_API_KEY",
+    "LEMONSQUEEZY_STORE_ID",
+    "LEMONSQUEEZY_WEBHOOK_SECRET"
   ],
   "tasks": {
     "dev": { "cache": false, "persistent": true },
@@ -62,8 +63,9 @@
         "SUPABASE_URL",
         "SUPABASE_ANON_KEY",
         "SUPABASE_SERVICE_KEY",
-        "STRIPE_SECRET_KEY",
-        "STRIPE_WEBHOOK_SECRET"
+        "LEMONSQUEEZY_API_KEY",
+        "LEMONSQUEEZY_STORE_ID",
+        "LEMONSQUEEZY_WEBHOOK_SECRET"
       ]
     },
     "db:pull": { "dependsOn": ["^build"], "outputs": ["packages/supabase/migrations/**"] },

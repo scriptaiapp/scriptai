@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import * as path from 'path';
 import { getRedisConnection } from './redis.connection';
+import { HealthController } from './health.controller';
 import { TrainAiProcessor } from './processor/train-ai.processor';
 import { ThumbnailProcessor } from './processor/thumbnail.processor';
 import { StoryBuilderProcessor } from './processor/story-builder.processor';
@@ -10,6 +11,7 @@ import { IdeationProcessor } from './processor/ideation.processor';
 import { ScriptProcessor } from './processor/script.processor';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

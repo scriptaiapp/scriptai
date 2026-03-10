@@ -2,14 +2,15 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bell, CreditCard, UserCircle } from "lucide-react";
+import { BarChart3, Bell, CreditCard, UserCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { ProfileSettingsForm } from "@/components/dashboard/settings/ProfileSettingsForm";
 import { NotificationSettingsForm } from "@/components/dashboard/settings/NotificationSettingsForm";
 import { BillingInfo } from "@/components/dashboard/settings/BillingInfo";
+import { UsageInfo } from "@/components/dashboard/settings/UsageInfo";
 
-type NavItemId = "profile" | "notifications" | "billing";
+type NavItemId = "profile" | "notifications" | "billing" | "usage";
 
 interface NavItem {
   id: NavItemId;
@@ -21,10 +22,9 @@ interface NavItem {
 export default function Settings() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as NavItemId) || "profile";
+  const validTabs: NavItemId[] = ["profile", "notifications", "billing", "usage"];
   const [activeTab, setActiveTab] = useState<NavItemId>(
-    ["profile", "notifications", "billing"].includes(initialTab)
-      ? initialTab
-      : "profile",
+    validTabs.includes(initialTab) ? initialTab : "profile",
   );
 
   const navItems: NavItem[] = useMemo(
@@ -47,6 +47,12 @@ export default function Settings() {
           label: "Billing",
           description: "View subscription and payment details"
         },
+        {
+          id: "usage",
+          icon: BarChart3,
+          label: "Usage",
+          description: "Track your credit consumption"
+        }
       ],
       []
   );
@@ -198,6 +204,18 @@ export default function Settings() {
                           transition={{ duration: 0.25, ease: "easeOut" }}
                       >
                         <BillingInfo />
+                      </motion.div>
+                  )}
+
+                  {activeTab === "usage" && (
+                      <motion.div
+                          key="usage"
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.25, ease: "easeOut" }}
+                      >
+                        <UsageInfo />
                       </motion.div>
                   )}
                 </AnimatePresence>

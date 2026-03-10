@@ -35,30 +35,39 @@ export default function SolutionCard() {
 
     return (
         <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4">
+            <motion.div
+                className="flex flex-col items-center text-center space-y-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+            >
                 <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50">
                     Solutions for Your Content Creation Challenges
                 </h2>
                 <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
                     Creator AI addresses your pain points with powerful, tailored solutions to streamline your workflow.
                 </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-16">
+            </motion.div>
+            <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-16"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } } }}
+            >
                 {solutions.map((solution, index) => (
                     <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 14 } } }}
                     >
                         <CardSpotlight
                             className={cn(
                                 "relative overflow-hidden min-h-[250px] w-full",
                                 solution.background,
-                                "border border-slate-100 dark:border-slate-700 shadow-sm rounded-xl"
+                                "border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-400/5 transition-shadow"
                             )}
-                            color="#b4cae0" // Light slate white for subtle hover
+                            color="#c4b5fd"
                             // radius={50}
                             role="article"
                         // aria-label={`Solution: ${solution.title}`}
@@ -77,7 +86,7 @@ export default function SolutionCard() {
                         </CardSpotlight>
                     </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </div>
     );
 }

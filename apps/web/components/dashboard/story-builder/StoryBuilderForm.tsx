@@ -133,8 +133,8 @@ export function StoryBuilderForm({
           {aiTrained ? (
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {personalized
-                ? "Blueprint adapts to your channel's pacing, humor, tone, and storytelling style"
-                : "Toggle on to use your trained AI style profile"}
+                ? "Blueprint adapts to your channel's past videos' style"
+                : "Toggle on to use your past trained profile"}
             </p>
           ) : (
             <div className="flex items-center justify-between gap-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-2.5">

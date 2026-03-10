@@ -1,11 +1,11 @@
 {
-  "name": "scriptai",
+  "name": "creatorai",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "description": "",
-  "author": "",
-  "license": "UNLICENSED",
+  "author": "Afrin Nahar",
+  "license": "MIT",
   "workspaces": [
     "apps/*",
     "packages/*"

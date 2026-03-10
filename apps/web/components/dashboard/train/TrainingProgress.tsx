@@ -14,9 +14,10 @@ const TRAIN_STEPS: GenerationProgressStep[] = [
 interface TrainingProgressProps {
   progress: number
   statusMessage: string
+  onStop?: () => void
 }
 
-export function TrainingProgress({ progress, statusMessage }: TrainingProgressProps) {
+export function TrainingProgress({ progress, statusMessage, onStop }: TrainingProgressProps) {
   return (
     <GenerationProgress
       progress={progress}
@@ -24,6 +25,7 @@ export function TrainingProgress({ progress, statusMessage }: TrainingProgressPr
       title="Model Training in Progress"
       steps={TRAIN_STEPS}
       hint="This may take 2-5 minutes depending on video content"
+      onStop={onStop}
     />
   )
 }

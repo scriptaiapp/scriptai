@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Req,
+  Query,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -28,6 +29,28 @@ export class BillingController {
     return this.billingService.getBillingInfo(userId);
   }
 
+  @Get('usage')
+  @UseGuards(SupabaseAuthGuard)
+  getUsage(
+    @Req() req: AuthRequest,
+    @Query('range') range?: 'daily' | 'weekly' | 'monthly',
+  ) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException();
+    return this.billingService.getUsageHistory(
+      userId,
+      range && ['daily', 'weekly', 'monthly'].includes(range) ? range : 'weekly',
+    );
+  }
+
+  @Post('sync')
+  @UseGuards(SupabaseAuthGuard)
+  syncSubscription(@Req() req: AuthRequest) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException();
+    return this.billingService.syncSubscription(userId);
+  }
+
   @Post('checkout')
   @UseGuards(SupabaseAuthGuard)
   createCheckoutSession(
@@ -41,9 +64,9 @@ export class BillingController {
 
   @Post('portal')
   @UseGuards(SupabaseAuthGuard)
-  createPortalSession(@Req() req: AuthRequest) {
+  getCustomerPortal(@Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedException();
-    return this.billingService.createPortalSession(userId);
+    return this.billingService.getCustomerPortalUrl(userId);
   }
 }
