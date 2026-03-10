@@ -86,13 +86,15 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed,
           </Button>
         </Link>
 
-        <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:to-indigo-500/20 px-3.5 py-1.5 text-sm ring-1 ring-purple-500/20 dark:ring-purple-400/20">
-          <Coins className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-          <span className="font-semibold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-300 dark:to-indigo-300 bg-clip-text text-transparent">
-            {profile?.credits || "0"}
-          </span>
-          <span className="text-xs text-muted-foreground hidden sm:inline">credits</span>
-        </div>
+        <Link href="/dashboard/settings?tab=usage">
+          <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:to-indigo-500/20 px-3.5 py-1.5 text-sm ring-1 ring-purple-500/20 dark:ring-purple-400/20 cursor-pointer hover:ring-purple-500/40 dark:hover:ring-purple-400/40 transition-all">
+            <Coins className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="font-semibold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-300 dark:to-indigo-300 bg-clip-text text-transparent">
+              {profile?.credits || "0"}
+            </span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">credits</span>
+          </div>
+        </Link>
 
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>

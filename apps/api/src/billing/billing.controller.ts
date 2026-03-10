@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Req,
+  Query,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -26,6 +27,28 @@ export class BillingController {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedException();
     return this.billingService.getBillingInfo(userId);
+  }
+
+  @Get('usage')
+  @UseGuards(SupabaseAuthGuard)
+  getUsage(
+    @Req() req: AuthRequest,
+    @Query('range') range?: 'daily' | 'weekly' | 'monthly',
+  ) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException();
+    return this.billingService.getUsageHistory(
+      userId,
+      range && ['daily', 'weekly', 'monthly'].includes(range) ? range : 'weekly',
+    );
+  }
+
+  @Post('sync')
+  @UseGuards(SupabaseAuthGuard)
+  syncSubscription(@Req() req: AuthRequest) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException();
+    return this.billingService.syncSubscription(userId);
   }
 
   @Post('checkout')

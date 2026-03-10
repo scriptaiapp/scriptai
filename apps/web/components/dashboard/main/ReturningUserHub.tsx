@@ -500,7 +500,7 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
 
           {/* Subscription Card */}
           <motion.div variants={itemVariants}>
-            <Link href="/dashboard/settings?tab=subscription">
+            <Link href="/dashboard/settings?tab=billing">
               <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow">
                 <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400" />
                 <CardHeader className="pb-2">
