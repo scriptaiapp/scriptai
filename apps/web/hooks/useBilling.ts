@@ -33,6 +33,7 @@ export function useBilling() {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -81,23 +82,22 @@ export function useBilling() {
     }
   }, []);
 
-  const openPortal = useCallback(async () => {
-    setPortalLoading(true);
+  const cancelSubscription = useCallback(async () => {
+    setCancelLoading(true);
     try {
-      const { url } = await api.post<{ url: string }>(
-        "/api/v1/billing/portal",
-        {},
-        { requireAuth: true },
-      );
-      if (url) window.location.href = url;
+      await api.post("/api/v1/billing/cancel", {}, { requireAuth: true });
+      toast.success("Subscription cancelled", {
+        description: "You have been switched to the free plan.",
+      });
+      await loadAll();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to open billing portal";
+        err instanceof Error ? err.message : "Failed to cancel subscription";
       toast.error(message);
     } finally {
-      setPortalLoading(false);
+      setCancelLoading(false);
     }
-  }, []);
+  }, [loadAll]);
 
   return {
     plans,
@@ -105,8 +105,9 @@ export function useBilling() {
     loading,
     checkoutLoading,
     portalLoading,
+    cancelLoading,
     subscribe,
-    openPortal,
+    cancelSubscription,
     refresh: loadAll,
   };
 }

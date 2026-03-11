@@ -46,7 +46,7 @@ interface LogoProps {
 
 export const Logo = ({
   showText = true,
-  href = "/dashboard",
+  href = "/",
 }: LogoProps) => (
   <Link
     href={href}

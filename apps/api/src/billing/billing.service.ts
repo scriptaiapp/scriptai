@@ -10,6 +10,7 @@ import {
   lemonSqueezySetup,
   createCheckout,
   getSubscription,
+  cancelSubscription,
   type NewCheckout,
 } from '@lemonsqueezy/lemonsqueezy.js';
 import * as crypto from 'crypto';
@@ -57,7 +58,7 @@ export class BillingService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   private initLemonSqueezy() {
     if (this.lsInitialized) return;
@@ -99,18 +100,60 @@ export class BillingService {
 
     const starterPlan = await this.getStarterPlan();
 
+    // Monthly credit reset for free plan (no LS subscription)
+    if (subscription && !subscription.ls_subscription_id && subscription.current_period_end) {
+      const periodEnd = new Date(subscription.current_period_end);
+      if (periodEnd <= new Date()) {
+        const now = new Date();
+        const newPeriodEnd = new Date(now);
+        newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1);
+
+        await supabase
+          .from('subscriptions')
+          .update({
+            current_period_start: now.toISOString(),
+            current_period_end: newPeriodEnd.toISOString(),
+          })
+          .eq('id', subscription.id);
+
+        const resetCredits =
+          subscription.plans?.credits_monthly ?? starterPlan?.credits_monthly ?? 500;
+        await supabase
+          .from('profiles')
+          .update({ credits: resetCredits })
+          .eq('user_id', userId);
+
+        if (profile) profile.credits = resetCredits;
+      }
+    } else if (!subscription && starterPlan) {
+      // First-time free user: create a free-plan subscription record for tracking
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      await supabase.from('subscriptions').insert({
+        user_id: userId,
+        plan_id: starterPlan.id,
+        ls_subscription_id: null,
+        ls_customer_id: null,
+        ls_order_id: null,
+        status: 'active',
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+      });
+    }
+
+    const isPaidSubscription = !!subscription?.ls_subscription_id;
+
     return {
       currentPlan: subscription?.plans ?? starterPlan,
-      subscription: subscription
+      subscription: isPaidSubscription
         ? {
-            id: subscription.id,
-            status: subscription.status,
-            currentPeriodEnd: subscription.current_period_end,
-            lsSubscriptionId: subscription.ls_subscription_id,
-            customerPortalUrl:
-              (subscription as SubscriptionRecord & { customer_portal_url?: string })
-                .customer_portal_url ?? null,
-          }
+          id: subscription!.id,
+          status: subscription!.status,
+          currentPeriodEnd: subscription!.current_period_end,
+          lsSubscriptionId: subscription!.ls_subscription_id,
+        }
         : null,
       credits: profile?.credits ?? 0,
     };
@@ -206,6 +249,67 @@ export class BillingService {
     };
   }
 
+  async cancelActiveSubscription(userId: string) {
+    this.initLemonSqueezy();
+    const supabase = this.supabaseService.getClient();
+
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .not('ls_subscription_id', 'is', null)
+      .in('status', ['active', 'on_trial', 'past_due'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!subscription?.ls_subscription_id) {
+      throw new BadRequestException('No active paid subscription found');
+    }
+
+    const { error } = await cancelSubscription(subscription.ls_subscription_id);
+    if (error) {
+      this.logger.error(`Failed to cancel subscription: ${JSON.stringify(error)}`);
+      throw new BadRequestException('Failed to cancel subscription');
+    }
+
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'canceled' })
+      .eq('id', subscription.id);
+
+    await this.createFreePlanSubscription(userId);
+
+    this.logger.log(`Subscription canceled for user ${userId}`);
+    return { success: true };
+  }
+
+  private async createFreePlanSubscription(userId: string) {
+    const supabase = this.supabaseService.getClient();
+    const starter = await this.getStarterPlan();
+    if (!starter) return;
+
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await supabase.from('subscriptions').insert({
+      user_id: userId,
+      plan_id: starter.id,
+      ls_subscription_id: null,
+      ls_customer_id: null,
+      ls_order_id: null,
+      status: 'active',
+      current_period_start: now.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+    });
+
+    await supabase
+      .from('profiles')
+      .update({ credits: starter.credits_monthly })
+      .eq('user_id', userId);
+  }
+
   // --- Webhook handlers ---
 
   async handleSubscriptionCreated(event: LsWebhookEvent) {
@@ -299,12 +403,18 @@ export class BillingService {
       .eq('ls_subscription_id', lsSubId);
 
     if (sub?.user_id) {
-      const starter = await this.getStarterPlan();
-      const fallbackCredits = starter?.credits_monthly ?? 500;
-      await supabase
-        .from('profiles')
-        .update({ credits: fallbackCredits })
-        .eq('user_id', sub.user_id);
+      // Skip if user already has a free plan subscription (e.g. from manual downgrade)
+      const { data: existingFreeSub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', sub.user_id)
+        .is('ls_subscription_id', null)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!existingFreeSub) {
+        await this.createFreePlanSubscription(sub.user_id);
+      }
     }
   }
 
