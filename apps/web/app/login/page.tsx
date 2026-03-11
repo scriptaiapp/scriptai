@@ -50,14 +50,20 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<ErrorState>({})
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { supabase, user } = useSupabase()
+  const { supabase, user, profile, profileLoading } = useSupabase()
   const router = useRouter()
 
   useEffect(() => {
-    if (user) {
-      router.replace("/dashboard")
+    if (user && !profileLoading && profile) {
+      if (profile.role === "admin") {
+        router.replace("/dashboard/admin")
+      } else if (profile.role === "sales_rep") {
+        router.replace("/dashboard/sales-rep")
+      } else {
+        router.replace("/dashboard")
+      }
     }
-  }, [user, router])
+  }, [user, profile, profileLoading, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,8 +86,20 @@ export default function LoginPage() {
 
       if (data.user) {
         toast.success("You have been successfully logged in.")
-        // Use Next.js router for client-side navigation instead of a full page reload.
-        router.push("/dashboard")
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .single()
+
+        const role = profileData?.role
+        if (role === "admin") {
+          router.push("/dashboard/admin")
+        } else if (role === "sales_rep") {
+          router.push("/dashboard/sales-rep")
+        } else {
+          router.push("/dashboard")
+        }
       }
     } catch (error: any) {
       if (isZodError(error)) {

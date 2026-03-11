@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useCallback } from "react"
+import { usePathname } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { DashboardSidebar } from "@/components/dashboard/sidebar/dashboard-sidebar"
 import DashboardHeader from "@/components/dashboard-header"
@@ -14,10 +15,18 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarPinned, setSidebarPinned] = useState(false)
   const { loading } = useSupabase()
+  const pathname = usePathname()
 
   const handleTogglePin = useCallback(() => {
     setSidebarPinned((prev) => !prev)
   }, [])
+
+  const isAdminRoute = pathname.startsWith("/dashboard/admin")
+  const isSalesRepRoute = pathname.startsWith("/dashboard/sales-rep")
+
+  if (isAdminRoute || isSalesRepRoute) {
+    return <>{children}</>
+  }
 
   if (loading) {
     return (

@@ -19,7 +19,7 @@ async function sendWelcomeEmail(
       from: 'Creator AI <onboarding@tryscriptai.com>',
       to: email,
       subject: 'Welcome to Creator AI!',
-      replyTo: 'no-reply@tryscriptai.com', // support@tryscriptai.com
+      replyTo: 'support@tryscriptai.com',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
           <h1 style="color: #4F46E5; margin-bottom: 10px;">Welcome aboard, ${full_name}! 🎉</h1>
@@ -57,7 +57,7 @@ async function sendWelcomeEmail(
           </p>
 
           <p style="margin-top: 30px;">Have any questions? Just reply to this email or reach us at 
-            <a href="mailto:no-reply@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">no-reply@tryscriptai.com</a>. <!-- support@tryscriptai.com -->
+            <a href="mailto:support@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">support@tryscriptai.com</a>.
           </p>
 
           <p style="margin-top: 20px;">Cheers,<br/>The Creator AI Team</p>
@@ -73,7 +73,7 @@ async function sendAdminNotification(full_name: string, email: string, resend: R
   try {
     await resend.emails.send({
       from: 'Creator AI <notifications@tryscriptai.com>',
-      to: 'afrin@tryscriptai.com',
+      to: 'support@tryscriptai.com',
       subject: 'New User Sign Up Notification',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
@@ -237,12 +237,26 @@ async function sendWelcomeEmailsIfNeeded(
   }
 }
 
+async function getRedirectByRole(supabase: any, userId: string, fallback: string | null): Promise<string> {
+  if (fallback) return fallback;
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    if (data?.role === 'admin') return '/dashboard/admin';
+    if (data?.role === 'sales_rep') return '/dashboard/sales-rep';
+  } catch {}
+  return '/dashboard';
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
   const code = searchParams.get('code');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/dashboard';
+  const nextParam = searchParams.get('next');
   const referralCode = searchParams.get('ref');
   //validate environment
   if (!process.env.RESEND_API_KEY) {
@@ -253,6 +267,7 @@ export async function GET(request: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
   // For Google sign-in
   if (code) {
+    let dest = nextParam ?? '/dashboard';
     try {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -296,15 +311,17 @@ export async function GET(request: NextRequest) {
       );
 
       console.log(` Google OAuth flow completed for: ${user.email}`);
+      dest = await getRedirectByRole(supabase, user.id, nextParam);
     } catch (error) {
       console.error(' Unexpected error in Google OAuth flow:', error);
-      redirect('/error?message=Failed to sign in with Google. Please try again.');
+      dest = '/error?message=Failed to sign in with Google. Please try again.';
     }
-    return redirect(next);
+    return redirect(dest);
   }
 
   // For email OTP verification (manual signup)
   if (token_hash && type) {
+    let dest = nextParam ?? '/dashboard';
     try {
       const { data, error } = await supabase.auth.verifyOtp({
         type,
@@ -313,10 +330,10 @@ export async function GET(request: NextRequest) {
 
       if (error || !data.user) {
         console.error(' Error verifying OTP:', error?.message);
-        redirect('/error?message=Invalid or expired confirmation link. Please request a new one.');
+        throw new Error('Invalid or expired confirmation link.');
       }
 
-      const user = data.user!;
+      const user = data.user;
       const full_name = user.user_metadata?.full_name || user.email!;
       const avatar_url = user.user_metadata?.avatar_url || null;
 
@@ -342,11 +359,15 @@ export async function GET(request: NextRequest) {
       );
 
       console.log(`Email OTP flow completed for: ${user.email}`);
-    } catch (error) {
+      dest = await getRedirectByRole(supabase, user.id, nextParam);
+    } catch (error: any) {
       console.error('Unexpected error in email OTP flow:', error);
-      redirect('/error?message=An unexpected error occurred. Please try again.');
+      const msg = error?.message === 'Invalid or expired confirmation link.'
+        ? 'Invalid or expired confirmation link. Please request a new one.'
+        : 'An unexpected error occurred. Please try again.';
+      dest = `/error?message=${encodeURIComponent(msg)}`;
     }
-    return redirect(next);
+    return redirect(dest);
   }
 
   console.error('Invalid auth callback request - missing required parameters');

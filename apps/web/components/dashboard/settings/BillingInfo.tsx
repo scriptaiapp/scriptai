@@ -13,14 +13,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useBilling } from "@/hooks/useBilling";
 import {
+  AlertTriangle,
   Check,
   Crown,
-  ExternalLink,
   Loader2,
   Sparkles,
   Zap,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -32,8 +44,9 @@ export function BillingInfo() {
     loading,
     checkoutLoading,
     portalLoading,
+    cancelLoading,
     subscribe,
-    openPortal,
+    cancelSubscription,
     refresh,
   } = useBilling();
 
@@ -110,21 +123,48 @@ export function BillingInfo() {
             </div>
           </div>
 
-          {hasActiveSubscription && (
-            <Button
-              variant="outline"
-              onClick={openPortal}
-              disabled={portalLoading}
-              className="w-full sm:w-auto"
-            >
-              {portalLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ExternalLink className="mr-2 h-4 w-4" />
-              )}
-              Manage Subscription
-            </Button>
-          )}
+          <div className="flex items-center justify-end">
+            {hasActiveSubscription && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild className="w-full">
+                  <Button
+                    variant="ghost"
+                    disabled={cancelLoading}
+                    className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+                  >
+                    {cancelLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <XCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Cancel Subscription
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                      Cancel Subscription?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will cancel your <strong>{currentPlanName}</strong> subscription
+                      and switch you to the free Starter plan. Your credits will be
+                      reset to the free plan allowance.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={cancelSubscription}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Yes, Cancel
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -201,6 +241,45 @@ export function BillingInfo() {
                     <Button variant="outline" disabled className="w-full">
                       Current Plan
                     </Button>
+                  ) : isFree && hasActiveSubscription ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          disabled={cancelLoading}
+                          className="w-full"
+                        >
+                          {cancelLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Zap className="mr-2 h-4 w-4" />
+                          )}
+                          Switch to Free
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                            Switch to Free Plan?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will cancel your <strong>{currentPlanName}</strong> subscription
+                            and switch you to the free Starter plan. Your credits will
+                            be reset to the free plan allowance.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Keep Current Plan</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={cancelSubscription}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Yes, Switch to Free
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   ) : isFree ? (
                     <Button variant="outline" disabled className="w-full">
                       Free
@@ -210,9 +289,9 @@ export function BillingInfo() {
                       className={cn(
                         "w-full",
                         isPopular &&
-                          "bg-purple-600 hover:bg-purple-700 text-white",
+                        "bg-purple-600 hover:bg-purple-700 text-white",
                         isEnterprise &&
-                          "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0",
+                        "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0",
                       )}
                       variant={isPopular || isEnterprise ? "default" : "outline"}
                       onClick={() => subscribe(plan.id)}

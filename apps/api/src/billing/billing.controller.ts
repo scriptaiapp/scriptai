@@ -61,4 +61,12 @@ export class BillingController {
     if (!userId) throw new UnauthorizedException();
     return this.billingService.getCustomerPortalUrl(userId);
   }
+
+  @Post('cancel')
+  @UseGuards(SupabaseAuthGuard)
+  cancelSubscription(@Req() req: AuthRequest) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException();
+    return this.billingService.cancelActiveSubscription(userId);
+  }
 }

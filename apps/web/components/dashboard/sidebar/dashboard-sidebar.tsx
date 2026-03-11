@@ -11,7 +11,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
-import { Lock } from "lucide-react"
+import { Lock, Shield } from "lucide-react"
+import { useSupabase } from "@/components/supabase-provider"
 
 import logo from "@/public/dark-logo.png"
 import HomeIcon from "./icons/HomeIcon"
@@ -46,7 +47,7 @@ interface LogoProps {
 
 export const Logo = ({
   showText = true,
-  href = "/dashboard",
+  href = "/",
 }: LogoProps) => (
   <Link
     href={href}
@@ -90,21 +91,16 @@ export function Nav({ links, isCollapsed, onLinkClick }: NavProps) {
       <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
         {links?.map((link, index) => {
           const isActive = pathname === link.href
-          const Comp = link.locked ? "div" : Link
-          return (
-            <Comp
-              key={index}
-              {...(!link.locked && { href: link.href, onClick: onLinkClick })}
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 transition-all hover:text-slate-900 dark:hover:text-white",
-                isActive
-                  ? "bg-slate-100 dark:bg-slate-800 font-medium text-slate-900 dark:text-white"
-                  : "hover:bg-slate-100 dark:hover:bg-slate-800",
-                isCollapsed && "h-9 w-9 justify-center px-2",
-                link.locked && "opacity-50 cursor-not-allowed pointer-events-none"
-              )}
-              title={isCollapsed ? link.label : undefined}
-            >
+          const linkClassName = cn(
+            "flex items-center gap-2 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 transition-all hover:text-slate-900 dark:hover:text-white",
+            isActive
+              ? "bg-slate-100 dark:bg-slate-800 font-medium text-slate-900 dark:text-white"
+              : "hover:bg-slate-100 dark:hover:bg-slate-800",
+            isCollapsed && "h-9 w-9 justify-center px-2",
+            link.locked && "opacity-50 cursor-not-allowed pointer-events-none"
+          )
+          const content = (
+            <>
               {link.icon}
               {!isCollapsed && (
                 <span className="flex items-center gap-2">
@@ -117,7 +113,29 @@ export function Nav({ links, isCollapsed, onLinkClick }: NavProps) {
                   {link.locked && <Lock className="h-3 w-3 text-gray-400" />}
                 </span>
               )}
-            </Comp>
+            </>
+          )
+          if (link.locked) {
+            return (
+              <div
+                key={index}
+                className={linkClassName}
+                title={isCollapsed ? link.label : undefined}
+              >
+                {content}
+              </div>
+            )
+          }
+          return (
+            <Link
+              key={index}
+              href={link.href}
+              onClick={onLinkClick}
+              className={linkClassName}
+              title={isCollapsed ? link.label : undefined}
+            >
+              {content}
+            </Link>
           )
         })}
       </nav>
@@ -135,14 +153,15 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }: DashboardSidebarProps) {
   const [open, setOpen] = useState(false)
   const isMobile = useMobile()
+  const { profile } = useSupabase()
 
   const effectiveOpen = pinned ? true : open
-  const handleSetOpen = (val: boolean) => {
+  const handleSetOpen = (value: React.SetStateAction<boolean>) => {
     if (pinned) return
-    setOpen(val)
+    setOpen((prev) => (typeof value === "function" ? value(prev) : value))
   }
 
-  const links: ReadonlyArray<NavLink> = [
+  const baseLinks: NavLink[] = [
     { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
     { label: "AI Studio", icon: <SparklesIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
     { label: "Ideation", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
@@ -152,8 +171,14 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
     { label: "Video Generation", icon: <Video className="h-4 w-4" />, variant: "ghost", href: "/dashboard/video-generation", badge: "Soon", locked: true },
     { label: "Course Builder", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses", badge: "Soon", locked: true },
     { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing", badge: "Soon", locked: true },
-    { label: "Story Builder", icon: <Clapperboard className="h-4 w-4" />, variant: "ghost", href: "/dashboard/story-builder" }
+    { label: "Story Builder", icon: <Clapperboard className="h-4 w-4" />, variant: "ghost", href: "/dashboard/story-builder" },
   ]
+
+  if (profile?.role === "admin") {
+    baseLinks.push({ label: "Admin Panel", icon: <Shield className="h-4 w-4" />, variant: "ghost", href: "/dashboard/admin", badge: "Admin" })
+  }
+
+  const links: ReadonlyArray<NavLink> = baseLinks
 
   if (isMobile) {
     return (

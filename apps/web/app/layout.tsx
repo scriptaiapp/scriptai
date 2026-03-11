@@ -1,4 +1,5 @@
 import type React from "react"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -6,20 +7,54 @@ import { Toaster } from "@/components/ui/sonner"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { Analytics } from "@vercel/analytics/next"
+import { siteConfig, createMetadata } from "@/lib/seo"
+import JsonLd from "@/components/JsonLd"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+})
 
-export async function generateMetadata() {
-  const fullUrl = process.env.NEXT_PUBLIC_BASE_URL || "https:///tryscriptai.com"
+export const metadata: Metadata = createMetadata({
+  title: {
+    default: `${siteConfig.name} — AI Assistant for YouTube Creators`,
+    template: `%s | ${siteConfig.name}`,
+  },
+})
 
-  return {
-    title: "Creator AI - Personalized AI Assistant for YouTubers",
-    description: "Generate personalized scripts, titles, thumbnails for your YouTube videos",
-    alternates: {
-      canonical: fullUrl,
-    },
-    category: 'technology',
-  }
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+}
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteConfig.name,
+  url: siteConfig.url,
+  description: siteConfig.description,
+  sameAs: [`https://twitter.com/${siteConfig.twitterHandle.replace("@", "")}`],
+}
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: siteConfig.name,
+  url: siteConfig.url,
+  description: siteConfig.description,
+  applicationCategory: "Multimedia",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
 }
 
 export default function RootLayout({
@@ -30,6 +65,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <JsonLd data={organizationJsonLd} />
+        <JsonLd data={webAppJsonLd} />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -43,7 +80,6 @@ export default function RootLayout({
         </ThemeProvider>
         <SpeedInsights />
         <Analytics />
-
       </body>
     </html>
   )

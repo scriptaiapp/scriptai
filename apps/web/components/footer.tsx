@@ -11,12 +11,11 @@ import { FloatingDock } from "@/components/ui/floating-dock";
 import ReportIssue from './issue/report-an-issue';
 
 const socialLinks = [
-  { name: 'Twitter', href: 'https://x.com/afrinxnahar', icon: Twitter },
+  { name: 'Twitter', href: 'https://x.com/joincreatorai', icon: Twitter },
   { name: 'Discord', href: 'https://discord.gg/k9sZcq2gNG', icon: Discord },
   { name: 'GitHub', href: 'https://github.com/scriptaiapp/scriptai', icon: Github },
   { name: 'LinkedIn', href: 'https://www.linkedin.com/company/creatoraiapp', icon: Linkedin },
-  { name: 'Instagram', href: 'https://instagram.com/your-profile', icon: Instagram },
-  { name: 'Facebook', href: 'https://facebook.com/your-profile', icon: Facebook },
+  { name: 'Facebook', href: 'https://www.facebook.com/share/18S6iQ2RLG', icon: Facebook },
 ];
 
 type FooterLink = { name: string; href: string };
