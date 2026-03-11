@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import Lenis from "lenis"
@@ -10,12 +10,40 @@ import Footer from "@/components/footer"
 import { SparklesCore } from "@/components/ui/sparkles"
 import { ArrowRight, Calendar, Clock, User } from "lucide-react"
 import { blogPosts } from "@/lib/blog-data"
+import { toast } from "sonner"
 
 export default function BlogPage() {
   useEffect(() => {
     const lenis = new Lenis({ autoRaf: true })
     return () => lenis.destroy()
   }, [])
+
+  const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [subscribing, setSubscribing] = useState(false)
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newsletterEmail || subscribing) return
+    setSubscribing(true)
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail }),
+      })
+      if (!res.ok) throw new Error("Failed to subscribe")
+      toast.success("Subscribed!", {
+        description: "You'll receive the latest updates in your inbox.",
+      })
+      setNewsletterEmail("")
+    } catch {
+      toast.error("Failed to subscribe", {
+        description: "Something went wrong. Please try again.",
+      })
+    } finally {
+      setSubscribing(false)
+    }
+  }
 
   const featured = blogPosts.find((p) => p.featured)
   const rest = blogPosts.filter((p) => !p.featured)
@@ -172,17 +200,24 @@ export default function BlogPage() {
               <p className="text-slate-600 mb-8">
                 Get the latest tips, product updates, and creator insights delivered to your inbox.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 justify-center">
                 <input
                   type="email"
+                  required
                   placeholder="your@email.com"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   className="flex-1 max-w-xs rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
-                <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 transition-colors">
-                  Subscribe
-                  <ArrowRight className="w-4 h-4" />
+                <button
+                  type="submit"
+                  disabled={subscribing}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+                >
+                  {subscribing ? "Subscribing..." : "Subscribe"}
+                  {!subscribing && <ArrowRight className="w-4 h-4" />}
                 </button>
-              </div>
+              </form>
             </motion.div>
           </div>
         </section>

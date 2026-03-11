@@ -19,7 +19,7 @@ async function sendWelcomeEmail(
       from: 'Creator AI <onboarding@tryscriptai.com>',
       to: email,
       subject: 'Welcome to Creator AI!',
-      replyTo: 'no-reply@tryscriptai.com', // support@tryscriptai.com
+      replyTo: 'support@tryscriptai.com',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
           <h1 style="color: #4F46E5; margin-bottom: 10px;">Welcome aboard, ${full_name}! 🎉</h1>
@@ -57,7 +57,7 @@ async function sendWelcomeEmail(
           </p>
 
           <p style="margin-top: 30px;">Have any questions? Just reply to this email or reach us at 
-            <a href="mailto:no-reply@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">no-reply@tryscriptai.com</a>. <!-- support@tryscriptai.com -->
+            <a href="mailto:support@tryscriptai.com" style="color: #4F46E5; text-decoration: none;">support@tryscriptai.com</a>.
           </p>
 
           <p style="margin-top: 20px;">Cheers,<br/>The Creator AI Team</p>
@@ -73,7 +73,7 @@ async function sendAdminNotification(full_name: string, email: string, resend: R
   try {
     await resend.emails.send({
       from: 'Creator AI <notifications@tryscriptai.com>',
-      to: 'afrin@tryscriptai.com',
+      to: 'support@tryscriptai.com',
       subject: 'New User Sign Up Notification',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">

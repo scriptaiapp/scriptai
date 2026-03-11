@@ -29,7 +29,8 @@
     "OPENAI_API_KEY",
     "LEMONSQUEEZY_API_KEY",
     "LEMONSQUEEZY_STORE_ID",
-    "LEMONSQUEEZY_WEBHOOK_SECRET"
+    "LEMONSQUEEZY_WEBHOOK_SECRET",
+    "RESEND_WEBHOOK_SECRET"
   ],
   "tasks": {
     "dev": { "cache": false, "persistent": true },
@@ -65,7 +66,8 @@
         "SUPABASE_SERVICE_KEY",
         "LEMONSQUEEZY_API_KEY",
         "LEMONSQUEEZY_STORE_ID",
-        "LEMONSQUEEZY_WEBHOOK_SECRET"
+        "LEMONSQUEEZY_WEBHOOK_SECRET",
+        "RESEND_WEBHOOK_SECRET"
       ]
     },
     "db:pull": { "dependsOn": ["^build"], "outputs": ["packages/supabase/migrations/**"] },

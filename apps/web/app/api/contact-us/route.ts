@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 
-async function contactUsMail(name: string, email: string, message: string,phone:string, resend: Resend) {
+async function contactUsMail(name: string, email: string, message: string, phone: string, resend: Resend) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Script AI <notifications@tryscriptai.com>',
-      to: 'afrin@tryscriptai.com',
+      from: 'Creator AI <notifications@tryscriptai.com>',
+      to: 'support@tryscriptai.com',
+      replyTo: email,
       subject: "📬 New Contact Message",
       html: `<div style="font-family: Arial, sans-serif; color: #333; background: #f9f9f9; padding: 20px;">
           <div style="background: white; padding: 20px; border-radius: 8px;">
@@ -22,7 +23,7 @@ async function contactUsMail(name: string, email: string, message: string,phone:
         </div>`,
     });
     if (error) {
-      console.error('Error sending issue mail:', error)
+      console.error('Error sending contact mail:', error)
       return { success: false, error }
     }
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
 
-    const result = await contactUsMail(email, message, name, phone, resend)
+    const result = await contactUsMail(name, email, message, phone, resend)
     return NextResponse.json(result, { status: result?.success ? 200 : 500 })
 
   } catch (error) {
