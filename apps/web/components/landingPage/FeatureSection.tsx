@@ -112,7 +112,7 @@ export default function FeatureSection() {
           Everything You Need to Create Better Content
         </h2>
         <p className="max-w-[700px] text-slate-600 dark:text-slate-400 md:text-lg">
-          From brainstorming ideas to publishing your video — Creator AI has a tool for every step.
+          From brainstorming ideas to publishing your video. Creator AI has a tool for every step.
         </p>
       </motion.div>
 

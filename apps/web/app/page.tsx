@@ -13,6 +13,7 @@ import HowItWorks from "@/components/landingPage/HowItWorks"
 import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
 import FAQSection from "@/components/landingPage/FAQSection"
+import WhyCreatorAI from "@/components/landingPage/WhyCreatorAI"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
 import { useEffect } from "react"
@@ -177,7 +178,11 @@ export default function Home() {
             <HowItWorks />
           </section>
 
-          <section id="pricing" className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-slate-800">
+          <section id="why-creator-ai" className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-slate-800">
+            <WhyCreatorAI />
+          </section>
+
+          <section id="pricing" className="py-16 sm:py-20 lg:py-24 bg-slate-50 dark:bg-slate-900">
             <PricingSection />
           </section>
 
