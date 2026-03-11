@@ -11,7 +11,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
-import { Lock } from "lucide-react"
+import { Lock, Shield } from "lucide-react"
+import { useSupabase } from "@/components/supabase-provider"
 
 import logo from "@/public/dark-logo.png"
 import HomeIcon from "./icons/HomeIcon"
@@ -152,6 +153,7 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }: DashboardSidebarProps) {
   const [open, setOpen] = useState(false)
   const isMobile = useMobile()
+  const { profile } = useSupabase()
 
   const effectiveOpen = pinned ? true : open
   const handleSetOpen = (value: React.SetStateAction<boolean>) => {
@@ -159,7 +161,7 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
     setOpen((prev) => (typeof value === "function" ? value(prev) : value))
   }
 
-  const links: ReadonlyArray<NavLink> = [
+  const baseLinks: NavLink[] = [
     { label: "Dashboard", icon: <HomeIcon className="h-4 w-4" />, variant: "default", href: "/dashboard" },
     { label: "AI Studio", icon: <SparklesIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/train" },
     { label: "Ideation", icon: <SearchIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/research" },
@@ -169,8 +171,14 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
     { label: "Video Generation", icon: <Video className="h-4 w-4" />, variant: "ghost", href: "/dashboard/video-generation", badge: "Soon", locked: true },
     { label: "Course Builder", icon: <BookOpenIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/courses", badge: "Soon", locked: true },
     { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing", badge: "Soon", locked: true },
-    { label: "Story Builder", icon: <Clapperboard className="h-4 w-4" />, variant: "ghost", href: "/dashboard/story-builder" }
+    { label: "Story Builder", icon: <Clapperboard className="h-4 w-4" />, variant: "ghost", href: "/dashboard/story-builder" },
   ]
+
+  if (profile?.role === "admin") {
+    baseLinks.push({ label: "Admin Panel", icon: <Shield className="h-4 w-4" />, variant: "ghost", href: "/dashboard/admin", badge: "Admin" })
+  }
+
+  const links: ReadonlyArray<NavLink> = baseLinks
 
   if (isMobile) {
     return (

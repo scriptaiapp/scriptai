@@ -64,7 +64,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase
           .from("profiles")
           .select(
-            "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
+            "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code, role"
           )
           .eq("user_id", userId)
           .single()
@@ -82,7 +82,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             .update({ referral_code: referral })
             .eq("user_id", userId)
             .select(
-              "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code"
+              "avatar_url, email, full_name, credits, ai_trained, youtube_connected, language, referral_code, role"
             )
             .single()
 
@@ -151,6 +151,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     isLoggingOut.current = true
     await supabase.auth.signOut()
+    setSession(null)
+    setUser(null)
+    setProfile(null)
+    setProviderToken(null)
+    isLoggingOut.current = false
   }
 
   // Fetch profile when user changes

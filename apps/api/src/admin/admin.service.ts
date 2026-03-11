@@ -1,0 +1,321 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { SupabaseService } from '../supabase/supabase.service';
+
+@Injectable()
+export class AdminService {
+  constructor(private readonly supabaseService: SupabaseService) {}
+
+  private get db() {
+    return this.supabaseService.getAdminClient();
+  }
+
+  // ==================== DASHBOARD STATS ====================
+
+  async getDashboardStats() {
+    const [
+      usersRes,
+      salesRepsRes,
+      newUsersRes,
+      subsRes,
+      blogsRes,
+      salesRes,
+      revenueRes,
+      mailsRes,
+    ] = await Promise.all([
+      this.db.from('profiles').select('id', { count: 'exact', head: true }),
+      this.db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales_rep'),
+      this.db.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString()),
+      this.db.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      this.db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+      this.db.from('affiliate_sales').select('id', { count: 'exact', head: true }).eq('status', 'confirmed'),
+      this.db.from('affiliate_sales').select('amount').in('status', ['confirmed', 'paid']),
+      this.db.from('mail_messages').select('id', { count: 'exact', head: true }).eq('status', 'unread'),
+    ]);
+
+    const totalRevenue = revenueRes.data?.reduce((sum, r) => sum + Number(r.amount || 0), 0) ?? 0;
+
+    return {
+      totalUsers: usersRes.count ?? 0,
+      totalSalesReps: salesRepsRes.count ?? 0,
+      newUsers30d: newUsersRes.count ?? 0,
+      activeSubscriptions: subsRes.count ?? 0,
+      publishedBlogs: blogsRes.count ?? 0,
+      totalSales: salesRes.count ?? 0,
+      totalRevenue,
+      unreadMails: mailsRes.count ?? 0,
+    };
+  }
+
+  // ==================== USERS CRUD ====================
+
+  async getUsers(page = 1, limit = 20, search?: string, role?: string) {
+    let query = this.db
+      .from('profiles')
+      .select('id, user_id, full_name, name, email, credits, role, ai_trained, created_at, updated_at, avatar_url', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (search) {
+      query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,name.ilike.%${search}%`);
+    }
+    if (role) {
+      query = query.eq('role', role);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async getUser(userId: string) {
+    const { data, error } = await this.db
+      .from('profiles')
+      .select('*, subscriptions(*), usage_credits(*)')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) throw new NotFoundException('User not found');
+    return data;
+  }
+
+  async updateUser(userId: string, updates: Record<string, unknown>) {
+    const { data, error } = await this.db
+      .from('profiles')
+      .update(updates)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async deleteUser(userId: string) {
+    const { error } = await this.db.auth.admin.deleteUser(userId);
+    if (error) throw new BadRequestException(error.message);
+    return { success: true };
+  }
+
+  // ==================== SALES REP MANAGEMENT ====================
+
+  async createSalesRep(email: string, name: string, password: string) {
+    const { data: authData, error: authError } = await this.db.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name },
+    });
+
+    if (authError) throw new BadRequestException(authError.message);
+
+    await this.db
+      .from('profiles')
+      .update({ role: 'sales_rep', full_name: name })
+      .eq('user_id', authData.user.id);
+
+    return { id: authData.user.id, email, name, role: 'sales_rep' };
+  }
+
+  async getSalesReps(page = 1, limit = 20) {
+    const { data, error, count } = await this.db
+      .from('profiles')
+      .select('id, user_id, full_name, name, email, role, created_at, avatar_url', { count: 'exact' })
+      .eq('role', 'sales_rep')
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async removeSalesRepRole(userId: string) {
+    const { data, error } = await this.db
+      .from('profiles')
+      .update({ role: 'user' })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  // ==================== BLOGS CRUD ====================
+
+  async getBlogs(page = 1, limit = 20, status?: string) {
+    let query = this.db
+      .from('blog_posts')
+      .select('*, profiles!blog_posts_author_fkey(full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async getBlog(id: string) {
+    const { data, error } = await this.db
+      .from('blog_posts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) throw new NotFoundException('Blog post not found');
+    return data;
+  }
+
+  async createBlog(authorId: string, blog: {
+    title: string;
+    slug: string;
+    excerpt?: string;
+    content: string;
+    cover_image_url?: string;
+    category?: string;
+    tags?: string[];
+    status?: string;
+    featured?: boolean;
+  }) {
+    const { data, error } = await this.db
+      .from('blog_posts')
+      .insert({
+        ...blog,
+        author_id: authorId,
+        published_at: blog.status === 'published' ? new Date().toISOString() : null,
+      })
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async updateBlog(id: string, updates: Record<string, unknown>) {
+    if (updates.status === 'published') {
+      updates.published_at = new Date().toISOString();
+    }
+
+    const { data, error } = await this.db
+      .from('blog_posts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async deleteBlog(id: string) {
+    const { error } = await this.db
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new BadRequestException(error.message);
+    return { success: true };
+  }
+
+  // ==================== ACTIVITIES ====================
+
+  async getActivities(page = 1, limit = 50, entityType?: string) {
+    let query = this.db
+      .from('activities')
+      .select('*, profiles!activities_actor_fkey(full_name, email, avatar_url)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (entityType) {
+      query = query.eq('entity_type', entityType);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async logActivity(actorId: string, action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) {
+    const { error } = await this.db
+      .from('activities')
+      .insert({ actor_id: actorId, action, entity_type: entityType, entity_id: entityId, metadata });
+
+    if (error) console.error('Failed to log activity:', error.message);
+  }
+
+  // ==================== MAILS ====================
+
+  async getMails(page = 1, limit = 20, status?: string) {
+    let query = this.db
+      .from('mail_messages')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async updateMailStatus(id: string, status: string, repliedBy?: string) {
+    const updates: Record<string, unknown> = { status };
+    if (status === 'replied' && repliedBy) {
+      updates.replied_at = new Date().toISOString();
+      updates.replied_by = repliedBy;
+    }
+
+    const { data, error } = await this.db
+      .from('mail_messages')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  // ==================== AFFILIATES (Admin view) ====================
+
+  async getAllAffiliateLinks(page = 1, limit = 20) {
+    const { data, error, count } = await this.db
+      .from('affiliate_links')
+      .select('*, profiles!affiliate_links_rep_fkey(full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async getAllAffiliateSales(page = 1, limit = 20) {
+    const { data, error, count } = await this.db
+      .from('affiliate_sales')
+      .select('*, affiliate_links(code, label), profiles!affiliate_sales_rep_fkey(full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async updateAffiliateSaleStatus(id: string, status: string) {
+    const { data, error } = await this.db
+      .from('affiliate_sales')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+}
