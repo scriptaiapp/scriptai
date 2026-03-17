@@ -21,6 +21,15 @@ import { Gift, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "../ui/button"
 
+const FEATURE_IMAGES: Record<string, string> = {
+  "AI Studio": "/ai studio page.png",
+  "Script Writing": "/scripts page.png",
+  "Video Ideas": "/ideation page.png",
+  "Story Builder": "/story page.png",
+  Thumbnails: "/thumbnail page.png",
+  Subtitles: "/subtitle page.png",
+}
+
 const Logo = () => (
   <Link
     href="/"
@@ -33,12 +42,14 @@ const Logo = () => (
 function DesktopNavItems({ items }: { items: NavItemType[] }) {
   const [hovered, setHovered] = useState<number | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [hoveredChildIdx, setHoveredChildIdx] = useState<number | null>(null)
 
   return (
     <div
       onMouseLeave={() => {
         setHovered(null)
         setDropdownOpen(false)
+        setHoveredChildIdx(null)
       }}
       className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 lg:flex"
     >
@@ -75,33 +86,76 @@ function DesktopNavItems({ items }: { items: NavItemType[] }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 top-full z-50 mt-1 w-[280px] -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                  className="absolute left-[-100%] top-full z-50 mt-1 flex w-full max-w-[800px] md:w-[800px] -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  {item.children.map((child, childIdx) => (
-                    <a
-                      key={`child-${childIdx}`}
-                      href={child.href}
-                      className="flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
-                    >
-                      <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                        {child.name}
-                      </span>
-                      {child.description && (
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {child.description}
-                        </span>
-                      )}
-                    </a>
-                  ))}
-                  <div className="mt-1 border-t border-slate-100 pt-1 dark:border-slate-800">
-                    <a
-                      href="/features"
-                      className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-purple-600 transition-colors hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
-                    >
-                      View all features →
-                    </a>
+                  <div className="flex min-w-0 flex-1 flex-col p-2">
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-0">
+                      {item.children.map((child, childIdx) => {
+                        const imageSrc = FEATURE_IMAGES[child.name]
+                        return (
+                          <a
+                            key={`child-${childIdx}`}
+                            href={child.href}
+                            className="flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                            onMouseEnter={() => setHoveredChildIdx(childIdx)}
+                          >
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                              {child.name}
+                            </span>
+                            {child.description && (
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {child.description}
+                              </span>
+                            )}
+                          </a>
+                        )
+                      })}
+                    </div>
+                    <div className="mt-1 border-t border-slate-100 pt-1 dark:border-slate-800">
+                      <a
+                        href="/features"
+                        className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-purple-600 transition-colors hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                      >
+                        View all features →
+                      </a>
+                    </div>
+                  </div>
+                  <div className="relative min-h-[220px] w-[320px] shrink-0 border-l border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+                    <AnimatePresence mode="wait">
+                      {(() => {
+                        const child =
+                          hoveredChildIdx !== null ? item.children[hoveredChildIdx] : null
+                        const imageSrc = child ? FEATURE_IMAGES[child.name] : null
+                        if (!child || !imageSrc) return null
+                        return (
+                          <motion.div
+                            key={hoveredChildIdx}
+                            initial={{ opacity: 0, scale: 0.96 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="absolute inset-0 flex items-center justify-center p-2"
+                          >
+                            <div className="relative h-full w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-900">
+                              <Image
+                                src={imageSrc}
+                                alt={child.name}
+                                fill
+                                className="object-contain object-center"
+                                sizes="320px"
+                              />
+                            </div>
+                          </motion.div>
+                        )
+                      })()}
+                    </AnimatePresence>
+                    {hoveredChildIdx === null && (
+                      <div className="flex h-full min-h-[200px] items-center justify-center p-4 text-sm text-slate-400 dark:text-slate-500">
+                        Hover a feature to preview
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
