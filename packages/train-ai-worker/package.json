@@ -28,6 +28,7 @@
     "@repo/api": "workspace:*",
     "@repo/supabase": "workspace:*",
     "@repo/validation": "workspace:*",
+    "@upstash/redis": "^1.37.0",
     "axios": "catalog:",
     "bullmq": "catalog:",
     "ioredis": "^5.8.2",

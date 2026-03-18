@@ -166,8 +166,8 @@ function SignupForm() {
     try {
 
       const redirectUrl = referralCode
-          ? `${window.location.origin}/api/auth/callback?ref=${referralCode}`
-          : `${window.location.origin}/api/auth/callback`;
+        ? `${window.location.origin}/api/auth/callback?ref=${referralCode}`
+        : `${window.location.origin}/api/auth/callback`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
