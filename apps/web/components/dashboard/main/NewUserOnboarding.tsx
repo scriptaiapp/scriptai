@@ -110,6 +110,9 @@ export function NewUserOnboarding({
                                 <Button
                                     onClick={connectYoutubeChannel}
                                     disabled={connectingYoutube}
+                                    variant="secondary"
+                                    size="sm"
+                                    className="bg-black text-white hover:bg-black/80"
                                 >
                                     {connectingYoutube ? "Connecting..." : "Connect"}
                                 </Button>

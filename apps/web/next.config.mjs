@@ -1,3 +1,8 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -11,6 +16,15 @@ const nextConfig = {
   },
   transpilePackages: ["@repo/ui"],
   poweredByHeader: false,
+  webpack: (config) => {
+    // @react-three/fiber 10.x alpha imports three/addons/inspector/Inspector.js
+    // which is not shipped in the three npm package. Stub it so the app builds.
+    config.resolve.alias["three/addons/inspector/Inspector.js"] = path.join(
+      __dirname,
+      "lib/three-inspector-stub.js"
+    );
+    return config;
+  },
   async headers() {
     return [
       {

@@ -97,6 +97,9 @@ const Footer = () => {
           <p className="text-sm text-slate-600 dark:text-slate-400">
             &copy; {new Date().getFullYear()} Creator AI. All rights reserved.
           </p>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+            Formerly known as Script AI
+          </p>
         </motion.div>
       </motion.div>
     </footer>
