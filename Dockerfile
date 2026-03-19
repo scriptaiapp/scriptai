@@ -1,7 +1,7 @@
 FROM node:18-alpine AS base
 
 RUN apk update && apk add --no-cache yt-dlp ffmpeg
-RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 WORKDIR /app
 
