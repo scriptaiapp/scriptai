@@ -2,10 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { WorkerModule } from './worker.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(WorkerModule);
-  const port = process.env.PORT ?? 8001;
-  await app.listen(port);
-  console.log(`Train AI Worker started (health :${port})`);
+  const app = await NestFactory.create(WorkerModule, {
+    logger: ['error', 'warn', 'log'],
+  });
+  await app.init();
+  // Keep process alive forever
+  process.on('SIGTERM', async () => {
+    console.log('Shutting down gracefully...');
+    await app.close();
+    process.exit(0);
+  });
+
+  console.log('Train AI Worker initialized successfully');
 }
 
 bootstrap().catch((error) => {

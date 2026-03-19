@@ -172,6 +172,8 @@ const LandingPageNavbar = () => {
   const [mobileFeatureOpen, setMobileFeatureOpen] = useState(false)
   const router = useRouter()
 
+
+
   return (
     <motion.div
       className="relative w-full"

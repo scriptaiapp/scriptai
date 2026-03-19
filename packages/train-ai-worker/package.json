@@ -43,5 +43,6 @@
     "ts-node": "^10.9.2",
     "tsup": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@9.15.4"
 }
