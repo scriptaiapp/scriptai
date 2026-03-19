@@ -36,7 +36,7 @@
     "supabase": "^2.48.3",
     "turbo": "^2.7.2"
   },
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=18"
   },
