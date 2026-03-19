@@ -1,29 +1,21 @@
-FROM node:18-alpine AS base
-
-RUN apk update && apk add --no-cache yt-dlp ffmpeg
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+FROM node:18-alpine
 
 WORKDIR /app
 
-# ── Install dependencies ──────────────────────────────────────────────
-FROM base AS deps
+# Optional runtime deps (used by `packages/train-ai-worker/src/processor/utils/yt-dlp.ts`)
+RUN apk update && apk add --no-cache yt-dlp ffmpeg
 
+# Enable pnpm (repo uses pnpm workspaces)
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+# Install dependencies (workspace)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
+
 RUN pnpm install --frozen-lockfile
 
-# ── Build the worker ──────────────────────────────────────────────────
-FROM deps AS build
-
+# Build the worker and its workspace dependencies
 RUN pnpm --filter @repo/train-ai-worker... build
-
-# ── Production image ──────────────────────────────────────────────────
-FROM base AS runner
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY --from=build /app/packages/train-ai-worker/dist ./packages/train-ai-worker/dist
-COPY --from=deps /app/package.json ./
 
 EXPOSE ${PORT:-8001}
 
