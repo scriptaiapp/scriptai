@@ -5,8 +5,10 @@ import Link from "next/link"
 import { Button } from "../ui/button"
 import { WobbleCard } from "../ui/wobble-card"
 import { motion } from "motion/react"
+import { useSupabase } from "../supabase-provider"
 
-export default function PricingSection() {
+export default function PricingSection({ hideHeader = false }: { hideHeader?: boolean }) {
+    const { user } = useSupabase()
     const comingSoon = new Set(["Course Builder", "Audio dubbing", "Video Generation"])
     const baseFeatures = {
         starter: [
@@ -72,20 +74,22 @@ export default function PricingSection() {
 
     return (
         <div className="container px-4 sm:px-6 lg:px-8">
-            <motion.div
-                className="flex flex-col items-center text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12 lg:mb-16"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-            >
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
-                    Pricing
-                </h2>
-                <p className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-prose text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-400">
-                    Choose the plan that works best for your content creation needs.
-                </p>
-            </motion.div>
+            {!hideHeader && (
+                <motion.div
+                    className="flex flex-col items-center text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12 lg:mb-16"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50">
+                        Pricing
+                    </h2>
+                    <p className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-prose text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-400">
+                        Choose the plan that works best for your content creation needs.
+                    </p>
+                </motion.div>
+            )}
 
             <motion.div
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12"
@@ -175,7 +179,11 @@ export default function PricingSection() {
                                 )}
                                 variant={isPopular ? "default" : "outline"}
                             >
-                                <Link href="/signup">
+                                <Link href={
+                                    user
+                                        ? `/dashboard/settings?tab=billing&plan=${plan.id}`
+                                        : `/login?redirectTo=${encodeURIComponent(`/dashboard/settings?tab=billing&plan=${plan.id}`)}`
+                                }>
                                     {buttonLabel}
                                 </Link>
                             </Button>

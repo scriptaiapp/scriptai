@@ -11,7 +11,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
-import { Lock, Shield } from "lucide-react"
+import { Lock } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
 
 import logo from "@/public/dark-logo.png"
@@ -173,10 +173,6 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
     { label: "Audio Dubbing", icon: <MicIcon className="h-4 w-4" />, variant: "ghost", href: "/dashboard/dubbing", badge: "Soon", locked: true },
     { label: "Story Builder", icon: <Clapperboard className="h-4 w-4" />, variant: "ghost", href: "/dashboard/story-builder" },
   ]
-
-  if (profile?.role === "admin") {
-    baseLinks.push({ label: "Admin Panel", icon: <Shield className="h-4 w-4" />, variant: "ghost", href: "/dashboard/admin", badge: "Admin" })
-  }
 
   const links: ReadonlyArray<NavLink> = baseLinks
 

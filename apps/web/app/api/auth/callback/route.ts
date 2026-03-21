@@ -238,14 +238,21 @@ async function sendWelcomeEmailsIfNeeded(
 }
 
 async function getRedirectByRole(supabase: any, userId: string, fallback: string | null): Promise<string> {
-  if (fallback) return fallback;
   try {
     const { data } = await supabase
       .from('profiles')
       .select('role')
       .eq('user_id', userId)
       .single();
-    if (data?.role === 'admin') return '/dashboard/admin';
+
+    if (data?.role === 'admin') {
+      return (fallback && fallback.startsWith('/dashboard/admin')) ? fallback : '/dashboard/admin';
+    }
+
+    if (fallback && fallback.startsWith('/dashboard') && !fallback.startsWith('/dashboard/admin')) {
+      return fallback;
+    }
+
     if (data?.role === 'sales_rep') return '/dashboard/sales-rep';
   } catch {}
   return '/dashboard';

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -52,18 +52,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const { supabase, user, profile, profileLoading } = useSupabase()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get("redirectTo")
 
   useEffect(() => {
     if (user && !profileLoading && profile) {
       if (profile.role === "admin") {
-        router.replace("/dashboard/admin")
+        router.replace("/admin/login")
+        return
+      }
+      if (redirectTo) {
+        router.replace(redirectTo)
       } else if (profile.role === "sales_rep") {
         router.replace("/dashboard/sales-rep")
       } else {
         router.replace("/dashboard")
       }
     }
-  }, [user, profile, profileLoading, router])
+  }, [user, profile, profileLoading, router, redirectTo])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +92,12 @@ export default function LoginPage() {
 
       if (data.user) {
         toast.success("You have been successfully logged in.")
+
+        if (redirectTo) {
+          router.push(redirectTo)
+          return
+        }
+
         const { data: profileData } = await supabase
           .from("profiles")
           .select("role")
@@ -94,8 +106,11 @@ export default function LoginPage() {
 
         const role = profileData?.role
         if (role === "admin") {
-          router.push("/dashboard/admin")
-        } else if (role === "sales_rep") {
+          await supabase.auth.signOut()
+          toast.error("Access Denied", { description: "Admins must use the admin login portal." })
+          return
+        }
+        if (role === "sales_rep") {
           router.push("/dashboard/sales-rep")
         } else {
           router.push("/dashboard")
@@ -125,10 +140,13 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      const callbackUrl = new URL("/api/auth/callback", window.location.origin)
+      if (redirectTo) callbackUrl.searchParams.set("next", redirectTo)
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       })
 
