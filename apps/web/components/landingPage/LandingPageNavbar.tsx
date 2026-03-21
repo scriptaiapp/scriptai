@@ -199,11 +199,11 @@ const LandingPageNavbar = () => {
               <Gift className="h-3.5 w-3.5" />
               Refer &amp; Earn 250 Free Credits
             </Button> */}
-            <ShimmerButton className="text-sm h-9" onClick={() => router.push("/signup")}>
+            {/* <ShimmerButton className="text-sm h-9" onClick={() => router.push("/signup")}>
               Sign Up
-            </ShimmerButton>
+            </ShimmerButton> */}
             <ShimmerButton className="text-sm h-9" onClick={() => router.push("/login")}>
-              Login
+              Sign In
             </ShimmerButton>
           </div>
         </NavBody>
@@ -274,22 +274,20 @@ const LandingPageNavbar = () => {
               )
             )}
             <div className="flex flex-col gap-3 mt-4">
-              <Link
+              {/* <Link
                 href="/signup?ref=navbar"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50/80 px-4 py-2.5 text-sm font-medium text-amber-700 dark:border-amber-600/40 dark:bg-amber-950/30 dark:text-amber-400"
               >
                 <Gift className="h-4 w-4" />
                 Refer &amp; Earn Credits
-              </Link>
+              </Link> */}
               <ShimmerButton className="text-sm h-9 w-full" onClick={() => { router.push("/signup"); setIsMobileMenuOpen(false) }}>
                 Get Started
               </ShimmerButton>
-              <NavbarButton variant="secondary" className="w-full">
-                <ShimmerButton className="text-sm h-9" onClick={() => { router.push("https://cal.com/afrin/30min"); setIsMobileMenuOpen(false) }}>
-                  Book a Call
-                </ShimmerButton>
-              </NavbarButton>
+              <ShimmerButton className="text-sm h-9" onClick={() => router.push("/login")}>
+                Sign In
+              </ShimmerButton>
             </div>
           </MobileNavMenu>
         </MobileNav>
