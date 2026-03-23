@@ -39,6 +39,7 @@ export function useIdeation() {
   const [nicheFocus, setNicheFocus] = useState("");
   const [ideaCount, setIdeaCount] = useState(3);
   const [autoMode, setAutoMode] = useState(false);
+  const [useYoutubeContext, setUseYoutubeContext] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -125,6 +126,7 @@ export function useIdeation() {
           nicheFocus: nicheFocus.trim() || undefined,
           ideaCount,
           autoMode,
+          useYoutubeContext,
         },
         { requireAuth: true },
       );
@@ -162,6 +164,7 @@ export function useIdeation() {
     setNicheFocus("");
     setIdeaCount(3);
     setAutoMode(false);
+    setUseYoutubeContext(false);
     setGeneratedResult(null);
   };
 
@@ -170,6 +173,7 @@ export function useIdeation() {
     nicheFocus, setNicheFocus,
     ideaCount, setIdeaCount,
     autoMode, setAutoMode,
+    useYoutubeContext, setUseYoutubeContext,
     isGenerating,
     progress: sse.progress,
     statusMessage: sse.statusMessage,

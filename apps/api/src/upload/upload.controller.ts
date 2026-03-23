@@ -2,12 +2,15 @@ import {
   Controller, Post, Delete, Req, UseGuards,
   UseInterceptors, UploadedFile,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { getUserId } from '../common/get-user-id';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { UploadService } from './upload.service';
 
+@ApiTags('upload')
+@ApiBearerAuth()
 @Controller('upload')
 @UseGuards(SupabaseAuthGuard)
 export class UploadController {

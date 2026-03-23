@@ -4,7 +4,8 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { createSupabaseClient, getSupabaseServiceEnv } from '@repo/supabase';
+import { ConfigService } from '@nestjs/config';
+import { SupabaseService } from '../supabase/supabase.service';
 import { CreateDubInput, DubResponse, DubbingProgress, murfLocaleMap, SupportedLanguage } from '@repo/validation';
 import { randomUUID } from 'crypto';
 import axios from 'axios';
@@ -20,24 +21,26 @@ interface PendingProject {
   mediaName: string;
 }
 
-const DUBBING_TIMEOUT = 600_000; // 10 minutes
+const DUBBING_TIMEOUT = 600_000;
 
 @Injectable()
 export class DubbingService {
   private readonly logger = new Logger(DubbingService.name);
-  private readonly supabase = createSupabaseClient(
-    getSupabaseServiceEnv().url,
-    getSupabaseServiceEnv().key,
-  );
-
   private readonly murfApiKey: string;
   private readonly baseURL = 'https://api.murf.ai/v1/murfdub';
   private readonly pendingProjects = new Map<string, PendingProject>();
 
-  constructor() {
-    const apiKey = process.env.MURF_API_KEY;
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly configService: ConfigService,
+  ) {
+    const apiKey = this.configService.get<string>('MURF_API_KEY');
     if (!apiKey) throw new Error('MURF_API_KEY missing');
     this.murfApiKey = apiKey;
+  }
+
+  private get supabase() {
+    return this.supabaseService.getClient();
   }
 
 

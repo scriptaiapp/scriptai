@@ -1,9 +1,12 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { YoutubeService } from './youtube.service';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { getUserId } from '../common/get-user-id';
 
+@ApiTags('youtube')
+@ApiBearerAuth()
 @Controller('youtube')
 @UseGuards(SupabaseAuthGuard)
 export class YoutubeController {

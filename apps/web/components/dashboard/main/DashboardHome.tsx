@@ -288,7 +288,7 @@ export function DashboardHome({
                             </div>
                             <div>
                               <p className="font-semibold">AI Studio</p>
-                              <p className="text-sm text-slate-500 dark:text-slate-400">To create a personalized script generator.</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">To create a personalized AI Engine.</p>
                             </div>
                           </div>
                           <ArrowRight className="h-5 w-5 text-slate-400" />
@@ -368,8 +368,8 @@ export function DashboardHome({
                         key={p}
                         onClick={() => setActivityPeriod(p)}
                         className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${activityPeriod === p
-                            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                           }`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}

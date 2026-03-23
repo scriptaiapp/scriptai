@@ -409,7 +409,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     userId: string,
     filename: string,
   ) {
-    const { duration } = input;
+    const { duration, scriptId } = input;
 
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -476,6 +476,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
           video_url: publicUrl,
           duration: parsedDuration,
           filename: filename,
+          script_id: scriptId || null,
         })
         .select()
         .single();

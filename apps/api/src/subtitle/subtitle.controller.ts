@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards, UnauthorizedException, BadRequestException, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubtitleService } from './subtitle.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -20,6 +21,8 @@ import type {
   BurnSubtitleInput,
 } from '@repo/validation';
 
+@ApiTags('subtitle')
+@ApiBearerAuth()
 @Controller('subtitle')
 @UseGuards(SupabaseAuthGuard)
 export class SubtitleController {

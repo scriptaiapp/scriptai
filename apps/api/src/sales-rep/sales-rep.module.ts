@@ -7,6 +7,5 @@ import { SupabaseModule } from '../supabase/supabase.module';
   imports: [SupabaseModule],
   controllers: [SalesRepController],
   providers: [SalesRepService],
-  exports: [SalesRepService],
 })
 export class SalesRepModule {}

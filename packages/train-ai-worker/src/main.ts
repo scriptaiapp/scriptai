@@ -1,11 +1,25 @@
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WorkerModule } from './worker.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(WorkerModule);
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Creator AI Worker')
+    .setDescription('Background job processor for Creator AI platform')
+    .setVersion('1.0')
+    .addTag('health', 'Health check')
+    .addTag('processors', 'BullMQ job processors: train-ai, thumbnail, story-builder, ideation, script')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document);
+
   const port = process.env.PORT ?? 8001;
   await app.listen(port);
   console.log(`Train AI Worker listening on :${port}`);
+  console.log(`Swagger docs available at http://localhost:${port}/docs`);
 
   process.on('SIGTERM', async () => {
     console.log('SIGTERM received – shutting down gracefully…');

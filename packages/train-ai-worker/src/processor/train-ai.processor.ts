@@ -200,8 +200,9 @@ export class TrainAiProcessor extends WorkerHost {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
-          responseSchema: schema,
-          temperature: 0
+          responseJsonSchema: schema,
+          temperature: 0,
+          maxOutputTokens: 30000
         },
       });
 

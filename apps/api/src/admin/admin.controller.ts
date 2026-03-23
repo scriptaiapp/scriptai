@@ -11,11 +11,14 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { RolesGuard, Roles } from '../guards/roles.guard';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 
+@ApiTags('admin')
+@ApiBearerAuth()
 @Controller('admin')
 @UseGuards(SupabaseAuthGuard, RolesGuard)
 @Roles('admin')

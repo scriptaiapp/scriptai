@@ -246,7 +246,7 @@ Video ${i + 1}:
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
-          responseSchema: schema,
+          responseJsonSchema: schema,
           temperature: 0
         }
       });
@@ -455,7 +455,7 @@ Avg Views: ${intelligence.avgViews}`;
       const result = await genAI.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: { responseMimeType: 'application/json', responseSchema: schema, temperature: 0 },
+        config: { responseMimeType: 'application/json', responseJsonSchema: schema, temperature: 0 },
       });
       const parsed = JSON.parse(result.text);
       return {

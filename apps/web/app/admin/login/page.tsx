@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
@@ -30,6 +30,14 @@ type FormState = Record<"email" | "password", string>
 type ErrorState = Partial<FormState>
 
 export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <AdminLoginContent />
+    </Suspense>
+  )
+}
+
+function AdminLoginContent() {
   const [details, setDetails] = useState<FormState>({ email: "", password: "" })
   const [errors, setErrors] = useState<ErrorState>({})
   const [visible, setVisible] = useState(false)

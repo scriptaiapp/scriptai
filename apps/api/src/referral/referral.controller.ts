@@ -7,12 +7,15 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReferralService } from './referral.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { TrackReferralSchema, type TrackReferralInput } from '@repo/validation';
 
+@ApiTags('referral')
+@ApiBearerAuth()
 @Controller('referral')
 export class ReferralController {
   constructor(private readonly referralService: ReferralService) {}

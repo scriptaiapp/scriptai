@@ -7,9 +7,11 @@ import {
   Logger,
   type RawBodyRequest,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { BillingService, type LsWebhookEvent } from './billing.service';
 
+@ApiTags('billing')
 @Controller('lemonsqueezy')
 export class LemonSqueezyWebhookController {
   private readonly logger = new Logger(LemonSqueezyWebhookController.name);

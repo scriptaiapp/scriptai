@@ -1,7 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { SupabaseService } from './supabase/supabase.service';
 import { SupabaseAuthGuard } from './guards/auth.guard';
 
+@ApiTags('app')
 @Controller()
 @UseGuards(SupabaseAuthGuard)
 export class AppController {

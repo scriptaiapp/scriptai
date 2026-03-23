@@ -1,4 +1,5 @@
 import { Body, Controller, Post, Req, Sse, Param, UseGuards, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -11,6 +12,8 @@ import { createJobSSE } from '../common/sse';
 
 export const TRAIN_AI_CANCEL_PREFIX = 'train-ai:cancel:';
 
+@ApiTags('train-ai')
+@ApiBearerAuth()
 @Controller('train-ai')
 export class TrainAiController {
   constructor(@InjectQueue('train-ai') private readonly queue: Queue) { }

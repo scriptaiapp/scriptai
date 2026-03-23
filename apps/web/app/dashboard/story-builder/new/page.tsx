@@ -10,6 +10,8 @@ import { StoryBuilderProgress } from "@/components/dashboard/story-builder/Story
 import { StoryBuilderResults } from "@/components/dashboard/story-builder/StoryBuilderResults"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { Sparkles } from "lucide-react"
 
 export default function NewStoryBuilderPage() {
   const router = useRouter()
@@ -22,7 +24,12 @@ export default function NewStoryBuilderPage() {
 
   useEffect(() => {
     const topic = searchParams.get("topic")
+    const ideationId = searchParams.get("ideationId")
+    const ideaIndex = searchParams.get("ideaIndex")
     if (topic && !hook.videoTopic) hook.setVideoTopic(topic)
+    if (ideationId && ideaIndex != null) {
+      hook.handleSelectIdea(ideationId, Number(ideaIndex), topic || "")
+    }
   }, [searchParams])
 
   if (profileLoading) {
@@ -49,6 +56,14 @@ export default function NewStoryBuilderPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-1">
           Build modular story blueprints with structured hooks, escalation segments, and retention scoring
         </p>
+        {searchParams.get("ideationId") && hook.videoTopic && (
+          <div className="mt-3 flex items-center gap-2">
+            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+              <Sparkles className="h-3 w-3 mr-1" /> From Ideation
+            </Badge>
+            <span className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-md">{hook.videoTopic}</span>
+          </div>
+        )}
       </div>
 
       {showTrainingOverlay ? (

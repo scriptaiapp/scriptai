@@ -11,7 +11,7 @@ const itemVariants = {
 const steps = [
     { step: 1, title: "Select Videos", desc: "Pick 3-5 videos from your channel that best represent your style.", icon: Youtube },
     { step: 2, title: "AI Analysis", desc: "Our AI analyzes your tone, vocabulary, and delivery style.", icon: Bot },
-    { step: 3, title: "Start Creating", desc: "Generate personalized scripts that match your unique voice.", icon: PenTool },
+    { step: 3, title: "Start Creating", desc: "Generate highly personalized contents that match your unique voice.", icon: PenTool },
 ]
 
 export function HowItWorksGuide() {

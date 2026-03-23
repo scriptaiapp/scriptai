@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "motion/react"
 import { useThumbnailGeneration } from "@/hooks/useThumbnailGeneration"
 import { useSupabase } from "@/components/supabase-provider"
@@ -10,10 +10,18 @@ import { ThumbnailOutputPanel } from "@/components/dashboard/thumbnails/Thumbnai
 import { VideoFrameModal } from "@/components/dashboard/thumbnails/VideoFrameModal"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { FileText, Clapperboard } from "lucide-react"
 
-export default function NewThumbnailPage() {
+function NewThumbnailPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { profile, profileLoading } = useSupabase()
+
+  const scriptId = searchParams.get("scriptId") ?? undefined
+  const storyBuilderId = searchParams.get("storyBuilderId") ?? undefined
+  const initialPrompt = searchParams.get("prompt") ?? undefined
+
   const {
     prompt, setPrompt,
     context, setContext,
@@ -28,7 +36,13 @@ export default function NewThumbnailPage() {
     handleDownload, handleUsePreset, clearForm,
   } = useThumbnailGeneration({
     onComplete: (id) => router.push(`/dashboard/thumbnails/${id}`),
+    initialPrompt,
+    initialScriptId: scriptId,
+    initialStoryBuilderId: storyBuilderId,
   })
+
+  const sourceLabel = scriptId ? "Script" : storyBuilderId ? "Story Builder" : null
+  const SourceIcon = scriptId ? FileText : Clapperboard
 
   const [showFrameModal, setShowFrameModal] = useState(false)
 
@@ -56,6 +70,14 @@ export default function NewThumbnailPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-1">
           Generate AI-powered thumbnails personalized to your channel style
         </p>
+        {sourceLabel && (
+          <div className="mt-3 flex items-center gap-2">
+            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+              <SourceIcon className="h-3 w-3 mr-1" /> From {sourceLabel}
+            </Badge>
+            {initialPrompt && <span className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-md">{initialPrompt}</span>}
+          </div>
+        )}
       </div>
 
       {showTrainingOverlay ? (
@@ -126,5 +148,19 @@ export default function NewThumbnailPage() {
         onFrameCapture={(file) => setReferenceImage(file)}
       />
     </motion.div>
+  )
+}
+
+export default function NewThumbnailPage() {
+  return (
+    <Suspense fallback={
+      <div className="container py-8 space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-6 w-96" />
+        <Skeleton className="h-[600px] rounded-lg mt-8" />
+      </div>
+    }>
+      <NewThumbnailPageInner />
+    </Suspense>
   )
 }

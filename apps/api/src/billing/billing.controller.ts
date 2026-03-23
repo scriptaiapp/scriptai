@@ -8,10 +8,13 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 
+@ApiTags('billing')
+@ApiBearerAuth()
 @Controller('billing')
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}

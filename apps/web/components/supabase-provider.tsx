@@ -57,7 +57,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // Profile fetch with suspense support
   const fetchUserProfile = async (userId: string): Promise<void> => {
-    setProfileLoading(true)
+    if (!profile) setProfileLoading(true)
     try {
       let profilePromise = profilePromises.get(userId)
       // if (!profilePromise) {

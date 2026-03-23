@@ -1,6 +1,7 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState, Suspense } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useScriptGeneration } from "@/hooks/useScriptGeneration"
 import { useSupabase } from "@/components/supabase-provider"
@@ -9,13 +10,41 @@ import ScriptOutputPanel from "@/components/dashboard/scripts/ScriptOutputPanel"
 import { ScriptHowItWorksGuide } from "@/components/dashboard/scripts/ScriptHowItWorksGuide"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { Sparkles } from "lucide-react"
+import { api } from "@/lib/api-client"
+import type { IdeationJob } from "@repo/validation"
 
-export default function NewScriptPage() {
+function NewScriptPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { profile, profileLoading } = useSupabase()
+
+  const ideationId = searchParams.get("ideationId") ?? undefined
+  const ideaIndex = searchParams.get("ideaIndex") != null ? Number(searchParams.get("ideaIndex")) : undefined
+  const [ideaTitle, setIdeaTitle] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!ideationId || ideaIndex == null) return
+    (async () => {
+      try {
+        const job = await api.get<IdeationJob>(`/api/v1/ideation/${ideationId}`, { requireAuth: true })
+        const idea = job.result?.ideas?.[ideaIndex]
+        if (idea) setIdeaTitle(idea.title)
+      } catch { /* ignore */ }
+    })()
+  }, [ideationId, ideaIndex])
+
   const hook = useScriptGeneration({
     onComplete: (id) => router.push(`/dashboard/scripts/${id}`),
+    initialIdeationId: ideationId,
+    initialIdeaIndex: ideaIndex,
+    initialPrompt: ideaTitle ?? "",
   })
+
+  useEffect(() => {
+    if (ideaTitle && !hook.prompt) hook.setPrompt(ideaTitle)
+  }, [ideaTitle])
 
   if (profileLoading) {
     return (
@@ -41,6 +70,14 @@ export default function NewScriptPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-1">
           Generate AI-powered scripts personalized to your channel style
         </p>
+        {ideaTitle && (
+          <div className="mt-3 flex items-center gap-2">
+            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+              <Sparkles className="h-3 w-3 mr-1" /> From Ideation
+            </Badge>
+            <span className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-md">{ideaTitle}</span>
+          </div>
+        )}
       </div>
 
       {showTrainingOverlay ? (
@@ -108,5 +145,19 @@ export default function NewScriptPage() {
         </AnimatePresence>
       )}
     </motion.div>
+  )
+}
+
+export default function NewScriptPage() {
+  return (
+    <Suspense fallback={
+      <div className="container py-8 space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-6 w-96" />
+        <Skeleton className="h-[600px] rounded-lg mt-8" />
+      </div>
+    }>
+      <NewScriptPageInner />
+    </Suspense>
   )
 }

@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete,
   Param, Body, Req, Res, Sse, UseGuards, UseInterceptors, UploadedFiles,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -15,6 +16,8 @@ import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { ScriptService } from './script.service';
 import { createJobSSE } from '../common/sse';
 
+@ApiTags('script')
+@ApiBearerAuth()
 @Controller('script')
 export class ScriptController {
   constructor(

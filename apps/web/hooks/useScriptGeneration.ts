@@ -33,6 +33,9 @@ interface SSEResult {
 
 interface UseScriptGenerationOptions {
   onComplete?: (scriptId: string) => void
+  initialIdeationId?: string
+  initialIdeaIndex?: number
+  initialPrompt?: string
 }
 
 const STATUS_MESSAGES: Record<string, (p: number) => string> = {
@@ -61,8 +64,10 @@ const calculateDurationInSeconds = (duration: string, customDuration: string): s
 export function useScriptGeneration(options?: UseScriptGenerationOptions) {
   const { profile } = useSupabase()
 
-  const [prompt, setPrompt] = useState("")
+  const [prompt, setPrompt] = useState(options?.initialPrompt ?? "")
   const [context, setContext] = useState("")
+  const [ideationId] = useState(options?.initialIdeationId)
+  const [ideaIndex] = useState(options?.initialIdeaIndex)
   const [tone, setTone] = useState("conversational")
   const [language, setLanguage] = useState("english")
   const [duration, setDuration] = useState("3min")
@@ -134,6 +139,9 @@ export function useScriptGeneration(options?: UseScriptGenerationOptions) {
       }
 
       formData.append("personalized", String(profile?.ai_trained ?? false))
+
+      if (ideationId) formData.append("ideationId", ideationId)
+      if (ideaIndex != null) formData.append("ideaIndex", String(ideaIndex))
 
       for (const file of files) {
         formData.append("files", file, file.name)
