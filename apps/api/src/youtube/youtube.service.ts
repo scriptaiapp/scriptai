@@ -150,12 +150,17 @@ export class YoutubeService {
     }
 
     try {
-      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
+      const params = new URLSearchParams({
         client_id: clientId,
         client_secret: clientSecret,
         refresh_token: channel.refresh_token,
         grant_type: 'refresh_token',
-      }, { timeout: 15000, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      });
+
+      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', params.toString(), {
+        timeout: 15000,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
 
       const newToken = tokenRes.data.access_token;
 

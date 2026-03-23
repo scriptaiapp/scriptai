@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Sparkles, Loader2, ArrowLeft, TrendingUp, Brain, Lightbulb, Shield, Search } from "lucide-react";
+import { Sparkles, Loader2, ArrowLeft, TrendingUp, Brain, Lightbulb, Shield, Search, Youtube } from "lucide-react";
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired";
 import IdeationProgress from "@/components/dashboard/research/IdeationProgress";
 import { useIdeation } from "@/hooks/useIdeation";
@@ -37,6 +37,7 @@ export default function NewIdeationPage() {
     nicheFocus, setNicheFocus,
     ideaCount, setIdeaCount,
     autoMode, setAutoMode,
+    useYoutubeContext, setUseYoutubeContext,
     isGenerating,
     progress,
     statusMessage,
@@ -128,6 +129,19 @@ export default function NewIdeationPage() {
                       </p>
                     </div>
                     <Switch checked={autoMode} onCheckedChange={setAutoMode} />
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 px-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Youtube className="h-4 w-4 text-red-500" />
+                      <div>
+                        <Label className="text-sm font-medium">YouTube Channel Context</Label>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Use your YouTube channel info to generate more relevant ideas
+                        </p>
+                      </div>
+                    </div>
+                    <Switch checked={useYoutubeContext} onCheckedChange={setUseYoutubeContext} />
                   </div>
 
                   {!autoMode && (

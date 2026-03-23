@@ -80,7 +80,7 @@ axiosInstance.interceptors.request.use(
         }
       } catch (error) {
         if (error instanceof ApiClientError) throw error;
-        // console.error('[API] Error attaching session:', error);
+        throw new ApiClientError('Failed to retrieve authentication session', 401);
       }
     }
 

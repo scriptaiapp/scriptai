@@ -152,14 +152,14 @@ export default function IdeaCard({ idea, index, ideationId }: IdeaCardProps) {
             <Button
               size="sm" variant="outline"
               className="text-xs sm:text-sm h-8 sm:h-9"
-              onClick={() => router.push(`/dashboard/story-builder?topic=${encodeURIComponent(idea.title)}`)}
+              onClick={() => router.push(`/dashboard/story-builder/new?topic=${encodeURIComponent(idea.title)}&ideationId=${ideationId}&ideaIndex=${index}`)}
             >
               <Clapperboard className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Story Builder
             </Button>
             <Button
               size="sm" variant="outline"
               className="text-xs sm:text-sm h-8 sm:h-9"
-              onClick={() => router.push(`/dashboard/thumbnails?topic=${encodeURIComponent(idea.title)}`)}
+              onClick={() => router.push(`/dashboard/thumbnails/new?prompt=${encodeURIComponent(idea.title)}`)}
             >
               <ImageIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Thumbnail
             </Button>

@@ -1,10 +1,11 @@
-// src/auth/auth.controller.ts
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from '@repo/validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import type { z } from 'zod';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }

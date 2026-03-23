@@ -37,6 +37,9 @@ interface GenerateResponse {
 
 interface UseThumbnailGenerationOptions {
   onComplete?: (thumbnailJobId: string) => void
+  initialPrompt?: string
+  initialScriptId?: string
+  initialStoryBuilderId?: string
 }
 
 const STATUS_MESSAGES: Record<string, (p: number) => string> = {
@@ -50,9 +53,11 @@ const STATUS_MESSAGES: Record<string, (p: number) => string> = {
 export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) {
   const { profile } = useSupabase()
 
-  const [prompt, setPrompt] = useState("")
+  const [prompt, setPrompt] = useState(options?.initialPrompt ?? "")
   const [context, setContext] = useState("")
   const [ratio, setRatio] = useState<ThumbnailRatio>("16:9")
+  const [scriptId] = useState(options?.initialScriptId)
+  const [storyBuilderId] = useState(options?.initialStoryBuilderId)
   const [generateCount] = useState(3)
   const [videoLink, setVideoLink] = useState("")
   const [referenceImage, setReferenceImage] = useState<File | null>(null)
@@ -126,6 +131,8 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
       if (videoLink.trim()) formData.append('videoLink', videoLink.trim())
       if (referenceImage) formData.append('referenceImage', referenceImage)
       if (faceImage) formData.append('faceImage', faceImage)
+      if (scriptId) formData.append('scriptId', scriptId)
+      if (storyBuilderId) formData.append('storyBuilderId', storyBuilderId)
 
       const response = await api.upload<GenerateResponse>(
         '/api/v1/thumbnail/generate',

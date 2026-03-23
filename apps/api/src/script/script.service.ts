@@ -44,7 +44,7 @@ export class ScriptService {
     input: CreateScriptInput,
     files: Express.Multer.File[] = [],
   ) {
-    const { prompt, context, tone, language, duration, includeStorytelling, includeTimestamps, references, personalized } = input;
+    const { prompt, context, tone, language, duration, includeStorytelling, includeTimestamps, references, personalized, ideationId, ideaIndex } = input;
 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) throw new BadRequestException(`File ${file.originalname} exceeds 10MB limit`);
@@ -64,6 +64,32 @@ export class ScriptService {
     }
 
     const shouldPersonalize = personalized !== false && profile.ai_trained === true;
+
+    let ideationContext: string | undefined;
+    if (ideationId) {
+      const { data: ideationJob } = await this.supabase
+        .from('ideation_jobs')
+        .select('result')
+        .eq('id', ideationId)
+        .eq('user_id', userId)
+        .single();
+
+      if (ideationJob?.result?.ideas && ideaIndex != null) {
+        const idea = ideationJob.result.ideas[ideaIndex];
+        if (idea) {
+          ideationContext = [
+            `Title: ${idea.title}`,
+            `Core Topic: ${idea.coreTopic}`,
+            `Unique Angle: ${idea.uniqueAngle}`,
+            `Hook Angle: ${idea.hookAngle}`,
+            `Why It Works: ${idea.whyItWorks}`,
+            `Suggested Format: ${idea.suggestedFormat}`,
+            idea.talkingPoints?.length ? `Talking Points: ${idea.talkingPoints.join('; ')}` : '',
+          ].filter(Boolean).join('\n');
+        }
+      }
+    }
+
     const bullJobId = `script-${userId}-${Date.now()}`;
 
     const fileUrls: string[] = [];
@@ -92,6 +118,7 @@ export class ScriptService {
         include_storytelling: includeStorytelling,
         include_timestamps: includeTimestamps,
         reference_links: references || null,
+        ideation_id: ideationId || null,
         status: 'queued',
         job_id: bullJobId,
         credits_consumed: 0,
@@ -118,6 +145,7 @@ export class ScriptService {
         references: references || '',
         personalized: shouldPersonalize,
         fileUrls,
+        ideationContext,
       },
       {
         jobId: bullJobId,

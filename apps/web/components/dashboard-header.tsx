@@ -6,18 +6,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, Settings, UserPlus, Coins, BarChart3, Gift, PanelLeft } from "lucide-react";
+import { LogOut, Settings, UserPlus, Coins, BarChart3, Gift } from "lucide-react";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
-interface DashboardHeaderProps {
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-  onToggleSidebarPin?: () => void;
-}
-
-export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed, onToggleSidebarPin }: DashboardHeaderProps) {
+export default function DashboardHeader() {
   const pathname = usePathname();
   const { user, profile: initialProfile, logout } = useSupabase();
   const [pageTitle, setPageTitle] = useState("");
@@ -49,28 +43,6 @@ export default function DashboardHeader({ sidebarCollapsed, setSidebarCollapsed,
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-      >
-        <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle sidebar</span>
-      </Button>
-
-      {onToggleSidebarPin && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden md:flex"
-          onClick={onToggleSidebarPin}
-        >
-          <PanelLeft className="h-4 w-4" />
-          <span className="sr-only">Toggle sidebar</span>
-        </Button>
-      )}
-
       <div className="flex-1">
         <h1 className="text-lg font-semibold">{pageTitle}</h1>
       </div>

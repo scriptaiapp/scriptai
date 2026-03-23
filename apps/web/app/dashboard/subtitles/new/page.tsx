@@ -1,13 +1,20 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { SubtitleUploader } from "@/components/dashboard/subtitles/subtitleUploader";
 import { motion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Gem, ArrowUpRight, ArrowLeft } from "lucide-react";
+import { Sparkles, Gem, ArrowUpRight, ArrowLeft, FileText } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function NewSubtitlePage() {
+function NewSubtitlePageInner() {
+    const searchParams = useSearchParams();
+    const scriptId = searchParams.get("scriptId") ?? undefined;
+
     return (
         <div className="min-h-screen bg-[#f8fafc]">
             <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:py-12">
@@ -28,6 +35,13 @@ export default function NewSubtitlePage() {
                         <p className="text-lg text-slate-500 max-w-2xl">
                             Transform your videos with studio-quality AI subtitles in minutes.
                         </p>
+                        {scriptId && (
+                            <div className="mt-3 flex items-center gap-2">
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                                    <FileText className="h-3 w-3 mr-1" /> Linked to Script
+                                </Badge>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
 
@@ -38,7 +52,7 @@ export default function NewSubtitlePage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
                         >
-                            <SubtitleUploader onUploadSuccess={() => {}} />
+                            <SubtitleUploader onUploadSuccess={() => {}} scriptId={scriptId} />
                         </motion.div>
                     </div>
 
@@ -87,5 +101,19 @@ export default function NewSubtitlePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function NewSubtitlePage() {
+    return (
+        <Suspense fallback={
+            <div className="container py-8 space-y-4">
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-6 w-96" />
+                <Skeleton className="h-[400px] rounded-lg mt-8" />
+            </div>
+        }>
+            <NewSubtitlePageInner />
+        </Suspense>
     );
 }

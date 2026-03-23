@@ -1,7 +1,10 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { SupportService } from './support.service';
 
+@ApiTags('support')
+@ApiBearerAuth()
 @Controller('support')
 @UseGuards(SupabaseAuthGuard)
 export class SupportController {

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import {
   ArrowLeft, Trash2, RefreshCw, Plus, CreditCard,
-  Film, Clock, Clapperboard, Users, GraduationCap, Palette,
+  Film, Clock, Clapperboard, Users, GraduationCap, Palette, ImageIcon,
 } from "lucide-react"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -97,6 +97,12 @@ export default function StoryBuilderDetailPage() {
               <span>{job.credits_consumed} credit{job.credits_consumed > 1 ? "s" : ""} used</span>
             </div>
           )}
+          <Link href={`/dashboard/thumbnails/new?storyBuilderId=${jobId}&prompt=${encodeURIComponent(job?.video_topic || "")}`}>
+            <Button variant="outline" size="sm">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Generate Thumbnail
+            </Button>
+          </Link>
           <Link href="/dashboard/story-builder/new">
             <Button variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" />

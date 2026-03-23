@@ -6,7 +6,11 @@ export class AdminService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   private get db() {
-    return this.supabaseService.getAdminClient();
+    const client = this.supabaseService.getAdminClient();
+    if (!client) {
+      throw new BadRequestException('Admin client is not configured');
+    }
+    return client;
   }
 
   // ==================== DASHBOARD STATS ====================
@@ -56,7 +60,8 @@ export class AdminService {
       .range((page - 1) * limit, page * limit - 1);
 
     if (search) {
-      query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,name.ilike.%${search}%`);
+      const sanitized = search.replace(/[%_\\]/g, '\\$&');
+      query = query.or(`email.ilike.%${sanitized}%,full_name.ilike.%${sanitized}%,name.ilike.%${sanitized}%`);
     }
     if (role) {
       query = query.eq('role', role);
@@ -79,10 +84,25 @@ export class AdminService {
     return data;
   }
 
+  private static readonly ALLOWED_USER_FIELDS = new Set([
+    'full_name', 'name', 'email', 'credits', 'role', 'avatar_url',
+  ]);
+
   async updateUser(userId: string, updates: Record<string, unknown>) {
+    const filtered: Record<string, unknown> = {};
+    for (const key of Object.keys(updates)) {
+      if (AdminService.ALLOWED_USER_FIELDS.has(key)) {
+        filtered[key] = updates[key];
+      }
+    }
+
+    if (Object.keys(filtered).length === 0) {
+      throw new BadRequestException('No valid fields to update');
+    }
+
     const { data, error } = await this.db
       .from('profiles')
-      .update(updates)
+      .update(filtered)
       .eq('user_id', userId)
       .select()
       .single();

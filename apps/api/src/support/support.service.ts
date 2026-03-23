@@ -2,6 +2,15 @@ import { Injectable, BadRequestException, InternalServerErrorException } from '@
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 @Injectable()
 export class SupportService {
   private readonly resend: Resend | null = null;
@@ -17,6 +26,10 @@ export class SupportService {
     }
     if (!this.resend) throw new InternalServerErrorException('Email service not configured');
 
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject);
+    const safeBody = escapeHtml(body);
+
     const { data, error } = await this.resend.emails.send({
       from: 'Creator AI <notifications@tryscriptai.com>',
       to: 'support@tryscriptai.com',
@@ -25,10 +38,10 @@ export class SupportService {
       html: `<div style="font-family: Arial, sans-serif; color: #333; background: #f9f9f9; padding: 20px;">
         <div style="background: white; padding: 20px; border-radius: 8px;">
           <h2 style="color: #4F46E5;">🚨 New Issue Reported</h2>
-          <p><strong>From:</strong> ${email}</p>
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>From:</strong> ${safeEmail}</p>
+          <p><strong>Subject:</strong> ${safeSubject}</p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-          <p style="white-space: pre-line;">${body}</p>
+          <p style="white-space: pre-line;">${safeBody}</p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
           <p style="font-size: 12px; color: #888;">Sent on ${new Date().toLocaleString()}</p>
         </div>

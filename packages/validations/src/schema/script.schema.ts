@@ -27,6 +27,8 @@ export const CreateScriptSchema = z.object({
     .optional()
     .or(z.literal('')),
   personalized: z.coerce.boolean().optional().default(true),
+  ideationId: z.string().uuid().optional(),
+  ideaIndex: z.coerce.number().int().min(0).optional(),
 });
 
 export type CreateScriptInput = z.infer<typeof CreateScriptSchema>;

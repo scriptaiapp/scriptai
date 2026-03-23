@@ -2,6 +2,7 @@ import {
   Controller, Post, Get, Delete,
   Body, Req, Res, Param, Sse, UseGuards, Query,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -12,6 +13,8 @@ import { getUserId } from '../common/get-user-id';
 import { createJobSSE } from '../common/sse';
 import { IdeationService } from './ideation.service';
 
+@ApiTags('ideation')
+@ApiBearerAuth()
 @Controller('ideation')
 export class IdeationController {
   constructor(
@@ -22,7 +25,7 @@ export class IdeationController {
   @Post()
   @UseGuards(SupabaseAuthGuard)
   async create(
-    @Body() body: { context?: string; nicheFocus?: string; ideaCount?: number; autoMode?: boolean },
+    @Body() body: { context?: string; nicheFocus?: string; ideaCount?: number; autoMode?: boolean; useYoutubeContext?: boolean },
     @Req() req: AuthRequest,
   ) {
     return this.ideationService.createJob(getUserId(req), body);

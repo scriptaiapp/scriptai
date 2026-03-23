@@ -64,8 +64,10 @@ export default function DubbingList() {
 
     if (session?.access_token) {
       fetchDubbings()
+    } else if (session === null) {
+      setLoading(false)
     }
-  }, [session?.access_token])
+  }, [session])
 
   const handleDeleteDubbing = async () => {
     if (!dubbingToDelete) return
@@ -213,7 +215,7 @@ export default function DubbingList() {
             </p>
             <Button
               variant="outline"
-              onClick={() => router.push("/topics")}
+              onClick={() => router.push("/dashboard")}
               className="bg-slate-950 hover:bg-slate-900 text-white"
             >
               Back to Topics

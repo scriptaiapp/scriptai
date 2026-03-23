@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Delete, Body, Req, Param, Sse, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -10,6 +11,8 @@ import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { getUserId } from '../common/get-user-id';
 import { createJobSSE } from '../common/sse';
 
+@ApiTags('story-builder')
+@ApiBearerAuth()
 @Controller('story-builder')
 @UseGuards(SupabaseAuthGuard)
 export class StoryBuilderController {

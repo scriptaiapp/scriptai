@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import {
   ArrowLeft, Loader2, CreditCard, Trash2, Save, Download, RefreshCw, Plus,
+  ImageIcon, Subtitles,
 } from "lucide-react"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -162,6 +163,18 @@ export default function ScriptPage() {
               <span>{script.credits_consumed} credit{script.credits_consumed > 1 ? "s" : ""} used</span>
             </div>
           )}
+          <Link href={`/dashboard/thumbnails/new?scriptId=${scriptId}&prompt=${encodeURIComponent(title || "")}`}>
+            <Button variant="outline" size="sm">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Generate Thumbnail
+            </Button>
+          </Link>
+          <Link href={`/dashboard/subtitles/new?scriptId=${scriptId}`}>
+            <Button variant="outline" size="sm">
+              <Subtitles className="h-4 w-4 mr-2" />
+              Create Subtitles
+            </Button>
+          </Link>
           <Link href="/dashboard/scripts/new">
             <Button variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" />

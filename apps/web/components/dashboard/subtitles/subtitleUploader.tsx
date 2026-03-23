@@ -18,9 +18,10 @@ import { createClient } from "@/lib/supabase/client";
 
 type SubtitleUploaderProps = {
     onUploadSuccess: () => void;
+    scriptId?: string;
 };
 
-export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
+export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploaderProps) {
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState("");
     const [duration, setDuration] = useState<number | null>(null);
@@ -73,6 +74,7 @@ export function SubtitleUploader({ onUploadSuccess }: SubtitleUploaderProps) {
         formData.append("video", file);
         formData.append("duration", String(duration));
         if (title.trim()) formData.append("title", title.trim());
+        if (scriptId) formData.append("scriptId", scriptId);
 
         try {
             const supabase = createClient();

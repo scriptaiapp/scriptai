@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback } from "react"
-import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { DashboardSidebar } from "@/components/dashboard/sidebar/dashboard-sidebar"
 import DashboardHeader from "@/components/dashboard-header"
@@ -14,21 +14,24 @@ export default function DashboardLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarPinned, setSidebarPinned] = useState(false)
-  const { loading } = useSupabase()
+  const { loading, profile, profileLoading } = useSupabase()
   const pathname = usePathname()
-
-  const handleTogglePin = useCallback(() => {
-    setSidebarPinned((prev) => !prev)
-  }, [])
+  const router = useRouter()
 
   const isAdminRoute = pathname.startsWith("/dashboard/admin")
   const isSalesRepRoute = pathname.startsWith("/dashboard/sales-rep")
+
+  useEffect(() => {
+    if (!loading && !profileLoading && profile?.role === "admin" && !isAdminRoute) {
+      router.replace("/dashboard/admin")
+    }
+  }, [loading, profileLoading, profile, isAdminRoute, router])
 
   if (isAdminRoute || isSalesRepRoute) {
     return <>{children}</>
   }
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-500 border-t-transparent"></div>
@@ -36,11 +39,13 @@ export default function DashboardLayout({
     )
   }
 
+  if (profile?.role === "admin") return null
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} pinned={sidebarPinned} setPinned={setSidebarPinned} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} onToggleSidebarPin={handleTogglePin} />
+        <DashboardHeader />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>

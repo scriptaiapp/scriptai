@@ -11,7 +11,8 @@ import PricingSection from "@/components/landingPage/PricingSection"
 import FAQSection from "@/components/landingPage/FAQSection"
 import { SparklesCore } from "@/components/ui/sparkles"
 import { MButton } from "@/components/ui/moving-border"
-import { ArrowRight, Check } from "lucide-react"
+import { ArrowRight, Check, Zap, CreditCard, Shield } from "lucide-react"
+import { useSupabase } from "@/components/supabase-provider"
 
 const comparisons = [
   { feature: "AI Model Training", starter: true, creator: true, enterprise: true },
@@ -31,17 +32,24 @@ const comparisons = [
 ]
 
 export default function PricingPage() {
+  const { user } = useSupabase()
+
   useEffect(() => {
     const lenis = new Lenis({ autoRaf: true })
     return () => lenis.destroy()
   }, [])
+
+  const billingHref = (planId: string) =>
+    user
+      ? `/dashboard/settings?tab=billing&plan=${planId}`
+      : `/login?redirectTo=${encodeURIComponent(`/dashboard/settings?tab=billing&plan=${planId}`)}`
 
   return (
     <div className="flex flex-col min-h-screen">
       <LandingPageNavbar />
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative w-full pt-32 pb-8 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+        <section className="relative w-full pt-32 pb-12 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
           <div aria-hidden="true" className="absolute inset-0 -z-0">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-purple-100/40 rounded-full blur-3xl" />
             <SparklesCore
@@ -58,23 +66,42 @@ export default function PricingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
+              className="space-y-6"
             >
-              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-4 tracking-tight">
-                Simple, Transparent{" "}
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-                  Pricing
-                </span>
+                  Simple Pricing,
+                </span>{" "}
+                Powerful Results
               </h1>
               <p className="text-lg md:text-xl text-slate-600 max-w-xl mx-auto">
-                Start for free. Upgrade when you need more. No hidden fees, no surprises.
+                Join thousands of creators who save 10+ hours every week. Start free, upgrade when you&#39;re ready.
               </p>
+
+              <motion.div
+                className="flex flex-wrap justify-center gap-6 pt-4"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                {[
+                  { icon: Zap, text: "500 free credits/month" },
+                  { icon: CreditCard, text: "No credit card required" },
+                  { icon: Shield, text: "Cancel anytime" },
+                ].map(({ icon: Icon, text }) => (
+                  <div key={text} className="flex items-center gap-2 text-sm text-slate-600">
+                    <Icon className="w-4 h-4 text-purple-500" />
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </motion.div>
             </motion.div>
           </div>
         </section>
 
         {/* Pricing Cards */}
         <section className="py-16 bg-slate-50">
-          <PricingSection />
+          <PricingSection hideHeader />
         </section>
 
         {/* Feature Comparison Table */}
@@ -151,7 +178,7 @@ export default function PricingPage() {
             <p className="max-w-[600px] mx-auto text-slate-300 md:text-lg mb-8">
               No credit card required. Get 500 free credits every month and access to all core features.
             </p>
-            <Link href="/signup">
+            <Link href={billingHref("starter")}>
               <MButton
                 size="lg"
                 className="bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:brightness-110 text-white shadow-md transition-all"

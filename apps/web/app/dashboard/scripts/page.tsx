@@ -83,7 +83,7 @@ export default function Scripts() {
   const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained
 
   const filteredScripts = scripts.filter(s =>
-    s.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (s.title ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

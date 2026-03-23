@@ -100,8 +100,8 @@ export function useSSE<TResult = unknown>(
           setProgress(0);
           onFinished?.();
         }
-      } catch {
-        // parse error
+      } catch (e) {
+        console.error('[SSE] Failed to parse event data:', e);
       }
     };
 

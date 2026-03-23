@@ -5,7 +5,16 @@ import { getSupabaseServer } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import { BACKEND_URL } from '@/lib/constants';
 
-const CREDITS_PER_REFERRAL = 10;
+const CREDITS_PER_REFERRAL = 250;
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 async function sendWelcomeEmail(
   full_name: string,
@@ -22,7 +31,7 @@ async function sendWelcomeEmail(
       replyTo: 'support@tryscriptai.com',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;">
-          <h1 style="color: #4F46E5; margin-bottom: 10px;">Welcome aboard, ${full_name}! 🎉</h1>
+          <h1 style="color: #4F46E5; margin-bottom: 10px;">Welcome aboard, ${escapeHtml(full_name)}! 🎉</h1>
           
           <p>We're excited to have you join <strong>Creator AI</strong>. 🚀</p>
           <p>
@@ -80,8 +89,8 @@ async function sendAdminNotification(full_name: string, email: string, resend: R
           <h1 style="color: #4F46E5;">New User Sign Up</h1>
           <p>A new user has signed up:</p>
           <ul>
-            <li><strong>Name:</strong> ${full_name}</li>
-            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Name:</strong> ${escapeHtml(full_name)}</li>
+            <li><strong>Email:</strong> ${escapeHtml(email)}</li>
             <li><strong>Time:</strong> ${new Date().toISOString()}</li>
           </ul>
         </div>`,
@@ -238,16 +247,23 @@ async function sendWelcomeEmailsIfNeeded(
 }
 
 async function getRedirectByRole(supabase: any, userId: string, fallback: string | null): Promise<string> {
-  if (fallback) return fallback;
   try {
     const { data } = await supabase
       .from('profiles')
       .select('role')
       .eq('user_id', userId)
       .single();
-    if (data?.role === 'admin') return '/dashboard/admin';
+
+    if (data?.role === 'admin') {
+      return (fallback && fallback.startsWith('/dashboard/admin')) ? fallback : '/dashboard/admin';
+    }
+
+    if (fallback && fallback.startsWith('/dashboard') && !fallback.startsWith('/dashboard/admin')) {
+      return fallback;
+    }
+
     if (data?.role === 'sales_rep') return '/dashboard/sales-rep';
-  } catch {}
+  } catch { }
   return '/dashboard';
 }
 

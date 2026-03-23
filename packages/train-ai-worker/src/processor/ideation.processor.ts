@@ -366,7 +366,8 @@ export class IdeationProcessor extends WorkerHost {
       });
 
       if (creditError) {
-        this.logger.error(`Failed to deduct credits for user ${userId}: ${creditError.message}`);
+        this.logger.warn(`Credit deduction failed for user ${userId} (${creditsConsumed} credits): ${creditError.message}`);
+        await job.log(`Warning: credit deduction failed — ${creditError.message}`);
       }
 
       await job.updateProgress(100);

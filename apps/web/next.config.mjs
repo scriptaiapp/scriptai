@@ -6,6 +6,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  webpack: (config) => {
+    config.output = {
+      ...config.output,
+      hashFunction: 'xxhash64',
+    };
+    return config;
+  },
   images: {
     formats: ["image/avif", "image/webp"],
   },

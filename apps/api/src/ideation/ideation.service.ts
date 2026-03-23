@@ -46,6 +46,7 @@ export class IdeationService {
     nicheFocus?: string;
     ideaCount?: number;
     autoMode?: boolean;
+    useYoutubeContext?: boolean;
   }) {
     const ideaCount = Math.min(MAX_IDEA_COUNT, Math.max(1, input.ideaCount || 3));
 
@@ -97,6 +98,22 @@ export class IdeationService {
       throw new InternalServerErrorException('Failed to create ideation job');
     }
 
+    let youtubeContext: string | undefined;
+    if (input.useYoutubeContext) {
+      const { data: channel } = await this.supabase
+        .from('youtube_channels')
+        .select('channel_id, channel_title, channel_description')
+        .eq('user_id', userId)
+        .single();
+
+      if (channel) {
+        youtubeContext = [
+          channel.channel_title ? `Channel: ${channel.channel_title}` : '',
+          channel.channel_description ? `Description: ${channel.channel_description}` : '',
+        ].filter(Boolean).join('\n');
+      }
+    }
+
     const bullJobId = `ideation-${userId}-${Date.now()}`;
     await this.queue.add(
       'generate-ideas',
@@ -107,6 +124,7 @@ export class IdeationService {
         nicheFocus: input.nicheFocus || '',
         ideaCount,
         autoMode: input.autoMode ?? false,
+        youtubeContext,
       },
       {
         jobId: bullJobId,

@@ -467,7 +467,7 @@ export class BillingService {
     }
     const since = new Date(now.getTime() - daysBack * 86400000).toISOString();
 
-    const tables = ['scripts', 'ideation_jobs', 'thumbnail_jobs', 'subtitle_jobs', 'dubbing_jobs', 'story_builder_jobs'] as const;
+    const tables = ['scripts', 'ideation_jobs', 'thumbnail_jobs', 'subtitle_jobs', 'dubbing_projects', 'story_builder_jobs', 'documentation_generations'] as const;
     type UsageRow = { credits_consumed: number; created_at: string };
 
     const rows: UsageRow[] = [];
@@ -517,10 +517,11 @@ export class BillingService {
 
     const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(rawBody).digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(digest),
-      Buffer.from(signature),
-    );
+    const digestBuf = Buffer.from(digest);
+    const signatureBuf = Buffer.from(signature);
+
+    if (digestBuf.length !== signatureBuf.length) return false;
+    return crypto.timingSafeEqual(digestBuf, signatureBuf);
   }
 
   // --- Helpers ---

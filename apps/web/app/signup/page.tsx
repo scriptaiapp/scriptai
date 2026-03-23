@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -23,13 +24,12 @@ type FormData = z.infer<typeof registerUserSchema> & { confirmPassword?: string 
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
 function isZodError(error: unknown): error is z.ZodError {
-  return Boolean(
-    error &&
+  if (error instanceof z.ZodError) return true;
+  return (
+    error !== null &&
     typeof error === "object" &&
     "name" in error &&
-    error.name === "ZodError" &&
-    "errors" in error &&
-    Array.isArray((error as any).errors)
+    (error as { name: string }).name === "ZodError"
   );
 }
 
@@ -43,6 +43,8 @@ function SignupForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [showReferralBanner, setShowReferralBanner] = useState(false);
 
@@ -50,16 +52,16 @@ function SignupForm() {
   const progress = (step / totalSteps) * 100;
 
   const trackReferral = async (userEmail: string | undefined) => {
-    if (referralCode && userEmail) {
-      try {
-        await api.post("/api/v1/referral/track", { referralCode, userEmail });
-        toast.success("Referral tracked!", {
-          description: "You've been referred to Creator AI! Welcome!",
-        });
-        setShowReferralBanner(false);
-      } catch (err) {
-        console.error("Error tracking referral:", err);
-      }
+    if (!referralCode || !userEmail) return;
+    try {
+      await api.post("/api/v1/referral/track", { referralCode, userEmail });
+      toast.success("Referral applied!", {
+        description: "You'll both receive 250 free credits once you verify your email.",
+      });
+      setShowReferralBanner(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not apply referral code.";
+      toast.warning("Referral not applied", { description: message });
     }
   };
 
@@ -117,6 +119,13 @@ function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setTermsError(null);
+
+    if (!acceptedTerms) {
+      setTermsError("You must accept the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -137,23 +146,20 @@ function SignupForm() {
 
       if (data.user) {
         toast.success("Account created!", { description: "Please check your email to verify your account." });
-        await trackReferral(data?.user?.email);
+        await trackReferral(data.user.email);
         router.push("/login");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isZodError(error)) {
         const fieldErrors: FormErrors = {};
         error.errors.forEach((err) => {
           const path = err.path[0] as keyof FormData;
-          if (path) {
-            fieldErrors[path] = err.message;
-          }
+          if (path) fieldErrors[path] = err.message;
         });
         setErrors(fieldErrors);
       } else {
-        toast.error("Signup Failed", {
-          description: error.message || "An unexpected error occurred.",
-        });
+        const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+        toast.error("Signup Failed", { description: message });
       }
     } finally {
       setLoading(false);
@@ -162,14 +168,17 @@ function SignupForm() {
 
 
   const handleGoogleSignup = async () => {
+    if (!acceptedTerms) {
+      setTermsError("You must accept the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     setLoading(true);
     try {
-
       const redirectUrl = referralCode
         ? `${window.location.origin}/api/auth/callback?ref=${referralCode}`
         : `${window.location.origin}/api/auth/callback`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: redirectUrl,
@@ -178,10 +187,9 @@ function SignupForm() {
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      toast.error("Google Signup Failed", {
-        description: error.message || "Could not sign up with Google. Please try again.",
-      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Could not sign up with Google. Please try again.";
+      toast.error("Google Signup Failed", { description: message });
     } finally {
       setLoading(false);
     }
@@ -229,7 +237,7 @@ function SignupForm() {
               {showReferralBanner && referralCode && (
                 <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
                   <p className="text-sm text-center text-purple-700 dark:text-purple-300">
-                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span>  <br /> You will earn 10 credits.
+                    🎉 You've been invited by a friend! <br /> Referral code: <span className="font-mono font-bold">{referralCode}</span> <br /> You'll both earn <strong>250 free credits</strong>.
                   </p>
                 </div>
               )}
@@ -371,7 +379,31 @@ function SignupForm() {
                 </motion.div>
               </AnimatePresence>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2 pb-8">
+            <CardFooter className="flex flex-col space-y-3 pb-8">
+              <div className="w-full space-y-1">
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="acceptTerms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => {
+                      setAcceptedTerms(checked === true);
+                      if (checked) setTermsError(null);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="acceptTerms" className="text-sm font-normal leading-snug text-slate-600 dark:text-slate-400 cursor-pointer">
+                    I agree to the{" "}
+                    <Link href="/terms" target="_blank" className="text-purple-600 hover:underline dark:text-purple-400">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" target="_blank" className="text-purple-600 hover:underline dark:text-purple-400">
+                      Privacy Policy
+                    </Link>
+                  </Label>
+                </div>
+                {termsError && <p className="text-sm text-red-400 pl-6">{termsError}</p>}
+              </div>
               <div className="text-sm text-center dark:text-slate-300">
                 Already have an account?{" "}
                 <Link href="/login" className="font-medium text-purple-600 hover:underline dark:text-purple-400">

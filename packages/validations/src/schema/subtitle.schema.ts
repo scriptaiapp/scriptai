@@ -24,6 +24,7 @@ export const UpdateSubtitleByIdSchema = z.object({
 
 export const UploadVideoSchema = z.object({
   duration: z.string(),
+  scriptId: z.string().uuid().optional(),
 });
 
 export const BurnSubtitleSchema = z.object({

@@ -159,26 +159,22 @@ ${prompt}`;
       await job.updateProgress(90);
       await job.log(`${imageUrls.length}/${count} thumbnails generated. Saving...`);
 
-      await this.updateJob(thumbnailJobId, { status: 'completed', image_urls: imageUrls });
-
       const creditsToDeduct = Math.ceil(totalConsumedTokens / 1000);
 
-      const { data: profile } = await this.supabase
-        .from('profiles')
-        .select('credits')
-        .eq('user_id', userId)
-        .single();
+      const { error: creditError } = await this.supabase.rpc('update_user_credits', {
+        user_uuid: userId,
+        credit_change: -creditsToDeduct,
+      });
 
-      if (!profile || profile.credits < creditsToDeduct) {
-        throw new Error('Insufficient credits, Please upgrade your plan.');
+      if (creditError) {
+        this.logger.error(`Credit deduction failed for user ${userId}: ${creditError.message}`);
+        await this.updateJob(thumbnailJobId, { status: 'failed', error_message: 'Insufficient credits' });
+        throw new Error('Insufficient credits. Please upgrade your plan.');
       }
 
-      await this.supabase
-        .from('profiles')
-        .update({ credits: profile.credits - creditsToDeduct })
-        .eq('user_id', userId);
-
       await this.updateJob(thumbnailJobId, {
+        status: 'completed',
+        image_urls: imageUrls,
         credits_consumed: creditsToDeduct,
         total_tokens: totalConsumedTokens,
       });

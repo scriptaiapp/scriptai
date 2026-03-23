@@ -8,7 +8,6 @@ import { SupabaseModule } from './supabase/supabase.module';
 
 import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
-import { TrainAiController } from './train-ai/train-ai.controller';
 import { TrainAiModule } from './train-ai/train-ai.module';
 import { AuthModule } from './auth/auth.module';
 import { SubtitleModule } from './subtitle/subtitle.module';
@@ -50,10 +49,6 @@ import { SalesRepModule } from './sales-rep/sales-rep.module';
         },
       }),
     }),
-    BullModule.registerQueue(
-      { name: 'train-ai' },
-      { name: 'script' },
-    ),
     SupabaseModule,
     TrainAiModule,
     AuthModule,
@@ -72,7 +67,7 @@ import { SalesRepModule } from './sales-rep/sales-rep.module';
     AdminModule,
     SalesRepModule,
   ],
-  controllers: [AppController, HealthController, TrainAiController],
+  controllers: [AppController, HealthController],
   providers: [],
 })
 export class AppModule { }

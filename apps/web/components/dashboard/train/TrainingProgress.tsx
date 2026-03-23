@@ -24,7 +24,7 @@ export function TrainingProgress({ progress, statusMessage, onStop }: TrainingPr
       statusMessage={statusMessage}
       title="Model Training in Progress"
       steps={TRAIN_STEPS}
-      hint="This may take 2-5 minutes depending on video content"
+      hint="This may take 2-5 minutes depending on video length"
       onStop={onStop}
     />
   )

@@ -185,10 +185,17 @@ export function BillingInfo() {
               const isPopular = plan.name === "Creator+";
               const isEnterprise = plan.name === "Enterprise";
               const isFree = plan.price_monthly === 0;
-              const features: string[] =
-                typeof plan.features === "string"
-                  ? JSON.parse(plan.features)
-                  : plan.features;
+              let features: string[] = [];
+              try {
+                features =
+                  typeof plan.features === "string"
+                    ? JSON.parse(plan.features)
+                    : Array.isArray(plan.features)
+                      ? plan.features
+                      : [];
+              } catch {
+                features = [];
+              }
 
               return (
                 <div

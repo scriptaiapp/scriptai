@@ -2,17 +2,35 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+const BYPASS_PATHS = [
+  "/api/auth/callback",
+  "/api/track-referral",
+  "/api/contact-us",
+  "/api/report-issue",
+  "/api/youtube/callback",
+]
 
-  if (request.nextUrl.pathname === "/api/auth/callback" ||
-    request.nextUrl.pathname === "/api/track-referral" ||
-    request.nextUrl.pathname === "/api/contact-us" ||
-    request.nextUrl.pathname === "/api/report-issue" || 
-    request.nextUrl.pathname === "/api/youtube/callback"
-  ) {
-    return response
+async function getUserRole(supabase: ReturnType<typeof createServerClient>, userId: string) {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .single()
+    return data?.role as string | undefined
+  } catch {
+    return undefined
   }
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (BYPASS_PATHS.includes(pathname)) {
+    return NextResponse.next()
+  }
+
+  const response = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,12 +51,39 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  if (request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Login page guards for already-authenticated users
+  if (pathname === "/login" && session) {
+    const role = await getUserRole(supabase, session.user.id)
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
+    }
+  }
+
+  if (pathname === "/admin/login" && session) {
+    const role = await getUserRole(supabase, session.user.id)
+    if (role !== "admin") {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+  }
+
+  // Dashboard guards
+  if (pathname.startsWith("/dashboard")) {
     if (!session) {
+      const loginPath = pathname.startsWith("/dashboard/admin") ? "/admin/login" : "/login"
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = "/login"
-      redirectUrl.searchParams.set("redirectedFrom", request.nextUrl.pathname)
+      redirectUrl.pathname = loginPath
+      redirectUrl.searchParams.set("redirectedFrom", pathname)
       return NextResponse.redirect(redirectUrl)
+    }
+
+    const role = await getUserRole(supabase, session.user.id)
+
+    if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+
+    if (!pathname.startsWith("/dashboard/admin") && role === "admin") {
+      return NextResponse.redirect(new URL("/dashboard/admin", request.url))
     }
   }
 
@@ -46,5 +91,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/login", "/admin/:path*"],
 }

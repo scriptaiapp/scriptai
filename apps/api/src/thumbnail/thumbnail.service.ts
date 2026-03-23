@@ -28,7 +28,7 @@ export class ThumbnailService {
     referenceImage?: Express.Multer.File,
     faceImage?: Express.Multer.File,
   ) {
-    const { prompt, ratio, generateCount, videoLink, personalized } = input;
+    const { prompt, ratio, generateCount, videoLink, personalized, scriptId, storyBuilderId } = input;
 
     if (referenceImage) this.validateImageFile(referenceImage, 'Reference image');
     if (faceImage) this.validateImageFile(faceImage, 'Face image');
@@ -73,7 +73,33 @@ export class ThumbnailService {
       );
     }
 
-    // ── Single DB insert with every column populated ──
+    let contentContext: string | undefined;
+    if (scriptId) {
+      const { data: script } = await this.supabaseService
+        .getClient()
+        .from('scripts')
+        .select('title, content')
+        .eq('id', scriptId)
+        .eq('user_id', userId)
+        .single();
+
+      if (script) {
+        contentContext = `Script Title: ${script.title}\n${(script.content || '').slice(0, 500)}`;
+      }
+    } else if (storyBuilderId) {
+      const { data: story } = await this.supabaseService
+        .getClient()
+        .from('story_builder_jobs')
+        .select('video_topic, result')
+        .eq('id', storyBuilderId)
+        .eq('user_id', userId)
+        .single();
+
+      if (story) {
+        contentContext = `Story Topic: ${story.video_topic}`;
+      }
+    }
+
     const shouldPersonalize = personalized && profile.ai_trained;
 
     const { data: job, error: jobError } = await this.supabaseService
@@ -93,6 +119,8 @@ export class ThumbnailService {
         error_message: null,
         credits_consumed: 0,
         job_id: bullJobId,
+        script_id: scriptId || null,
+        story_builder_id: storyBuilderId || null,
       })
       .select('id')
       .single();
@@ -115,6 +143,7 @@ export class ThumbnailService {
         faceImageUrl,
         videoLink: videoLink || null,
         personalized: shouldPersonalize,
+        contentContext,
       },
       {
         jobId: bullJobId,

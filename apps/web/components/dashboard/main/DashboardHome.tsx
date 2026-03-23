@@ -1,36 +1,48 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  FileText, Sparkles, Youtube, Image, MessageSquare,
-  Clapperboard, TrendingUp, Clock, Zap, Globe, Crown,
-  Activity, BarChart3, Lightbulb, ChevronRight, CircleDot,
+  ArrowRight, Check, Unlink, FileText, Search, Image,
+  MessageSquare, Clapperboard, Lightbulb, Sparkles,
+  Youtube, TrendingUp, Clock, Zap, Globe, Crown,
+  Activity, BarChart3, ChevronRight, CircleDot,
 } from "lucide-react";
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis,
+  Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
+import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import type { DashboardData } from "@/app/dashboard/page";
 
-interface ReturningUserHubProps {
+// ── Types ──
+
+interface DashboardHomeProps {
   profile: {
+    youtube_connected: boolean;
+    ai_trained: boolean;
     credits: number;
     full_name?: string;
     youtube_channel_name?: string;
     language?: string;
-    ai_trained?: boolean;
-    youtube_connected?: boolean;
   } | null;
   data: DashboardData;
+  connectYoutubeChannel: () => void;
+  connectingYoutube: boolean;
   disconnectYoutubeChannel: () => void;
   disconnectingYoutube: boolean;
 }
+
+// ── Animation ──
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -42,9 +54,36 @@ const itemVariants = {
   visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
+// ── Constants ──
+
 const CHART_COLORS = ["#a855f7", "#6366f1", "#ec4899", "#f59e0b", "#10b981"];
 
+const QUICK_ACTIONS = [
+  { label: "Write Script", description: "Generate a new video script", href: "/dashboard/scripts/new", icon: FileText, color: "text-purple-600", bg: "bg-purple-100 dark:bg-purple-900/30" },
+  { label: "Research Idea", description: "Research a new topic with AI", href: "/dashboard/research/new", icon: Search, color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30" },
+  { label: "Create Thumbnail", description: "Design an eye-catching thumbnail", href: "/dashboard/thumbnails/new", icon: Image, color: "text-pink-600", bg: "bg-pink-100 dark:bg-pink-900/30" },
+  { label: "Add Subtitles", description: "Generate subtitles for your video", href: "/dashboard/subtitles/new", icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
+  { label: "Build Story", description: "Create a compelling story", href: "/dashboard/story-builder/new", icon: Clapperboard, color: "text-indigo-600", bg: "bg-indigo-100 dark:bg-indigo-900/30" },
+  { label: "Ideate Content", description: "Brainstorm content ideas", href: "/dashboard/research", icon: Lightbulb, color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/30" },
+] as const;
+
+const ACTIVITY_ICONS: Record<string, { icon: typeof FileText; color: string }> = {
+  script: { icon: FileText, color: "text-purple-500" },
+  ideation: { icon: Lightbulb, color: "text-amber-500" },
+  thumbnail: { icon: Image, color: "text-pink-500" },
+  subtitle: { icon: MessageSquare, color: "text-blue-500" },
+  dubbing: { icon: Globe, color: "text-emerald-500" },
+};
+
 type ActivityPeriod = "weekly" | "monthly" | "yearly";
+
+const PERIOD_LABELS: Record<ActivityPeriod, string> = {
+  weekly: "Last 7 days",
+  monthly: "Last 30 days",
+  yearly: "Last 12 months",
+};
+
+// ── Helpers ──
 
 function buildActivityData(data: DashboardData, period: ActivityPeriod) {
   const now = new Date();
@@ -114,28 +153,6 @@ function buildRecentActivity(data: DashboardData) {
   return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
 }
 
-const ACTIVITY_ICONS: Record<string, { icon: typeof FileText; color: string }> = {
-  script: { icon: FileText, color: "text-purple-500" },
-  ideation: { icon: Lightbulb, color: "text-amber-500" },
-  thumbnail: { icon: Image, color: "text-pink-500" },
-  subtitle: { icon: MessageSquare, color: "text-blue-500" },
-  dubbing: { icon: Globe, color: "text-emerald-500" },
-};
-
-const STAT_LINKS: Record<string, string> = {
-  Scripts: "/dashboard/scripts",
-  Ideas: "/dashboard/research",
-  Thumbnails: "/dashboard/thumbnails",
-  Subtitles: "/dashboard/subtitles",
-  Stories: "/dashboard/story-builder",
-};
-
-const PERIOD_LABELS: Record<ActivityPeriod, string> = {
-  weekly: "Last 7 days",
-  monthly: "Last 30 days",
-  yearly: "Last 12 months",
-};
-
 function formatTimeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -148,7 +165,22 @@ function formatTimeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en", { month: "short", day: "numeric" });
 }
 
-export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disconnectingYoutube }: ReturningUserHubProps) {
+// ── Component ──
+
+export function DashboardHome({
+  profile,
+  data,
+  connectYoutubeChannel,
+  connectingYoutube,
+  disconnectYoutubeChannel,
+  disconnectingYoutube,
+}: DashboardHomeProps) {
+  const isYoutubeConnected = profile?.youtube_connected === true;
+  const isAiTrained = profile?.ai_trained === true;
+  const isSetupComplete = isYoutubeConnected && isAiTrained;
+  const progressValue = isYoutubeConnected ? (isAiTrained ? 100 : 50) : 0;
+  const searchParams = useSearchParams();
+
   const [activityPeriod, setActivityPeriod] = useState<ActivityPeriod>("weekly");
   const activityData = useMemo(() => buildActivityData(data, activityPeriod), [data, activityPeriod]);
   const recentActivity = useMemo(() => buildRecentActivity(data), [data]);
@@ -166,63 +198,162 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
     ];
   }, [data]);
 
-  const pieData = useMemo(() => {
-    return stats
-      .filter((s) => s.count > 0)
-      .map((s) => ({ name: s.label, value: s.count }));
-  }, [stats]);
-
+  const pieData = useMemo(() => stats.filter((s) => s.count > 0).map((s) => ({ name: s.label, value: s.count })), [stats]);
   const totalContent = stats.reduce((a, s) => a + s.count, 0);
   const creditsUsed = [
     ...data.scripts.map((s) => s.credits_consumed || 0),
     ...data.ideations.map((i) => i.credits_consumed || 0),
   ].reduce((a, b) => a + b, 0);
 
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      toast.error(
+        <div className="font-semibold text-red-600">
+          Oops! We couldn&apos;t connect your YouTube channel. Please try again.
+        </div>,
+        { className: "bg-red-50 border-red-600 text-red-900" },
+      );
+    }
+  }, [searchParams]);
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {profile?.full_name?.split(" ")[0] || "Creator"}
+            Welcome{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Here&apos;s an overview of your content creation activity
+            {isSetupComplete
+              ? "Here\u2019s an overview of your content creation activity"
+              : "Let\u2019s get your AI personalized to start creating."}
           </p>
         </div>
       </motion.div>
 
-      {/* Stats Row — clickable quick navigation */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {stats.map((stat) => (
-          <Link key={stat.label} href={STAT_LINKS[stat.label] || "/dashboard"}>
-            <Card className="relative overflow-hidden group hover:shadow-md transition-shadow border-slate-200/80 dark:border-slate-800 cursor-pointer h-full">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`p-2 rounded-lg ${stat.bg}`}>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+      {/* ── Onboarding Card (visible until setup complete) ── */}
+      {!isSetupComplete && (
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center mb-2">
+                <CardTitle className="text-2xl">Let&apos;s Get Your AI Personalized</CardTitle>
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {progressValue}% Complete
+                </span>
+              </div>
+              <Progress value={progressValue} className="w-full [&>div]:bg-purple-600" />
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="flex items-center justify-between py-4">
+                <div className="flex items-center space-x-4">
+                  <div className={`flex items-center justify-center h-8 w-8 rounded-full font-bold text-sm ${isYoutubeConnected ? "bg-green-500 text-white" : "border-2 border-purple-600 text-purple-600"}`}>
+                    {isYoutubeConnected ? <Check className="h-5 w-5" /> : "1"}
                   </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
+                  <div>
+                    <p className="font-semibold">Connect YouTube Channel</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">To let our AI learn your unique voice and style.</p>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold tracking-tight">{stat.count}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</span>
-                  {stat.count > 0 && (
-                    <span className="text-xs text-slate-400">{stat.completed} done</span>
-                  )}
-                </div>
-              </CardContent>
-              <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity`} />
-            </Card>
-          </Link>
-        ))}
+                {isYoutubeConnected ? (
+                  <Button variant="secondary" size="sm" onClick={disconnectYoutubeChannel} disabled={disconnectingYoutube}>
+                    <Unlink className="h-4 w-4 mr-2" />
+                    {disconnectingYoutube ? "Disconnecting..." : "Disconnect"}
+                  </Button>
+                ) : (
+                  <Button onClick={connectYoutubeChannel} disabled={connectingYoutube} variant="secondary" size="sm" className="bg-black text-white hover:bg-black/80">
+                    {connectingYoutube ? "Connecting..." : "Connect"}
+                  </Button>
+                )}
+              </div>
+
+              <Separator />
+
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={`py-4 ${!isYoutubeConnected ? "cursor-not-allowed" : ""}`}>
+                      <Link
+                        href={isYoutubeConnected ? "/dashboard/train" : "#"}
+                        className={`block ${!isYoutubeConnected ? "pointer-events-none opacity-50" : ""}`}
+                        aria-disabled={!isYoutubeConnected}
+                        tabIndex={!isYoutubeConnected ? -1 : undefined}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className={`flex items-center justify-center h-8 w-8 rounded-full font-bold text-sm ${isAiTrained ? "bg-green-500 text-white" : "border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500"}`}>
+                              {isAiTrained ? <Check className="h-5 w-5" /> : "2"}
+                            </div>
+                            <div>
+                              <p className="font-semibold">AI Studio</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">To create a personalized AI Engine.</p>
+                            </div>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-slate-400" />
+                        </div>
+                      </Link>
+                    </div>
+                  </TooltipTrigger>
+                  {!isYoutubeConnected && <TooltipContent><p>Complete Step 1 to unlock</p></TooltipContent>}
+                </Tooltip>
+              </TooltipProvider>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ── Quick Actions ── */}
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-5 w-5 text-purple-500" />
+          <h2 className="text-xl font-semibold">Let's Get Started</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {QUICK_ACTIONS.map((action) => {
+            const locked = !isSetupComplete;
+            return (
+              <TooltipProvider key={action.label} delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={locked ? "cursor-not-allowed" : ""}>
+                      <Link
+                        href={locked ? "#" : action.href}
+                        className={locked ? "pointer-events-none" : ""}
+                        aria-disabled={locked}
+                        tabIndex={locked ? -1 : undefined}
+                      >
+                        <Card className={`group hover:shadow-md transition-all h-full ${locked ? "opacity-50" : "hover:border-purple-200 dark:hover:border-purple-800"}`}>
+                          <CardContent className="p-5 flex items-start gap-4">
+                            <div className={`p-2.5 rounded-xl ${action.bg} shrink-0`}>
+                              <action.icon className={`h-5 w-5 ${action.color}`} />
+                            </div>
+                            <div className="min-w-0">
+                              <CardTitle className="text-base mb-0.5 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                {action.label}
+                              </CardTitle>
+                              <CardDescription className="text-xs">{action.description}</CardDescription>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-purple-500 transition-colors ml-auto mt-1 shrink-0" />
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    </div>
+                  </TooltipTrigger>
+                  {locked && <TooltipContent><p>Complete AI setup to unlock</p></TooltipContent>}
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })}
+        </div>
       </motion.div>
 
-      {/* Main Grid */}
+      {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Activity Chart with period filter */}
+          {/* Activity Chart */}
           <motion.div variants={itemVariants}>
             <Card className="border-slate-200/80 dark:border-slate-800">
               <CardHeader className="pb-2">
@@ -236,11 +367,10 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                       <button
                         key={p}
                         onClick={() => setActivityPeriod(p)}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-                          activityPeriod === p
-                            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                        }`}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${activityPeriod === p
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                          : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                          }`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
                       </button>
@@ -269,15 +399,8 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                       </defs>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} allowDecimals={false} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(15, 23, 42, 0.9)",
-                          border: "none",
-                          borderRadius: "8px",
-                          color: "#e2e8f0",
-                          fontSize: "12px",
-                          padding: "8px 12px",
-                        }}
+                      <RechartsTooltip
+                        contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "none", borderRadius: "8px", color: "#e2e8f0", fontSize: "12px", padding: "8px 12px" }}
                       />
                       <Area type="monotone" dataKey="scripts" stroke="#a855f7" strokeWidth={2} fill="url(#fillScripts)" name="Scripts" />
                       <Area type="monotone" dataKey="ideas" stroke="#f59e0b" strokeWidth={2} fill="url(#fillIdeas)" name="Ideas" />
@@ -310,7 +433,7 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                          className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                         >
                           <div className={`p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 ${cfg!.color}`}>
                             <Icon className="h-3.5 w-3.5" />
@@ -319,9 +442,7 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                             <p className="text-sm font-medium truncate">{item.title}</p>
                             <p className="text-xs text-slate-400 capitalize">{item.type}</p>
                           </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs text-slate-400">{formatTimeAgo(item.date)}</span>
-                          </div>
+                          <span className="text-xs text-slate-400 shrink-0">{formatTimeAgo(item.date)}</span>
                         </motion.div>
                       );
                     })}
@@ -340,68 +461,61 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
         {/* Right Column */}
         <div className="space-y-6">
           {/* YouTube Channel Card */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-red-500 via-red-400 to-orange-400" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Youtube className="h-4 w-4 text-red-500" />
-                  YouTube Channel
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="font-semibold text-lg truncate">
-                    {profile?.youtube_channel_name || "Connected Channel"}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className="mt-1.5 text-green-600 border-green-600/30 bg-green-500/10"
-                  >
-                    <CircleDot className="h-2.5 w-2.5 mr-1.5 text-green-500 animate-pulse" />
-                    Connected
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Globe className="h-3 w-3 text-slate-400" />
-                      <span className="text-xs text-slate-500">Language</span>
-                    </div>
-                    <p className="text-sm font-semibold capitalize">{profile?.language || "English"}</p>
+          {isYoutubeConnected && (
+            <motion.div variants={itemVariants}>
+              <Card className="border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                <div className="h-1.5 bg-gradient-to-r from-red-500 via-red-400 to-orange-400" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <Youtube className="h-4 w-4 text-red-500" />
+                    YouTube Channel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold text-lg truncate">{profile?.youtube_channel_name || "Connected Channel"}</p>
+                    <Badge variant="outline" className="mt-1.5 text-green-600 border-green-600/30 bg-green-500/10">
+                      <CircleDot className="h-2.5 w-2.5 mr-1.5 text-green-500 animate-pulse" />
+                      Connected
+                    </Badge>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Sparkles className="h-3 w-3 text-slate-400" />
-                      <span className="text-xs text-slate-500">AI Model</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Globe className="h-3 w-3 text-slate-400" />
+                        <span className="text-xs text-slate-500">Language</span>
+                      </div>
+                      <p className="text-sm font-semibold capitalize">{profile?.language || "English"}</p>
                     </div>
-                    <p className="text-sm font-semibold">
-                      {profile?.ai_trained ? "Trained" : "Pending"}
-                    </p>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Sparkles className="h-3 w-3 text-slate-400" />
+                        <span className="text-xs text-slate-500">AI Model</span>
+                      </div>
+                      <p className="text-sm font-semibold">{profile?.ai_trained ? "Trained" : "Pending"}</p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Link href="/dashboard/channel-stats" className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full gap-1.5 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20">
-                      <BarChart3 className="h-3.5 w-3.5" />
-                      View More
+                  <div className="flex gap-2">
+                    <Link href="/dashboard/channel-stats" className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full gap-1.5 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20">
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        View More
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                      onClick={disconnectYoutubeChannel}
+                      disabled={disconnectingYoutube}
+                    >
+                      {disconnectingYoutube ? "..." : "Disconnect"}
                     </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                    onClick={disconnectYoutubeChannel}
-                    disabled={disconnectingYoutube}
-                  >
-                    {disconnectingYoutube ? "..." : "Disconnect"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Credits Card */}
           <motion.div variants={itemVariants}>
@@ -428,7 +542,6 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                     </div>
                   )}
                 </div>
-
                 {creditsUsed > 0 && (
                   <div>
                     <div className="flex justify-between text-xs text-slate-500 mb-1.5">
@@ -459,28 +572,13 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
                   <div className="h-[160px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={65}
-                          paddingAngle={3}
-                          dataKey="value"
-                          strokeWidth={0}
-                        >
+                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={3} dataKey="value" strokeWidth={0}>
                           {pieData.map((_, index) => (
                             <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(15, 23, 42, 0.9)",
-                            border: "none",
-                            borderRadius: "8px",
-                            color: "#e2e8f0",
-                            fontSize: "12px",
-                          }}
+                        <RechartsTooltip
+                          contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "none", borderRadius: "8px", color: "#e2e8f0", fontSize: "12px" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -520,7 +618,6 @@ export function ReturningUserHub({ profile, data, disconnectYoutubeChannel, disc
               </Card>
             </Link>
           </motion.div>
-
         </div>
       </div>
     </motion.div>

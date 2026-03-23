@@ -11,6 +11,8 @@ export const CreateThumbnailSchema = z.object({
   generateCount: z.coerce.number().int().min(1).max(5).default(3),
   videoLink: z.string().url('Invalid video URL').optional().or(z.literal('')),
   personalized: z.coerce.boolean().optional().default(true),
+  scriptId: z.string().uuid().optional(),
+  storyBuilderId: z.string().uuid().optional(),
 });
 
 export type ThumbnailRatio = (typeof THUMBNAIL_RATIOS)[number];

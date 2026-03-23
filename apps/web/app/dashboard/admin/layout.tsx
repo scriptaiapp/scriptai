@@ -18,7 +18,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft,
 } from "lucide-react"
 
 const adminLinks = [
@@ -41,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!loading && !profileLoading) {
       if (!user) {
-        router.push("/login?redirectedFrom=/dashboard/admin")
+        router.push("/admin/login?redirectedFrom=/dashboard/admin")
         return
       }
       if (profile?.role !== "admin") {
@@ -106,14 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="border-t border-slate-800 p-4 space-y-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to App
-          </Link>
+        <div className="border-t border-slate-800 p-4">
           <button
             onClick={() => logout()}
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-red-400 transition-colors w-full"

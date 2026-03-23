@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get, Delete, Param, Query, UseGuards, Req, Sse } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DubbingService } from './dubbing.service';
 import type { CreateDubInput } from '@repo/validation';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -6,6 +7,8 @@ import type { Observable } from 'rxjs';
 import type { Request } from 'express';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 
+@ApiTags('dubbing')
+@ApiBearerAuth()
 @Controller('dubbing')
 export class DubbingController {
   constructor(private readonly service: DubbingService) { }

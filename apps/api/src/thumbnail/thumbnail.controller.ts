@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFiles,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -23,6 +24,8 @@ import type { Observable } from 'rxjs';
 import { ThumbnailService } from './thumbnail.service';
 import { createJobSSE } from '../common/sse';
 
+@ApiTags('thumbnail')
+@ApiBearerAuth()
 @Controller('thumbnail')
 export class ThumbnailController {
   constructor(
