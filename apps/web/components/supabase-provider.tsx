@@ -48,10 +48,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(true)
   const isLoggingOut = useRef(false)
 
-  // Generate referral code
   function generateReferralCode(): string {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")
+    const bytes = new Uint8Array(8)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (b) => chars[b % chars.length]).join("")
   }
 
   // Profile fetch with suspense support

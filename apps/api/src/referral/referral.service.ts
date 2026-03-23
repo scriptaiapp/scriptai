@@ -9,13 +9,13 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import type { TrackReferralInput } from '@repo/validation';
 
-const CREDITS_PER_REFERRAL = 10;
+const CREDITS_PER_REFERRAL = 250;
 
 @Injectable()
 export class ReferralService {
   private readonly logger = new Logger(ReferralService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) { }
 
   async getReferralData(userId: string) {
     const supabase = this.supabaseService.getClient();

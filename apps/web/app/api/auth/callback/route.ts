@@ -5,7 +5,7 @@ import { getSupabaseServer } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import { BACKEND_URL } from '@/lib/constants';
 
-const CREDITS_PER_REFERRAL = 10;
+const CREDITS_PER_REFERRAL = 250;
 
 function escapeHtml(str: string): string {
   return str
@@ -263,7 +263,7 @@ async function getRedirectByRole(supabase: any, userId: string, fallback: string
     }
 
     if (data?.role === 'sales_rep') return '/dashboard/sales-rep';
-  } catch {}
+  } catch { }
   return '/dashboard';
 }
 
