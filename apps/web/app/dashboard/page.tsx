@@ -1,17 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 import { useSupabase } from "@/components/supabase-provider"
-import { toast } from "sonner"
-import { NewUserOnboarding } from "@/components/dashboard/main/NewUserOnboarding"
-import { ReturningUserHub } from "@/components/dashboard/main/ReturningUserHub"
-import { DashboardSkeleton } from "@/components/dashboard/main/skeleton/DashboardSkeleton";
+import { DashboardHome } from "@/components/dashboard/main/DashboardHome"
+import { DashboardSkeleton } from "@/components/dashboard/main/skeleton/DashboardSkeleton"
 import { connectYoutubeChannel, isGoogleProvider } from "@/lib/connectYT"
+import { toast } from "sonner"
+import { GmailPromptDialog } from "@/components/dashboard/gmail-prompt-dialog"
 import { getScripts, type Script } from "@/lib/api/getScripts"
 import { getThumbnails, type ThumbnailJob } from "@/lib/api/getThumbnails"
 import { getDubbings, type DubbingProject } from "@/lib/api/getDubbings"
 import { api } from "@/lib/api-client"
-import { GmailPromptDialog } from "@/components/dashboard/gmail-prompt-dialog"
 import type { IdeationJob, SubtitleResponse } from "@repo/validation"
 
 export interface DashboardData {
@@ -23,15 +22,15 @@ export interface DashboardData {
 }
 
 export default function Dashboard() {
-  const { supabase, user, profile, fetchUserProfile } = useSupabase();
+  const { supabase, user, profile, fetchUserProfile } = useSupabase()
 
   const [data, setData] = useState<DashboardData>({
     scripts: [], thumbnails: [], dubbings: [], ideations: [], subtitles: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isConnectingYoutube, setIsConnectingYoutube] = useState(false);
-  const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false);
-  const [showGmailDialog, setShowGmailDialog] = useState(false);
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
+  const [isDisconnectingYoutube, setIsDisconnectingYoutube] = useState(false)
+  const [showGmailDialog, setShowGmailDialog] = useState(false)
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -105,26 +104,16 @@ export default function Dashboard() {
     )
   }
 
-  const isSetupComplete = profile.youtube_connected && profile.ai_trained
-
   return (
     <div className="container py-8">
-      {isSetupComplete ? (
-        <ReturningUserHub
-          profile={profile}
-          data={data}
-          disconnectYoutubeChannel={handleDisconnectYoutube}
-          disconnectingYoutube={isDisconnectingYoutube}
-        />
-      ) : (
-        <NewUserOnboarding
-          profile={profile}
-          connectYoutubeChannel={handleConnectYoutube}
-          connectingYoutube={isConnectingYoutube}
-          disconnectYoutubeChannel={handleDisconnectYoutube}
-          disconnectingYoutube={isDisconnectingYoutube}
-        />
-      )}
+      <DashboardHome
+        profile={profile}
+        data={data}
+        connectYoutubeChannel={handleConnectYoutube}
+        connectingYoutube={isConnectingYoutube}
+        disconnectYoutubeChannel={handleDisconnectYoutube}
+        disconnectingYoutube={isDisconnectingYoutube}
+      />
 
       <GmailPromptDialog
         open={showGmailDialog}

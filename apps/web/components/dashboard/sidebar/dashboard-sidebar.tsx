@@ -8,10 +8,11 @@ import Image from "next/image"
 import { motion, AnimatePresence } from "motion/react"
 
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
-import { Lock } from "lucide-react"
+import { Lock, Menu, PanelLeft } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
 
 import logo from "@/public/dark-logo.png"
@@ -178,8 +179,18 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
 
   if (isMobile) {
     return (
-      <Sheet open={collapsed} onOpenChange={setCollapsed}>
-        <SheetContent side="left" className="w-64 p-0">
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed left-4 top-4 z-40 md:hidden"
+          onClick={() => setCollapsed(true)}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
+        </Button>
+        <Sheet open={collapsed} onOpenChange={setCollapsed}>
+          <SheetContent side="left" className="w-64 p-0">
           <div className="flex h-14 items-center border-b px-4">
             <Link href="/dashboard">
               <Logo />
@@ -188,8 +199,9 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
           <div className="p-2">
             <Nav links={links} onLinkClick={() => setCollapsed(false)} />
           </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      </>
     )
   }
 
@@ -199,7 +211,20 @@ export function DashboardSidebar({ collapsed, setCollapsed, pinned, setPinned }:
     <Sidebar open={effectiveOpen} setOpen={handleSetOpen} animate={!pinned}>
       <SidebarBody className="justify-between gap-10">
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-          {effectiveOpen ? <Logo showText={true} /> : <Logo showText={false} />}
+          <div className="flex items-center justify-between">
+            {effectiveOpen ? <Logo showText={true} /> : <Logo showText={false} />}
+            {effectiveOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPinned?.(!pinned)}
+              >
+                <PanelLeft className="h-4 w-4" />
+                <span className="sr-only">Toggle sidebar</span>
+              </Button>
+            )}
+          </div>
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => {
               const isActive = pathname === link.href;

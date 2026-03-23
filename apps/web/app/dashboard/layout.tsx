@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { DashboardSidebar } from "@/components/dashboard/sidebar/dashboard-sidebar"
@@ -17,10 +17,6 @@ export default function DashboardLayout({
   const { loading, profile, profileLoading } = useSupabase()
   const pathname = usePathname()
   const router = useRouter()
-
-  const handleTogglePin = useCallback(() => {
-    setSidebarPinned((prev) => !prev)
-  }, [])
 
   const isAdminRoute = pathname.startsWith("/dashboard/admin")
   const isSalesRepRoute = pathname.startsWith("/dashboard/sales-rep")
@@ -49,7 +45,7 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       <DashboardSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} pinned={sidebarPinned} setPinned={setSidebarPinned} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} onToggleSidebarPin={handleTogglePin} />
+        <DashboardHeader />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>
