@@ -106,7 +106,7 @@ export class SubtitleService {
         .eq('id', subtitleId)
         .single();
 
-      if (subtitleError && subtitleError.code !== 'PGRST116' || !subtitle?.video_url) {
+      if ((subtitleError && subtitleError.code !== 'PGRST116') || !subtitle?.video_url) {
         await this.logErrorToDB('Subtitle lookup failed or video_url missing', subtitleId);
         throw new NotFoundException('Subtitle lookup error');
       }
@@ -219,7 +219,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
       const { data, error: subtitleInsertError } = await this.supabaseService.getClient()
         .from("subtitle_jobs")
         .update({
-          subtitles_json: JSON.stringify(subtitlesJson),
+          subtitles_json: subtitlesJson,
           status: "done",
           language: language,
           detected_language: detectedLanguage,
@@ -253,6 +253,9 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
       if (updateError) {
         this.logger.error('Error updating credits', updateError);
+        if (updateError.message?.includes('Insufficient credits')) {
+          throw new ForbiddenException('Insufficient credits for this operation.');
+        }
         throw new InternalServerErrorException('Failed to update credits');
       }
 
@@ -292,25 +295,24 @@ Your task is to transcribe the provided audio file and generate precise, time-st
   }
 
   async findOne(id: string, userId: string) {
-    try {
-      const { data: subtitleData, error: subtitleError } = await this.supabaseService.getClient()
-        .from('subtitle_jobs')
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", userId)
-        .single();
+    const { data: subtitleData, error: subtitleError } = await this.supabaseService.getClient()
+      .from('subtitle_jobs')
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
 
-      if (subtitleError) {
-        throw new InternalServerErrorException('Error fetching subtitle');
+    if (subtitleError) {
+      if (subtitleError.code === 'PGRST116') {
+        throw new NotFoundException('Subtitle not found');
       }
-
-      return {
-        success: true,
-        subtitle: subtitleData
-      };
-    } catch (error) {
       throw new InternalServerErrorException('Error fetching subtitle');
     }
+
+    return {
+      success: true,
+      subtitle: subtitleData
+    };
   }
 
   async update(input: UpdateSubtitleInput, userId: string) {
@@ -386,7 +388,7 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     const srtContent = convertJsonToSrt(subtitle_json);
     const { error: updateError } = await this.supabaseService.getClient()
       .from("subtitle_jobs")
-      .update({ subtitles_json: JSON.stringify(subtitle_json) })
+      .update({ subtitles_json: subtitle_json })
       .eq("id", id)
       .eq("user_id", userId);
     if (updateError) {
@@ -449,7 +451,9 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     } catch (err) {
       throw new InternalServerErrorException('Failed to upload video');
     } finally {
-      await fs.unlink(file.path).catch(() => null);
+      if (file.path) {
+        await fs.unlink(file.path).catch(() => null);
+      }
     }
 
     // Get public URL

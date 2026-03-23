@@ -80,7 +80,7 @@ export default function Thumbnails() {
     const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained
 
     const filteredThumbnails = thumbnails.filter((t) =>
-        t.prompt.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.prompt ?? "").toLowerCase().includes(searchQuery.toLowerCase())
     )
 
     return (

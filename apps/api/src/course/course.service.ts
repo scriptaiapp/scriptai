@@ -114,10 +114,14 @@ For each video in the course, include:
       throw new InternalServerErrorException('Failed to parse course module data');
     }
 
-    await this.supabase
-      .from('profiles')
-      .update({ credits: profileData.credits - 2 })
-      .eq('user_id', userId);
+    const { error: creditError } = await this.supabase.rpc('update_user_credits', {
+      user_uuid: userId,
+      credit_change: -2,
+    });
+
+    if (creditError) {
+      throw new ForbiddenException('Insufficient credits. Please upgrade your plan.');
+    }
 
     return courseModule;
   }

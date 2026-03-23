@@ -30,10 +30,16 @@ export class TrainAiController {
   @Post('stop/:jobId')
   @UseGuards(SupabaseAuthGuard)
   async stopTraining(
+    @Req() req: AuthRequest,
     @Param('jobId') jobId: string,
   ): Promise<{ message: string }> {
+    const userId = getUserId(req);
     const job = await this.queue.getJob(jobId);
     if (!job) throw new NotFoundException('Job not found');
+
+    if (job.data?.userId !== userId) {
+      throw new NotFoundException('Job not found');
+    }
 
     const state = await job.getState();
 

@@ -53,7 +53,8 @@ export default function LoginPage() {
   const { supabase, user, profile, profileLoading } = useSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo")
+  const rawRedirect = searchParams.get("redirectTo") || searchParams.get("redirectedFrom")
+  const redirectTo = rawRedirect?.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null
 
   useEffect(() => {
     if (user && !profileLoading && profile) {

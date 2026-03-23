@@ -42,6 +42,11 @@ export class UploadService {
       .from(BUCKET)
       .getPublicUrl(newFileName);
 
+    await this.supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('user_id', userId);
+
     return { url: publicUrl };
   }
 
@@ -58,6 +63,11 @@ export class UploadService {
       );
       await this.supabase.storage.from(BUCKET).remove([filePath]);
     }
+
+    await this.supabase
+      .from('profiles')
+      .update({ avatar_url: null })
+      .eq('user_id', userId);
 
     return { message: 'Avatar deleted.' };
   }

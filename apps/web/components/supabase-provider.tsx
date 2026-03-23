@@ -155,6 +155,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setProfile(null)
     setProviderToken(null)
+    sessionPromise = null
+    profilePromises.clear()
     isLoggingOut.current = false
   }
 

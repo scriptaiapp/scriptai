@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { Suspense, useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { BarChart3, Bell, CreditCard, UserCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -20,6 +20,14 @@ interface NavItem {
 }
 
 export default function Settings() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as NavItemId) || "profile";
   const validTabs: NavItemId[] = ["profile", "notifications", "billing", "usage"];

@@ -517,10 +517,11 @@ export class BillingService {
 
     const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(rawBody).digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(digest),
-      Buffer.from(signature),
-    );
+    const digestBuf = Buffer.from(digest);
+    const signatureBuf = Buffer.from(signature);
+
+    if (digestBuf.length !== signatureBuf.length) return false;
+    return crypto.timingSafeEqual(digestBuf, signatureBuf);
   }
 
   // --- Helpers ---

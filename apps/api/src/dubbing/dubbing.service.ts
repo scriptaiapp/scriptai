@@ -44,8 +44,20 @@ export class DubbingService {
   async createDub(userId: string, dto: CreateDubInput): Promise<{ projectId: string }> {
     const targetLocale = murfLocaleMap[dto.targetLanguage as SupportedLanguage];
     if (!targetLocale) throw new BadRequestException('Unsupported language');
+
+    try {
+      const parsedUrl = new URL(dto.mediaUrl);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        throw new BadRequestException('Invalid media URL');
+      }
+    } catch {
+      throw new BadRequestException('Invalid media URL');
+    }
+
     const fileResponse = await axios.get(dto.mediaUrl, {
       responseType: 'arraybuffer',
+      timeout: 120_000,
+      maxContentLength: 500 * 1024 * 1024,
     });
 
     if (!fileResponse.data) {
@@ -259,12 +271,15 @@ export class DubbingService {
     // Cleanup pending data
     this.pendingProjects.delete(projectId);
 
-    // Deduct credits from user profile
     if (creditsUsed > 0) {
-      await this.supabase.rpc('update_user_credits', {
+      const { error: creditError } = await this.supabase.rpc('update_user_credits', {
         user_uuid: userId,
         credit_change: -creditsUsed * 10,
       });
+
+      if (creditError) {
+        this.logger.error(`Credit deduction failed for user ${userId}: ${creditError.message}`);
+      }
     }
   }
 

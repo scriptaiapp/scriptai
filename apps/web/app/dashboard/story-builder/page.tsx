@@ -72,7 +72,7 @@ export default function StoryBuilderListPage() {
   const showTrainingOverlay = !profile?.youtube_connected || !profile?.ai_trained
 
   const filteredJobs = jobs.filter(j =>
-    j.video_topic.toLowerCase().includes(searchQuery.toLowerCase())
+    (j.video_topic ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
