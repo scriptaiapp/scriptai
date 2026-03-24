@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps ./apps
+COPY packages ./packages
+
+RUN pnpm install --frozen-lockfile
+
+RUN pnpm exec turbo run build --filter=api
+
+ENV NODE_ENV=production
+
+CMD ["node", "apps/api/dist/src/main.js"]

@@ -165,9 +165,6 @@ importers:
       form-data:
         specifier: ^4.0.0
         version: 4.0.4
-      ioredis:
-        specifier: ^5.8.2
-        version: 5.8.2
       jsonrepair:
         specifier: ^3.13.0
         version: 3.13.0
@@ -722,9 +719,6 @@ importers:
       bullmq:
         specifier: 'catalog:'
         version: 5.62.2
-      ioredis:
-        specifier: ^5.8.2
-        version: 5.8.2
       jsonrepair:
         specifier: ^3.13.0
         version: 3.13.0
