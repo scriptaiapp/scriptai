@@ -28,7 +28,7 @@
     "RESEND_WEBHOOK_SECRET"
   ],
   "tasks": {
-    "dev": { "cache": false, "persistent": true },
+    "dev": { "dependsOn": ["^build"], "cache": false, "persistent": true },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**", ".tsup/**"],
