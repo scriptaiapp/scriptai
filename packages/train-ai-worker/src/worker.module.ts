@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import * as path from 'path';
-import { getRedisConnection } from './redis.connection';
+import { getRedisConnection } from '@repo/redis';
 import { HealthController } from './health.controller';
 import { TrainAiProcessor } from './processor/train-ai.processor';
 import { ThumbnailProcessor } from './processor/thumbnail.processor';

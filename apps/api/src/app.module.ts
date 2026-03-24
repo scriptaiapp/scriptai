@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import * as path from 'path';
-import redisConfig from './config/redis.config';
-import { getRedisConnection } from './redis.connection';
+import { getRedisConnection } from '@repo/redis';
 import { SupabaseModule } from './supabase/supabase.module';
 
 import { AppController } from './app.controller';
@@ -29,7 +28,6 @@ import { SalesRepModule } from './sales-rep/sales-rep.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [redisConfig],
       envFilePath: [
         '.env',
         '.env.local',
