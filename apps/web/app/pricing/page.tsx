@@ -23,6 +23,7 @@ const comparisons = [
   { feature: "Story Builder", starter: true, creator: true, enterprise: true },
   { feature: "Referral Program", starter: true, creator: true, enterprise: true },
   { feature: "Monthly Credits", starter: "500", creator: "5,000", enterprise: "100,000" },
+  { feature: "Audio Dubbing", starter: false, creator: true, enterprise: true },
   { feature: "Video Generation", starter: false, creator: true, enterprise: true },
   { feature: "Community Access", starter: false, creator: true, enterprise: true },
   { feature: "Advanced Analytics", starter: false, creator: false, enterprise: true },

@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: "What can I create with it?",
-    a: "You can generate video scripts, brainstorm video ideas based on trends, create eye-catching thumbnails, auto-generate subtitles from your videos, and build structured story outlines with retention scoring. Video generation and course building are coming soon.",
+    a: "You can generate video scripts, brainstorm video ideas based on trends, create eye-catching thumbnails, auto-generate subtitles from your videos, and build structured story outlines with retention scoring. Video generation, course building, and audio dubbing are coming soon.",
   },
   {
     q: "How do credits work?",

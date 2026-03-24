@@ -6,7 +6,7 @@ import {
   Mic,
   Image,
   Subtitles,
-  Layers,
+  Languages,
   LayoutDashboard,
   X,
   Check,
@@ -46,17 +46,17 @@ const comparisons = [
     genericAI: false,
   },
   {
-    feature: "Retention-Focused Story Blueprints",
+    feature: "Dubbing in 24+ Languages",
     description:
-      "Map hooks, tension, and payoff to your topic with pacing scores — not a generic bullet list.",
-    icon: Layers,
+      "Natural-sounding AI dubbing to reach global audiences without hiring voice actors.",
+    icon: Languages,
     creatorAI: true,
     genericAI: false,
   },
   {
     feature: "All-in-One Dashboard",
     description:
-      "Scripts, thumbnails, subtitles, ideas, and story blueprints — one tool, zero context-switching.",
+      "Scripts, thumbnails, subtitles, dubbing, ideas, and story blueprints — one tool, zero context-switching.",
     icon: LayoutDashboard,
     creatorAI: true,
     genericAI: false,
@@ -159,7 +159,7 @@ export default function WhyCreatorAI() {
         </h3>
         <p className="text-purple-100 max-w-2xl mx-auto mb-6">
           Generic AI tools cost $80–180/month when you piece together scripts,
-          thumbnails, and subtitles from different apps. Creator AI
+          thumbnails, subtitles, and dubbing from different apps. Creator AI
           gives you everything in one subscription — purpose-built for YouTube
           creators.
         </p>

@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react"
 import { SuccessDialog } from "@/components/success-dialog"
-import { PenTool, Search, Video, ImageIcon, Subtitles, BookOpen } from "lucide-react"
+import { PenTool, Search, Volume2, ImageIcon, Subtitles, BookOpen } from "lucide-react"
 
 import { useAITraining } from "@/hooks/useAITraining"
 import { HowItWorksGuide } from "@/components/dashboard/train/HowItWorksGuide"
@@ -14,7 +14,7 @@ import { TrainingProgress } from "@/components/dashboard/train/TrainingProgress"
 const nextSteps = [
   { title: "Create Scripts", description: "Generate scripts in your style", icon: PenTool, href: "/dashboard/scripts" },
   { title: "Ideation", description: "Discover trending ideas", icon: Search, href: "/dashboard/research" },
-  { title: "Video Generation", description: "Turn scripts into AI video", icon: Video, href: "/dashboard/video-generation" },
+  { title: "Audio Dubbing", description: "Dub audio in any language", icon: Volume2, href: "/dashboard/dubbing" },
   { title: "Thumbnails", description: "AI-generated thumbnails", icon: ImageIcon, href: "/dashboard/thumbnails" },
   { title: "Subtitles", description: "Auto-generate subtitles", icon: Subtitles, href: "/dashboard/subtitles" },
   { title: "Story Builder", description: "Build story structures", icon: BookOpen, href: "/dashboard/story-builder" },

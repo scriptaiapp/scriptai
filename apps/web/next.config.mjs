@@ -18,13 +18,6 @@ const nextConfig = {
   },
   transpilePackages: ["@repo/ui"],
   poweredByHeader: false,
-  async redirects() {
-    return [
-      { source: "/dashboard/dubbing", destination: "/dashboard", permanent: false },
-      { source: "/dashboard/dubbing/new", destination: "/dashboard", permanent: false },
-      { source: "/dashboard/dubbing/:id", destination: "/dashboard", permanent: false },
-    ];
-  },
   async headers() {
     return [
       {

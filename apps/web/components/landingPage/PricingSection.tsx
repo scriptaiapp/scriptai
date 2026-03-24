@@ -9,7 +9,7 @@ import { useSupabase } from "../supabase-provider"
 
 export default function PricingSection({ hideHeader = false }: { hideHeader?: boolean }) {
     const { user } = useSupabase()
-    const comingSoon = new Set(["Course Builder", "Video Generation"])
+    const comingSoon = new Set(["Course Builder", "Audio dubbing", "Video Generation"])
     const baseFeatures = {
         starter: [
             "No credit card required",
@@ -25,6 +25,7 @@ export default function PricingSection({ hideHeader = false }: { hideHeader?: bo
         creatorPlusExtras: [
             "Everything in Starter",
             "5k credits/month",
+            "Audio dubbing",
             "Video Generation",
             "Community Access",
         ],

@@ -280,7 +280,7 @@ export default function AboutPage() {
                 Every Feature, Personalized
               </h2>
               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                Scripts, thumbnails, subtitles, and story blueprints — each powered by an AI model trained on your content, not generic templates.
+                Scripts, thumbnails, subtitles, dubbing — each powered by an AI model trained on your content, not generic templates.
               </p>
             </motion.div>
 

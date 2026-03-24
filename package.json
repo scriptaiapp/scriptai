@@ -14,6 +14,9 @@
     "dev": "turbo run dev",
     "dev:setup": "turbo run dev --filter='./apps/*'",
     "build": "turbo run build",
+    "build:web": "turbo run build --filter=web...",
+    "build:api": "turbo run build --filter=api...",
+    "build:worker": "turbo run build --filter=@repo/train-ai-worker...",
     "build:packages": "turbo run build --filter='./packages/*'",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
@@ -36,7 +39,12 @@
     "supabase": "^2.48.3",
     "turbo": "^2.7.2"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.30.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "supabase"
+    ]
+  },
   "engines": {
     "node": ">=18"
   },

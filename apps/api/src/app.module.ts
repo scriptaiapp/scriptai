@@ -10,6 +10,7 @@ import { HealthController } from './health.controller';
 import { TrainAiModule } from './train-ai/train-ai.module';
 import { AuthModule } from './auth/auth.module';
 import { SubtitleModule } from './subtitle/subtitle.module';
+import { DubbingModule } from './dubbing/dubbing.module';
 import { ThumbnailModule } from './thumbnail/thumbnail.module';
 import { StoryBuilderModule } from './story-builder/story-builder.module';
 import { ReferralModule } from './referral/referral.module';
@@ -50,6 +51,7 @@ import { SalesRepModule } from './sales-rep/sales-rep.module';
     TrainAiModule,
     AuthModule,
     SubtitleModule,
+    DubbingModule,
     ThumbnailModule,
     StoryBuilderModule,
     ReferralModule,

@@ -15,6 +15,7 @@ export const siteConfig = {
     "YouTube script generator",
     "AI subtitles",
     "YouTube content creator",
+    "AI dubbing",
     "video script AI",
     "Creator AI",
     "YouTube SEO",
