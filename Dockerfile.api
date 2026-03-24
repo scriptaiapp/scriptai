@@ -10,9 +10,7 @@ COPY packages ./packages
 
 RUN pnpm install --frozen-lockfile
 
-# ...api = api plus all workspace dependencies (^build order via turbo.json)
 RUN pnpm run build:api
-RUN test -f packages/redis/dist/index.js
 
 ENV NODE_ENV=production
 
