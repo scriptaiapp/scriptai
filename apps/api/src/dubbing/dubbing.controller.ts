@@ -3,8 +3,6 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DubbingService } from './dubbing.service';
 import type { CreateDubInput } from '@repo/validation';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
-import type { Observable } from 'rxjs';
-import type { Request } from 'express';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 
 @ApiTags('dubbing')
@@ -16,15 +14,12 @@ export class DubbingController {
   @Post()
   @UseGuards(SupabaseAuthGuard)
   async create(@Req() req: AuthRequest, @Body() dto: CreateDubInput) {
-    return this.service.createDub(req.user!.id, dto);
+    return this.service.createDub();
   }
 
   @Sse('status/:projectId')
-  status(
-    @Param('projectId') projectId: string,
-    @Req() req: Request,
-  ): Observable<MessageEvent> {
-    return this.service.streamDubbingStatus(projectId, req);
+  status(@Param('projectId') projectId: string) {
+    return this.service.streamDubbingStatus();
   }
 
   @Get()

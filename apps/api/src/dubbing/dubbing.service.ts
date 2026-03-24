@@ -4,286 +4,27 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CreateDubInput, DubResponse, DubbingProgress, murfLocaleMap, SupportedLanguage } from '@repo/validation';
-import { randomUUID } from 'crypto';
-import axios from 'axios';
-import FormData from 'form-data';
-import { Observable } from 'rxjs';
-import type { Request } from 'express';
+import type { DubResponse } from '@repo/validation';
 
-interface PendingProject {
-  userId: string;
-  originalMediaUrl: string;
-  targetLanguage: string;
-  isVideo: boolean;
-  mediaName: string;
-}
-
-const DUBBING_TIMEOUT = 600_000;
+const FEATURE_DISABLED_MSG = 'Audio dubbing is not yet available';
 
 @Injectable()
 export class DubbingService {
   private readonly logger = new Logger(DubbingService.name);
-  private readonly murfApiKey: string;
-  private readonly baseURL = 'https://api.murf.ai/v1/murfdub';
-  private readonly pendingProjects = new Map<string, PendingProject>();
 
-  constructor(
-    private readonly supabaseService: SupabaseService,
-    private readonly configService: ConfigService,
-  ) {
-    const apiKey = this.configService.get<string>('MURF_API_KEY');
-    if (!apiKey) throw new Error('MURF_API_KEY missing');
-    this.murfApiKey = apiKey;
-  }
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   private get supabase() {
     return this.supabaseService.getClient();
   }
 
-
-  async createDub(userId: string, dto: CreateDubInput): Promise<{ projectId: string }> {
-    const targetLocale = murfLocaleMap[dto.targetLanguage as SupportedLanguage];
-    if (!targetLocale) throw new BadRequestException('Unsupported language');
-
-    try {
-      const parsedUrl = new URL(dto.mediaUrl);
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        throw new BadRequestException('Invalid media URL');
-      }
-    } catch {
-      throw new BadRequestException('Invalid media URL');
-    }
-
-    const fileResponse = await axios.get(dto.mediaUrl, {
-      responseType: 'arraybuffer',
-      timeout: 120_000,
-      maxContentLength: 500 * 1024 * 1024,
-    });
-
-    if (!fileResponse.data) {
-      throw new BadRequestException('Failed to download media file');
-    }
-
-    const fileBuffer = Buffer.from(fileResponse.data);
-    const fileName = `media-${Date.now()}.${dto.isVideo ? 'mp4' : 'mp3'}`;
-
-    // Create FormData with the actual file
-    const formData = new FormData();
-    formData.append('file', fileBuffer, {
-      filename: fileName,
-      contentType: dto.isVideo ? 'video/mp4' : 'audio/mpeg',
-    });
-
-    formData.append('file_name', fileName);
-    formData.append('target_locales', targetLocale);
-    formData.append('priority', 'NORMAL');
-
-    let createResponse;
-    try {
-      createResponse = await axios.post(
-        `${this.baseURL}/jobs/create`,
-        formData,
-        {
-          headers: {
-            'api-key': this.murfApiKey,
-            ...formData.getHeaders(),
-          },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        },
-      );
-
-    } catch (error) {
-      this.logger.error('Error creating Murf dubbing job', error);
-      throw error;
-    }
-
-    const projectId = createResponse.data.job_id;
-
-    // Store pending project data in memory - will save to DB on completion
-    this.pendingProjects.set(projectId, {
-      userId,
-      originalMediaUrl: dto.mediaUrl,
-      targetLanguage: dto.targetLanguage,
-      isVideo: dto.isVideo,
-      mediaName: dto.mediaName,
-    });
-
-    return { projectId };
+  async createDub(): Promise<never> {
+    throw new BadRequestException(FEATURE_DISABLED_MSG);
   }
 
-  streamDubbingStatus(projectId: string, req: Request): Observable<MessageEvent> {
-    return new Observable((observer) => {
-      let closed = false;
-
-      const sendEvent = (data: DubbingProgress) => {
-        if (!closed) observer.next({ data: JSON.stringify(data) } as MessageEvent);
-      };
-
-      // Initial processing state
-      sendEvent({ state: 'processing', progress: 20, message: 'Dubbing started...', finished: false });
-
-      const pollStatus = async () => {
-        const start = Date.now();
-        let delay = 5_000;
-
-        while (!closed && Date.now() - start < DUBBING_TIMEOUT) {
-          try {
-            const statusResponse = await axios.get(
-              `${this.baseURL}/jobs/${projectId}/status`,
-              { headers: { 'api-key': this.murfApiKey } },
-            );
-
-            const { status, download_details, credits_used, failure_reason } = statusResponse.data;
-
-            if (status === 'FAILED') {
-              this.pendingProjects.delete(projectId);
-              sendEvent({
-                state: 'failed',
-                progress: 0,
-                message: failure_reason ?? 'Dubbing failed',
-                finished: true,
-              });
-              observer.complete();
-              return;
-            }
-
-            if (status === 'COMPLETED' && download_details?.length) {
-              // Get download URL from first locale result
-              const dubbedUrl = download_details[0].download_url;
-
-              // Finalize: download, upload to storage, update DB, deduct credits
-              await this.finalizeDubbing(projectId, dubbedUrl, credits_used);
-
-              sendEvent({
-                state: 'completed',
-                progress: 100,
-                message: 'Dubbing complete!',
-                creditsUsed: credits_used * 10,
-                finished: true,
-              });
-              observer.complete();
-              return;
-            }
-
-            // Still processing - send progress update
-            const elapsed = Date.now() - start;
-            const progress = Math.min(20 + Math.floor((elapsed / DUBBING_TIMEOUT) * 80), 90);
-            sendEvent({
-              state: 'processing',
-              progress,
-              message: 'Processing audio...',
-              finished: false,
-            });
-
-            await new Promise((r) => setTimeout(r, delay));
-            delay = Math.min(delay * 1.5, 20_000);
-          } catch (err) {
-            this.logger.error('Status check failed', err);
-            this.pendingProjects.delete(projectId);
-            sendEvent({
-              state: 'failed',
-              progress: 0,
-              message: 'Status check failed',
-              finished: true,
-            });
-            observer.complete();
-            return;
-          }
-        }
-
-        // Timeout
-        if (!closed) {
-          this.pendingProjects.delete(projectId);
-          sendEvent({ state: 'failed', progress: 0, message: 'Dubbing timeout', finished: true });
-          observer.complete();
-        }
-      };
-
-      pollStatus();
-
-      // Cleanup on disconnect
-      req.on('close', () => {
-        closed = true;
-        this.pendingProjects.delete(projectId);
-        observer.complete();
-      });
-    });
-  }
-
-  private async finalizeDubbing(
-    projectId: string,
-    dubbedUrl: string,
-    creditsUsed: number,
-  ): Promise<void> {
-    const pending = this.pendingProjects.get(projectId);
-    if (!pending) {
-      throw new InternalServerErrorException('Pending project not found');
-    }
-
-    const { userId, isVideo, originalMediaUrl, targetLanguage, mediaName } = pending;
-
-    const dubbedResponse = await axios.get(dubbedUrl, {
-      responseType: 'arraybuffer',
-    });
-
-    const ext = isVideo ? 'mp4' : 'mp3';
-    const contentType = isVideo ? 'video/mp4' : 'audio/mpeg';
-    const dubbedBuffer = Buffer.from(dubbedResponse.data);
-
-    // Upload to Supabase storage
-    const filePath = `${userId}/${projectId}/${randomUUID()}-dubbed.${ext}`;
-
-    const { error: uploadErr } = await this.supabase.storage
-      .from('dubbing_media')
-      .upload(filePath, dubbedBuffer, {
-        contentType,
-        upsert: false,
-      });
-
-    if (uploadErr) {
-      throw new InternalServerErrorException('Storage upload failed');
-    }
-
-    const {
-      data: { publicUrl },
-    } = this.supabase.storage.from('dubbing_media').getPublicUrl(filePath);
-
-    // Insert completed project to database
-    const { error: insertErr } = await this.supabase
-      .from('dubbing_projects')
-      .insert({
-        user_id: userId,
-        project_id: projectId,
-        original_media_url: originalMediaUrl,
-        target_language: targetLanguage,
-        is_video: isVideo,
-        media_name: mediaName,
-        dubbed_url: publicUrl,
-        status: 'dubbed',
-        credits_consumed: creditsUsed * 10,
-      });
-
-    if (insertErr) {
-      throw new InternalServerErrorException('Failed to save dubbing project');
-    }
-
-    // Cleanup pending data
-    this.pendingProjects.delete(projectId);
-
-    if (creditsUsed > 0) {
-      const { error: creditError } = await this.supabase.rpc('update_user_credits', {
-        user_uuid: userId,
-        credit_change: -creditsUsed * 10,
-      });
-
-      if (creditError) {
-        this.logger.error(`Credit deduction failed for user ${userId}: ${creditError.message}`);
-      }
-    }
+  streamDubbingStatus(): never {
+    throw new BadRequestException(FEATURE_DISABLED_MSG);
   }
 
   async listDubs(userId: string, pageSize = 100) {
@@ -335,16 +76,6 @@ export class DubbingService {
 
     if (error) {
       throw new BadRequestException('Dub not found or access denied');
-    }
-
-    try {
-      await axios.delete(`${this.baseURL}/jobs/${projectId}`, {
-        headers: {
-          'api-key': this.murfApiKey,
-        },
-      });
-    } catch (err) {
-      this.logger.warn('Failed to delete Murf job', err);
     }
   }
 }
