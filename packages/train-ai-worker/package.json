@@ -8,8 +8,8 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
     }
   },
   "scripts": {
@@ -34,6 +34,7 @@
     "@upstash/redis": "^1.37.0",
     "axios": "catalog:",
     "bullmq": "catalog:",
+    "ioredis": "^5.8.2",
     "jsonrepair": "^3.13.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
