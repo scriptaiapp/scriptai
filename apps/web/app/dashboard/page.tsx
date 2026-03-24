@@ -9,14 +9,14 @@ import { toast } from "sonner"
 import { GmailPromptDialog } from "@/components/dashboard/gmail-prompt-dialog"
 import { getScripts, type Script } from "@/lib/api/getScripts"
 import { getThumbnails, type ThumbnailJob } from "@/lib/api/getThumbnails"
-import { getDubbings, type DubbingProject } from "@/lib/api/getDubbings"
+import { getStoryBuilderJobs, type StoryBuilderJob } from "@/lib/api/getStoryBuilderJobs"
 import { api } from "@/lib/api-client"
 import type { IdeationJob, SubtitleResponse } from "@repo/validation"
 
 export interface DashboardData {
   scripts: Script[];
   thumbnails: ThumbnailJob[];
-  dubbings: DubbingProject[];
+  storyBuilders: StoryBuilderJob[];
   ideations: IdeationJob[];
   subtitles: SubtitleResponse[];
 }
@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { supabase, user, profile, fetchUserProfile } = useSupabase()
 
   const [data, setData] = useState<DashboardData>({
-    scripts: [], thumbnails: [], dubbings: [], ideations: [], subtitles: [],
+    scripts: [], thumbnails: [], storyBuilders: [], ideations: [], subtitles: [],
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isConnectingYoutube, setIsConnectingYoutube] = useState(false)
@@ -36,10 +36,10 @@ export default function Dashboard() {
     const fetchAll = async () => {
       setIsLoading(true)
       try {
-        const [scripts, thumbnails, dubbings, ideationRes, subtitles] = await Promise.allSettled([
+        const [scripts, thumbnails, storyBuilders, ideationRes, subtitles] = await Promise.allSettled([
           getScripts(),
           getThumbnails(),
-          getDubbings(),
+          getStoryBuilderJobs(),
           api.get<{ data: IdeationJob[] }>("/api/v1/ideation?limit=50", { requireAuth: true }),
           api.get<SubtitleResponse[]>("/api/v1/subtitle", { requireAuth: true }),
         ])
@@ -47,7 +47,7 @@ export default function Dashboard() {
         setData({
           scripts: scripts.status === "fulfilled" ? scripts.value : [],
           thumbnails: thumbnails.status === "fulfilled" ? thumbnails.value : [],
-          dubbings: dubbings.status === "fulfilled" ? dubbings.value : [],
+          storyBuilders: storyBuilders.status === "fulfilled" ? storyBuilders.value : [],
           ideations: ideationRes.status === "fulfilled" ? (ideationRes.value?.data ?? []) : [],
           subtitles: subtitles.status === "fulfilled" ? (subtitles.value ?? []) : [],
         })
