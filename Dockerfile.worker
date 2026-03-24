@@ -16,4 +16,4 @@ RUN pnpm exec turbo run build --filter=@repo/train-ai-worker
 
 ENV NODE_ENV=production
 
-CMD ["node", "packages/train-ai-worker/dist/main.js"]
+CMD ["node", "packages/train-ai-worker/dist/src/main.js"]
