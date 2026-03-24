@@ -142,7 +142,7 @@ Edit each `.env` file with your credentials. See the `.env.example` files for re
 |---------|-----|----------|---------|
 | Supabase | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` | Yes | Database, auth, storage |
 | Google AI | `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | Script generation, ideation, training |
-| Redis | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Yes | BullMQ job queues |
+| Redis | `REDIS_URL` | Yes | BullMQ job queues (API and worker use the same variable) |
 | OpenAI | `OPENAI_API_KEY` | Optional | Subtitle generation |
 | Resend | `RESEND_API_KEY` | Optional | Transactional emails |
 | YouTube | `YOUTUBE_API_KEY` | Optional | Channel integration |
