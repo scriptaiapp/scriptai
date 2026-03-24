@@ -13,7 +13,7 @@ import {
   ArrowRight, Check, Unlink, FileText, Search, Image,
   MessageSquare, Clapperboard, Lightbulb, Sparkles,
   Youtube, TrendingUp, Clock, Zap, Globe, Crown,
-  Activity, BarChart3, ChevronRight, CircleDot,
+  Activity, BarChart3, ChevronRight, CircleDot, BookOpen,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis,
@@ -72,7 +72,7 @@ const ACTIVITY_ICONS: Record<string, { icon: typeof FileText; color: string }> =
   ideation: { icon: Lightbulb, color: "text-amber-500" },
   thumbnail: { icon: Image, color: "text-pink-500" },
   subtitle: { icon: MessageSquare, color: "text-blue-500" },
-  dubbing: { icon: Globe, color: "text-emerald-500" },
+  "story-builder": { icon: BookOpen, color: "text-indigo-500" },
 };
 
 type ActivityPeriod = "weekly" | "monthly" | "yearly";
@@ -148,7 +148,15 @@ function buildRecentActivity(data: DashboardData) {
   data.ideations.forEach((i) => items.push({ id: i.id, title: i.context || i.niche_focus || "Ideation", type: "ideation", date: i.created_at, status: i.status }));
   data.thumbnails.forEach((t) => items.push({ id: t.id, title: (t as any).title || "Thumbnail", type: "thumbnail", date: t.created_at, status: (t as any).status }));
   data.subtitles.forEach((s) => items.push({ id: s.id, title: s.title || s.filename || "Subtitle", type: "subtitle", date: s.created_at, status: s.status }));
-  data.dubbings.forEach((d) => items.push({ id: d.id, title: d.media_name || "Dubbing", type: "dubbing", date: d.created_at, status: d.status }));
+  data.storyBuilders.forEach((j) =>
+    items.push({
+      id: j.id,
+      title: j.video_topic || "Story blueprint",
+      type: "story-builder",
+      date: j.created_at,
+      status: j.status,
+    }),
+  );
 
   return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
 }
@@ -194,7 +202,7 @@ export function DashboardHome({
       { label: "Ideas", count: data.ideations.length, completed: completed(data.ideations, ["completed"]), icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-500/10" },
       { label: "Thumbnails", count: data.thumbnails.length, completed: completed(data.thumbnails as any[], ["completed", "done"]), icon: Image, color: "text-pink-500", bg: "bg-pink-500/10" },
       { label: "Subtitles", count: data.subtitles.length, completed: completed(data.subtitles, ["done"]), icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
-      { label: "Stories", count: data.dubbings.length, completed: completed(data.dubbings, ["dubbed", "completed"]), icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+      { label: "Stories", count: data.storyBuilders.length, completed: completed(data.storyBuilders, ["completed"]), icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
     ];
   }, [data]);
 

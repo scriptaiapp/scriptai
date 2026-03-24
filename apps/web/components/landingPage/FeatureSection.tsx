@@ -12,7 +12,6 @@ import {
   Gift,
   BookOpen,
   Film,
-  Volume2,
 } from "lucide-react"
 import FeatureCard from "../feature-card"
 
@@ -76,12 +75,6 @@ const features = [
     icon: BookOpen,
     description:
       "Break down complex topics into structured video courses with outlines and scripts. Coming soon.",
-  },
-  {
-    title: "Audio Dubbing",
-    icon: Volume2,
-    description:
-      "Dub your videos into other languages while keeping your voice. Coming soon.",
   },
 ]
 

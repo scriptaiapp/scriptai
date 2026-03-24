@@ -6,7 +6,6 @@ export const FeatureType = {
   SUBTITLE_GENERATION: 'subtitle_generation',
   RESEARCH_TOPIC: 'research_topic',
   COURSE_MODULE: 'course_module',
-  DUBBING: 'dubbing',
   AI_TRAINING: 'ai_training',
   STORY_BUILDER: 'story_builder',
   IDEATION: 'ideation',
@@ -18,19 +17,9 @@ export interface TokenBasedCreditParams {
   totalTokens: number;
 }
 
-export interface ExternalCreditParams {
-  externalCreditsUsed: number;
-  multiplier?: number;
-}
-
 export function calculateCreditsFromTokens(params: TokenBasedCreditParams): number {
   const { totalTokens } = params;
   return Math.max(1, Math.ceil(totalTokens / TOKENS_PER_CREDIT));
-}
-
-export function calculateDubbingCredits(params: ExternalCreditParams): number {
-  const { externalCreditsUsed, multiplier = 10 } = params;
-  return externalCreditsUsed * multiplier;
 }
 
 export function hasEnoughCredits(userCredits: number, requiredCredits: number): boolean {

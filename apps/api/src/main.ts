@@ -25,7 +25,6 @@ async function bootstrap() {
       .addTag('billing', 'Plans, subscriptions & checkout')
       .addTag('admin', 'Admin management')
       .addTag('course', 'AI course generation')
-      .addTag('dubbing', 'Video dubbing')
       .addTag('ideation', 'Content ideation')
       .addTag('referral', 'Referral system')
       .addTag('sales-rep', 'Sales representative portal')
