@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import * as path from 'path';
-import { getRedisConnection } from '@repo/config';
+import { getRedisConnection } from './redis';
 import { SupabaseModule } from './supabase/supabase.module';
 
 import { AppController } from './app.controller';

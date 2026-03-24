@@ -38,6 +38,7 @@
     "@tabler/icons-react": "^3.34.1",
     "@upstash/redis": "^1.37.0",
     "bullmq": "catalog:",
+    "ioredis": "^5.8.2",
     "clsx": "^2.1.1",
     "ffmpeg-static": "^5.2.0",
     "ffprobe-static": "^3.1.0",

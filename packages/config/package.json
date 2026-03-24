@@ -8,9 +8,7 @@
     "lint": "echo 'No source JavaScript files to lint'",
     "build": "tsc -p tsconfig.json"
   },
-  "dependencies": {
-    "ioredis": "^5.8.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "eslint": "^9.0.0",
