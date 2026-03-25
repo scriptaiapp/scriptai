@@ -74,9 +74,9 @@ export class YoutubeService {
 
     const accessToken = await this.resolveAccessToken(userId, channel);
 
-    const searchParams: Record<string, string | number> = {
+    const searchParams: Record<string, string | number | boolean> = {
       part: 'snippet',
-      forMine: 'true',
+      forMine: true,
       type: 'video',
       order: 'viewCount',
       maxResults,
