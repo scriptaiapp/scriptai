@@ -138,7 +138,7 @@ export default function Thumbnails() {
                         animate="visible"
                     >
                         {filteredThumbnails.map((job) => {
-                            const config = statusConfig[job.status] ?? statusConfig.queued
+                            const config = (statusConfig[job.status] ?? statusConfig.queued)!
                             return (
                                 <ContentCard
                                     key={job.id}

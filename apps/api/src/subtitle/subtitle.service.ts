@@ -47,7 +47,7 @@ async function waitForFileActive(ai: GoogleAIInstance, fileName: string, maxWait
   throw new Error(`File processing timeout for ${fileName} after ${maxWaitTime / 1000}s`);
 }
 
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_VIDEO_DURATION = 10 * 60; // 10 minutes in seconds
 type StorageErrorLike = {
   message?: string;
@@ -102,7 +102,7 @@ export class SubtitleService {
     }
 
     if (status === 413 || code.includes('entity_too_large') || message.includes('too large')) {
-      return new PayloadTooLargeException('File size must be less than 200MB');
+      return new PayloadTooLargeException('Video upload limit is 50MB on your current plan. Please upgrade to upload larger videos.');
     }
 
     if (status === 415 || code.includes('invalid_mime') || message.includes('mime') || message.includes('content type')) {
@@ -479,11 +479,11 @@ Your task is to transcribe the provided audio file and generate precise, time-st
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      throw new PayloadTooLargeException('File size must be less than 200MB');
+      throw new PayloadTooLargeException('Video upload limit is 50MB on your current plan. Please upgrade to upload larger videos.');
     }
 
     if (parsedDuration > MAX_VIDEO_DURATION) {
-      throw new BadRequestException('Video duration must be 10 minutes or less');
+      throw new BadRequestException('Video duration exceeds 10 minutes on your current plan. Please upgrade to upload longer videos.');
     }
 
     const safeOriginalName = this.sanitizeFileName(file.originalname);
@@ -588,6 +588,15 @@ Your task is to transcribe the provided audio file and generate precise, time-st
 
       const outputBuffer = await fs.readFile(outputPath);
       return outputBuffer;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to burn subtitles: ${errorMessage}`);
+      if (errorMessage.includes('ENOENT') || errorMessage.toLowerCase().includes('ffmpeg')) {
+        throw new InternalServerErrorException(
+          'Video processing dependency is missing (FFmpeg). Please contact support or try again later.',
+        );
+      }
+      throw new InternalServerErrorException('Failed to process video with subtitles');
     } finally {
       await Promise.allSettled([
         fs.unlink(videoPath).catch(() => null),

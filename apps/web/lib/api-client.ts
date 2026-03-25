@@ -13,7 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 
 
 export interface ApiErrorResponse {
-  message: string;
+  message: string | string[];
   statusCode?: number;
   errors?: Array<{ path: string; message: string }>;
   error?: string;
@@ -31,9 +31,46 @@ export class ApiClientError extends Error {
   }
 }
 
+function normalizeErrorMessage(message: unknown): string {
+  if (Array.isArray(message)) {
+    return message
+      .map((item) => (typeof item === 'string' ? item : JSON.stringify(item)))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  if (typeof message === 'string' && message.trim()) {
+    return message;
+  }
+
+  if (message && typeof message === 'object') {
+    return JSON.stringify(message);
+  }
+
+  return 'An error occurred';
+}
+
+export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  if (error instanceof ApiClientError) {
+    if (error.statusCode === 0) return 'Network error. Please check your internet connection.';
+    if (error.statusCode === 401) return 'Your session expired. Please sign in again.';
+    if (error.statusCode === 403) return error.message || 'You do not have permission for this action.';
+    if (error.statusCode === 413) return error.message || fallback;
+    if (error.statusCode === 429) return 'Too many requests. Please try again in a moment.';
+    if (error.statusCode >= 500) return error.message || 'Server error. Please try again.';
+    return error.message || fallback;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 interface CustomRequestConfig extends AxiosRequestConfig {
   requireAuth?: boolean;
-  // Expose upload progress callback for file uploads
+  accessToken?: string;
   onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
@@ -66,12 +103,10 @@ axiosInstance.interceptors.request.use(
       return config;
     }
 
-    // If requireAuth is true, we must attach the token
     if (customConfig.requireAuth) {
       try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const token = customConfig.accessToken
+          ?? (await createClient().auth.getSession()).data.session?.access_token;
 
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
@@ -105,14 +140,14 @@ axiosInstance.interceptors.response.use(
           .join(', ');
 
         throw new ApiClientError(
-          errorMessages || data.message || 'Validation failed',
+          errorMessages || normalizeErrorMessage(data.message) || 'Validation failed',
           status,
           data.errors
         );
       }
 
       // Handle Standard Error Format (message string)
-      const message = data?.message || data?.error || error.message || 'An error occurred';
+      const message = normalizeErrorMessage(data?.message) || data?.error || error.message || 'An error occurred';
       throw new ApiClientError(message, status);
 
     } else if (error.request) {

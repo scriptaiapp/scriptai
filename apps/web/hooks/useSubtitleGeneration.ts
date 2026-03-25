@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useSupabase } from "@/components/supabase-provider";
-import { api } from '@/lib/api-client';
+import { api, getApiErrorMessage } from '@/lib/api-client';
 export function useSubtitleGeneration(
     id: string,
     videoDuration: number | null,
@@ -34,7 +34,9 @@ export function useSubtitleGeneration(
             await fetchUserProfile(user?.id as string)
 
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Unknown error');
+            toast.error("Subtitle generation failed", {
+                description: getApiErrorMessage(error, 'Please try again.'),
+            });
         } finally {
             setIsGenerating(false);
         }

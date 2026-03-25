@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import { api, ApiClientError } from "@/lib/api-client"
+import { api, getApiErrorMessage } from "@/lib/api-client"
 import { useSSE, type SSEEvent } from "./useSSE"
 import type {
   VideoDuration,
@@ -103,8 +103,10 @@ export function useStoryBuilder(options?: UseStoryBuilderOptions) {
       const data = await api.get<ProfileStatus>('/api/v1/story-builder/profile-status', { requireAuth: true })
       setAiTrained(data.aiTrained)
       setCredits(data.credits)
-    } catch {
-      toast.error("Failed to load profile status")
+    } catch (error) {
+      toast.error("Failed to load profile status", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     } finally {
       setIsLoadingProfile(false)
     }
@@ -115,8 +117,10 @@ export function useStoryBuilder(options?: UseStoryBuilderOptions) {
     try {
       const data = await api.get<StoryBuilderJob[]>('/api/v1/story-builder', { requireAuth: true })
       setPastJobs(data)
-    } catch {
-      toast.error("Failed to load story builder jobs")
+    } catch (error) {
+      toast.error("Failed to load story builder jobs", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     } finally {
       setIsLoadingJobs(false)
     }
@@ -127,8 +131,10 @@ export function useStoryBuilder(options?: UseStoryBuilderOptions) {
     try {
       const res = await api.get<IdeationListResponse>('/api/v1/ideation?limit=50', { requireAuth: true })
       setIdeationJobs((res.data || []).filter(j => j.status === 'completed' && j.result?.ideas?.length))
-    } catch {
-      toast.error("Failed to load ideation jobs")
+    } catch (error) {
+      toast.error("Failed to load ideation jobs", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     } finally {
       setIsLoadingIdeations(false)
     }
@@ -194,13 +200,10 @@ export function useStoryBuilder(options?: UseStoryBuilderOptions) {
       toast.success(response.personalized
         ? "Generating personalized story blueprint!"
         : "Generation started!")
-    } catch (error: any) {
-      let message = "Failed to start generation"
-      if (error instanceof ApiClientError) {
-        message = error.message
-        if (error.statusCode === 403) message = "Insufficient credits. Please upgrade your plan."
-      }
-      toast.error("Generation Failed", { description: message })
+    } catch (error) {
+      toast.error("Generation Failed", {
+        description: getApiErrorMessage(error, "Failed to start generation."),
+      })
       setIsGenerating(false)
       setJobId(null)
       setRecordId(null)
@@ -231,8 +234,10 @@ export function useStoryBuilder(options?: UseStoryBuilderOptions) {
       await api.delete(`/api/v1/story-builder/${jobId}`, { requireAuth: true })
       setPastJobs((prev) => prev.filter((j) => j.id !== jobId))
       toast.success("Job deleted")
-    } catch {
-      toast.error("Failed to delete job")
+    } catch (error) {
+      toast.error("Failed to delete job", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     }
   }, [])
 

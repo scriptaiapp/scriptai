@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
-import { api, ApiClientError } from "@/lib/api-client"
+import { api, getApiErrorMessage } from "@/lib/api-client"
 import { useSSE, type SSEEvent } from "./useSSE"
 
 export interface ScriptFormData {
@@ -156,13 +156,10 @@ export function useScriptGeneration(options?: UseScriptGenerationOptions) {
       setScriptJobId(response.id)
       setJobId(response.jobId)
       toast.success("Generation started!")
-    } catch (error: any) {
-      let message = "Failed to start generation"
-      if (error instanceof ApiClientError) {
-        message = error.message
-        if (error.statusCode === 403) message = "Insufficient credits. Please upgrade your plan."
-      }
-      toast.error("Generation Failed", { description: message })
+    } catch (error) {
+      toast.error("Generation Failed", {
+        description: getApiErrorMessage(error, "Failed to start generation."),
+      })
       setIsGenerating(false)
       setJobId(null)
     }

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { DubbedResult, DubbingProgress, supportedLanguages } from "@repo/validation";
-import { api, ApiClientError } from "@/lib/api-client";
+import { api, getApiErrorMessage } from "@/lib/api-client";
 import { useSupabase } from "@/components/supabase-provider";
 import { BACKEND_URL } from "@/lib/constants";
 
@@ -145,14 +145,9 @@ export function useDubbing() {
         updateProgress("failed", 0, "Connection lost");
         toast.error("Connection lost", { description: "Please try again" });
       };
-    } catch (error: any) {
+    } catch (error) {
       eventSource?.close();
-      let message = "Dubbing failed";
-
-      if (error instanceof ApiClientError) {
-        message = error.message;
-        if (error.statusCode === 401) message = "Please sign in again.";
-      }
+      const message = getApiErrorMessage(error, "Dubbing failed.");
 
       updateProgress("failed", 0, message);
       toast.error("Error dubbing media", { description: message });

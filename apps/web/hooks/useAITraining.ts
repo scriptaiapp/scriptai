@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
 import { connectYoutubeChannel } from "@/lib/connectYT"
-import { api, ApiClientError } from "@/lib/api-client"
+import { api, getApiErrorMessage } from "@/lib/api-client"
 import { useSSE } from "./useSSE"
 import type { ChannelVideo } from "./useChannelVideos"
 
@@ -77,8 +77,10 @@ export function useAITraining() {
       setUploading(false)
       setJobId(null)
       toast.info("Training stopped")
-    } catch {
-      toast.error("Failed to stop training")
+    } catch (error) {
+      toast.error("Failed to stop training", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     }
   }
 
@@ -122,12 +124,9 @@ export function useAITraining() {
       setJobId(jobId)
       toast.success("Training started! Analyzing your videos...")
     } catch (error: unknown) {
-      let message = "Failed to start training"
-      if (error instanceof ApiClientError) {
-        message = error.message
-        if (error.statusCode === 401) message = "Please sign in again."
-      }
-      toast.error("Training Failed to Start", { description: message })
+      toast.error("Training Failed to Start", {
+        description: getApiErrorMessage(error, "Failed to start training."),
+      })
       setIsTraining(false)
       setUploading(false)
     }

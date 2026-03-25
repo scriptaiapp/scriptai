@@ -21,6 +21,8 @@ import type {
   BurnSubtitleInput,
 } from '@repo/validation';
 
+const SUBTITLE_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 @ApiTags('subtitle')
 @ApiBearerAuth()
 @Controller('subtitle')
@@ -54,9 +56,19 @@ export class SubtitleController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 200 * 1024 * 1024 }), // 200MB
+          new MaxFileSizeValidator({ maxSize: SUBTITLE_MAX_FILE_SIZE }),
           new FileTypeValidator({ fileType: /(video\/.*)/ }),
         ],
+        exceptionFactory: (errors) => {
+          const combined = Array.isArray(errors) ? errors.join(' | ').toLowerCase() : String(errors).toLowerCase();
+          if (combined.includes('max') || combined.includes('size') || combined.includes('larger')) {
+            return new BadRequestException('Video upload limit is 50MB on your current plan. Please upgrade to upload larger videos.');
+          }
+          if (combined.includes('type') || combined.includes('video')) {
+            return new BadRequestException('Unsupported video format. Please upload a valid video file.');
+          }
+          return new BadRequestException('Invalid upload request.');
+        },
       }),
     )
     file: Express.Multer.File,

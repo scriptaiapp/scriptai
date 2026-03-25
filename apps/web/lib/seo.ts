@@ -35,7 +35,7 @@ export function createMetadata(overrides: Metadata = {}): Metadata {
   return {
     title,
     description,
-    keywords: siteConfig.keywords,
+    keywords: siteConfig.keywords as unknown as string[],
     authors: [{ name: siteConfig.author, url: siteConfig.url }],
     creator: siteConfig.author,
     publisher: siteConfig.author,

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 // Hooks & Utils
-import { api } from "@/lib/api-client";
+import { api, getApiErrorMessage } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase/client";
 
 type SubtitleUploaderProps = {
@@ -27,6 +27,8 @@ export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploader
     const [duration, setDuration] = useState<number | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxDuration = 10 * 60; // 10 minutes
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -35,9 +37,10 @@ export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploader
         setFile(null);
         setDuration(null);
 
-        const maxSize = 200 * 1024 * 1024; // 200MB
         if (selectedFile.size > maxSize) {
-            toast.error("File size must be less than 200MB");
+            toast.error("Upload limit reached", {
+                description: "Your current plan allows up to 50MB for subtitle uploads. Please upgrade to upload larger videos.",
+            });
             e.target.value = "";
             return;
         }
@@ -47,10 +50,10 @@ export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploader
         video.onloadedmetadata = () => {
             URL.revokeObjectURL(video.src);
             const videoDuration = video.duration;
-            const maxDuration = 10 * 60; // 10 minutes
-
             if (videoDuration > maxDuration) {
-                toast.error("Video duration must be 10 minutes or less");
+                toast.error("Duration limit reached", {
+                    description: "Your current plan allows videos up to 10 minutes for subtitle generation. Please upgrade for longer videos.",
+                });
                 e.target.value = "";
                 return;
             }
@@ -100,8 +103,8 @@ export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploader
             setTitle("");
             setDuration(null);
         } catch (error) {
-            console.error(error);
-            toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+            const message = getApiErrorMessage(error, "Failed to upload video.");
+            toast.error("Upload failed", { description: message });
         } finally {
             setIsUploading(false);
         }
@@ -158,7 +161,7 @@ export function SubtitleUploader({ onUploadSuccess, scriptId }: SubtitleUploader
                         </div>
 
                         <div className="flex items-center space-x-4 text-xs text-slate-400 uppercase tracking-widest font-bold">
-                            <span>Max 200MB</span>
+                            <span>Max 50MB</span>
                             <span className="w-1.5 h-1.5 bg-slate-200 rounded-full"></span>
                             <span>10 Min Limit</span>
                         </div>

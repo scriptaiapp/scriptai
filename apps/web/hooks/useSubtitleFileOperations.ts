@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { SubtitleLine } from "@repo/validation";
 import { parseSRT } from '@/utils/srtUtils';
 import { convertJsonToSrt } from '@/utils/convertJsonToSrt';
-import { api } from '@/lib/api-client';
+import { api, getApiErrorMessage } from '@/lib/api-client';
 import { downloadFile, downloadBlob } from '@/lib/download';
 
 export function useSubtitleFileOperations(
@@ -28,7 +28,9 @@ export function useSubtitleFileOperations(
             setSubtitles(res.subtitles);
             toast.success('Saved successfully!');
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Unknown error');
+            toast.error('Failed to save subtitles', {
+                description: getApiErrorMessage(error, 'Please try again.'),
+            });
         } finally {
             setIsSaving(false);
         }
@@ -88,7 +90,9 @@ export function useSubtitleFileOperations(
             downloadBlob(blob, "video_with_subs.mp4");
             toast.success('Video downloaded successfully!');
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Unknown error');
+            toast.error('Failed to process video', {
+                description: getApiErrorMessage(error, 'Please try again.'),
+            });
         } finally {
             setDownloadVideoLoading(false);
         }
