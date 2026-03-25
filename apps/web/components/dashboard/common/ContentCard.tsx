@@ -32,7 +32,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
@@ -65,6 +64,8 @@ export function ContentCard({
     statusBadge,
 }: ContentCardProps) {
     const [isExporting, setIsExporting] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const creationDate = new Date(created_at).toLocaleDateString();
 
@@ -101,6 +102,22 @@ export function ContentCard({
         exportPromise.finally(() => {
             setIsExporting(false);
         });
+    };
+
+    const openDeleteDialog = () => {
+        setToDelete(id);
+        setMenuOpen(false);
+        setDialogOpen(true);
+    };
+
+    const closeDeleteDialog = () => {
+        setDialogOpen(false);
+        setToDelete(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        setDialogOpen(false);
+        await onDelete();
     };
 
     return (
@@ -143,8 +160,8 @@ export function ContentCard({
                 </Link>
 
                 <div className="absolute top-4 right-4 z-10">
-                    <AlertDialog>
-                        <DropdownMenu>
+                    <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
@@ -182,16 +199,13 @@ export function ContentCard({
                                         </DropdownMenuItem>
                                     ))}
 
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem
-                                        className="text-red-500 focus:text-red-500 cursor-pointer"
-                                        onSelect={(e) => e.preventDefault()}
-                                        onClick={() => setToDelete(id)}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        <span>{deleteLabel}</span>
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
+                                <DropdownMenuItem
+                                    className="text-red-500 focus:text-red-500 cursor-pointer"
+                                    onClick={openDeleteDialog}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>{deleteLabel}</span>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -201,11 +215,11 @@ export function ContentCard({
                                 <AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setToDelete(null)}>
+                                <AlertDialogCancel onClick={closeDeleteDialog}>
                                     Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
-                                    onClick={onDelete}
+                                    onClick={handleConfirmDelete}
                                     className="bg-red-600 hover:bg-red-700 text-white"
                                 >
                                     {deleteLabel}
