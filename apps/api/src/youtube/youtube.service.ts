@@ -72,6 +72,8 @@ export class YoutubeService {
       throw new NotFoundException('YouTube channel not found. Please connect your channel first.');
     }
 
+    console.error('Supabase channel lookup result:', { channel_id: channel.channel_id, has_provider_token: !!channel.provider_token, has_refresh_token: !!channel.refresh_token, supabase_error: error });
+
     const accessToken = await this.resolveAccessToken(userId, channel);
 
     const searchParams: Record<string, string | number> = {
@@ -87,7 +89,8 @@ export class YoutubeService {
       params: searchParams,
       headers: { Authorization: `Bearer ${accessToken}` },
       timeout: 15000,
-    }).catch(() => {
+    }).catch((error) => {
+      console.error('YouTube search API error:', error.response?.data || error.message);
       throw new InternalServerErrorException('Failed to fetch videos from YouTube');
     });
 
@@ -101,7 +104,10 @@ export class YoutubeService {
       params: { part: 'statistics', id: videoIds },
       headers: { Authorization: `Bearer ${accessToken}` },
       timeout: 15000,
-    }).catch(() => null);
+    }).catch((error) => {
+      console.error('YouTube stats API error:', error.response?.data || error.message);
+      return null;
+    });
 
     const statsMap = new Map<string, number>();
     if (statsRes?.data?.items) {
