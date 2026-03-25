@@ -1,6 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 import { manageAccessToken, validateOAuthEnvironment } from "./token-manager";
-import { ChannelData, ChannelIntelligence, StyleAnalysis, Thumbnail, Transcript, VideoData } from "@repo/validation";
+import {
+  ChannelData,
+  ChannelIntelligence,
+  StyleAnalysis,
+  Thumbnail,
+  Transcript,
+  VideoData,
+  calculateCreditsFromTokens,
+  TOKENS_PER_CREDIT,
+  TRAIN_AI_CREDIT_MULTIPLIER,
+} from "@repo/validation";
 import type { SupabaseClient } from "@repo/supabase";
 import axios from "axios";
 import { calculateRetryDelay, logError, shouldRetry } from "./error-handler";
@@ -491,7 +501,12 @@ export async function saveStyleData(
   channelIntelligence?: ChannelIntelligence,
   topicEmbedding?: number[],
 ): Promise<void> {
-  const geminiCredits = Math.ceil(totalConsumedTokens / 1000);
+  const tokensPerCredit = getEnvNumber('TOKENS_PER_CREDIT', TOKENS_PER_CREDIT);
+  const trainAiMultiplier = getEnvNumber('TRAIN_AI_CREDIT_MULTIPLIER', TRAIN_AI_CREDIT_MULTIPLIER);
+  const geminiCredits = calculateCreditsFromTokens(
+    { totalTokens: totalConsumedTokens },
+    { tokensPerCredit, multiplier: trainAiMultiplier, minimumCredits: 1 },
+  );
 
   const { data: profile } = await supabase.from('profiles').select('credits').eq('user_id', userId).single();
   if (profile.credits < geminiCredits) {
@@ -555,4 +570,10 @@ export async function saveStyleData(
     logError('train-ai-style-save', error, { userId });
     throw new Error('Failed to save style analysis');
   }
+}
+
+function getEnvNumber(key: string, fallback: number): number {
+  const raw = process.env[key];
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }

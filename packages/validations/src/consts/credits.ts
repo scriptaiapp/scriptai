@@ -1,4 +1,10 @@
 export const TOKENS_PER_CREDIT = 1000;
+export const SCRIPT_CREDIT_MULTIPLIER = 1;
+export const THUMBNAIL_CREDIT_MULTIPLIER = 2;
+export const SUBTITLE_CREDIT_MULTIPLIER = 2;
+export const IDEATION_CREDIT_MULTIPLIER = 1;
+export const STORY_BUILDER_CREDIT_MULTIPLIER = 1;
+export const TRAIN_AI_CREDIT_MULTIPLIER = 2;
 
 export const FeatureType = {
   SCRIPT_GENERATION: 'script_generation',
@@ -23,9 +29,22 @@ export interface ExternalCreditParams {
   multiplier?: number;
 }
 
-export function calculateCreditsFromTokens(params: TokenBasedCreditParams): number {
+export interface TokenCreditConfig {
+  tokensPerCredit?: number;
+  multiplier?: number;
+  minimumCredits?: number;
+}
+
+export function calculateCreditsFromTokens(
+  params: TokenBasedCreditParams,
+  config?: TokenCreditConfig,
+): number {
   const { totalTokens } = params;
-  return Math.max(1, Math.ceil(totalTokens / TOKENS_PER_CREDIT));
+  const tokensPerCredit = config?.tokensPerCredit ?? TOKENS_PER_CREDIT;
+  const multiplier = config?.multiplier ?? 1;
+  const minimumCredits = config?.minimumCredits ?? 1;
+  const baseCredits = Math.ceil(totalTokens / tokensPerCredit);
+  return Math.max(minimumCredits, baseCredits * multiplier);
 }
 
 export function calculateDubbingCredits(params: ExternalCreditParams): number {
@@ -37,22 +56,69 @@ export function hasEnoughCredits(userCredits: number, requiredCredits: number): 
   return userCredits >= requiredCredits;
 }
 
-export function getMinimumCreditsForGemini(): number {
-  return 1;
+export function getMinimumCreditsForGemini(multiplier = SCRIPT_CREDIT_MULTIPLIER): number {
+  return Math.max(1, multiplier);
 }
 
-export function getMinimumCreditsForIdeation(): number {
-  return 2;
+export function getMinimumCreditsForIdeation(multiplier = IDEATION_CREDIT_MULTIPLIER): number {
+  return Math.max(2, multiplier);
 }
 
-export function calculateIdeationCredits(params: TokenBasedCreditParams): number {
-  return Math.max(2, calculateCreditsFromTokens(params));
+export function calculateIdeationCredits(
+  params: TokenBasedCreditParams,
+  config?: Omit<TokenCreditConfig, 'minimumCredits'>,
+): number {
+  return calculateCreditsFromTokens(params, {
+    tokensPerCredit: config?.tokensPerCredit,
+    multiplier: config?.multiplier ?? IDEATION_CREDIT_MULTIPLIER,
+    minimumCredits: 2,
+  });
 }
 
-export function getMinimumCreditsForStoryBuilder(): number {
-  return 2;
+export function getMinimumCreditsForStoryBuilder(multiplier = STORY_BUILDER_CREDIT_MULTIPLIER): number {
+  return Math.max(2, multiplier);
 }
 
-export function calculateStoryBuilderCredits(params: TokenBasedCreditParams): number {
-  return Math.max(2, calculateCreditsFromTokens(params));
+export function calculateStoryBuilderCredits(
+  params: TokenBasedCreditParams,
+  config?: Omit<TokenCreditConfig, 'minimumCredits'>,
+): number {
+  return calculateCreditsFromTokens(params, {
+    tokensPerCredit: config?.tokensPerCredit,
+    multiplier: config?.multiplier ?? STORY_BUILDER_CREDIT_MULTIPLIER,
+    minimumCredits: 2,
+  });
+}
+
+export function calculateThumbnailCredits(
+  params: TokenBasedCreditParams,
+  config?: Omit<TokenCreditConfig, 'minimumCredits'>,
+): number {
+  return calculateCreditsFromTokens(params, {
+    tokensPerCredit: config?.tokensPerCredit,
+    multiplier: config?.multiplier ?? THUMBNAIL_CREDIT_MULTIPLIER,
+    minimumCredits: 1,
+  });
+}
+
+export function getMinimumCreditsForThumbnailRequest(
+  generateCount: number,
+  multiplier = THUMBNAIL_CREDIT_MULTIPLIER,
+): number {
+  return Math.max(1, generateCount * multiplier);
+}
+
+export function calculateSubtitleCredits(
+  params: TokenBasedCreditParams,
+  config?: Omit<TokenCreditConfig, 'minimumCredits'>,
+): number {
+  return calculateCreditsFromTokens(params, {
+    tokensPerCredit: config?.tokensPerCredit,
+    multiplier: config?.multiplier ?? SUBTITLE_CREDIT_MULTIPLIER,
+    minimumCredits: 1,
+  });
+}
+
+export function getMinimumCreditsForSubtitleRequest(multiplier = SUBTITLE_CREDIT_MULTIPLIER): number {
+  return Math.max(1, multiplier);
 }

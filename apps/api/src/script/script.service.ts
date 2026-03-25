@@ -8,7 +8,12 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseService } from '../supabase/supabase.service';
-import { type CreateScriptInput, hasEnoughCredits, getMinimumCreditsForGemini } from '@repo/validation';
+import {
+  type CreateScriptInput,
+  hasEnoughCredits,
+  getMinimumCreditsForGemini,
+  SCRIPT_CREDIT_MULTIPLIER,
+} from '@repo/validation';
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -58,7 +63,8 @@ export class ScriptService {
       .single();
 
     if (profileError || !profile) throw new NotFoundException('Profile not found');
-    const minCredits = getMinimumCreditsForGemini();
+    const scriptMultiplier = this.getEnvNumber('SCRIPT_CREDIT_MULTIPLIER', SCRIPT_CREDIT_MULTIPLIER);
+    const minCredits = getMinimumCreditsForGemini(scriptMultiplier);
     if (!hasEnoughCredits(profile.credits, minCredits)) {
       throw new ForbiddenException(`Insufficient credits. Need at least ${minCredits}, have ${profile.credits}.`);
     }
@@ -246,6 +252,12 @@ export class ScriptService {
       end: { x: width - margins.right, y: footerY + 12 },
       thickness: 0.4, color: rgb(0.85, 0.85, 0.85),
     });
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 
   async exportPdf(id: string, userId: string): Promise<{ pdfBytes: Uint8Array; filename: string }> {

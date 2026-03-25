@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { api, ApiClientError } from "@/lib/api-client";
+import { api, getApiErrorMessage } from "@/lib/api-client";
 import { useSSE, type SSEEvent } from "./useSSE";
 import { useSupabase } from "@/components/supabase-provider";
 import type { IdeationResult, IdeationJob } from "@repo/validation";
@@ -59,8 +59,10 @@ export function useIdeation() {
       const res = await api.get<ListResponse>("/api/v1/ideation?limit=20", { requireAuth: true });
       setJobs(res.data || []);
       return res.data || [];
-    } catch {
-      toast.error("Failed to load ideation jobs");
+    } catch (error) {
+      toast.error("Failed to load ideation jobs", {
+        description: getApiErrorMessage(error, "Please try again."),
+      });
       return [];
     } finally {
       setIsLoadingJobs(false);
@@ -135,14 +137,9 @@ export function useIdeation() {
       setJobId(response.jobId);
       toast.success("Ideation started!", { description: response.message });
     } catch (error: unknown) {
-      let message = "Failed to start ideation";
-      if (error instanceof ApiClientError) {
-        message = error.message;
-        if (error.statusCode === 401) message = "Session expired. Please sign in again.";
-        if (error.statusCode === 403) message = error.message;
-        if (error.statusCode === 409) message = error.message;
-      }
-      toast.error("Ideation Failed", { description: message });
+      toast.error("Ideation Failed", {
+        description: getApiErrorMessage(error, "Failed to start ideation."),
+      });
       setIsGenerating(false);
       setJobId(null);
     }
@@ -154,8 +151,9 @@ export function useIdeation() {
       setJobs((prev) => prev.filter((j) => j.id !== id));
       toast.success("Job deleted");
     } catch (error: unknown) {
-      const msg = error instanceof ApiClientError ? error.message : "Failed to delete job";
-      toast.error("Delete failed", { description: msg });
+      toast.error("Delete failed", {
+        description: getApiErrorMessage(error, "Failed to delete job."),
+      });
     }
   }, []);
 

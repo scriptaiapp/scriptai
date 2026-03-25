@@ -1,7 +1,31 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { SubtitleResponse, SubtitleLine } from "@repo/validation";
-import { api } from '@/lib/api-client';
+import { api, getApiErrorMessage } from '@/lib/api-client';
+
+function isSubtitleLineArray(value: unknown): value is SubtitleLine[] {
+    return Array.isArray(value) && value.every(
+        (item) =>
+            item &&
+            typeof item === 'object' &&
+            typeof (item as SubtitleLine).start === 'string' &&
+            typeof (item as SubtitleLine).end === 'string' &&
+            typeof (item as SubtitleLine).text === 'string',
+    );
+}
+
+function parseSubtitles(value: SubtitleResponse['subtitles_json']): SubtitleLine[] {
+    if (!value) return [];
+    if (isSubtitleLineArray(value)) return value;
+    if (typeof value !== 'string') return [];
+
+    try {
+        const parsed = JSON.parse(value);
+        return isSubtitleLineArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
 
 export function useSubtitleData(id: string) {
     const [subtitleData, setSubtitleData] = useState<SubtitleResponse | null>(null);
@@ -23,20 +47,16 @@ export function useSubtitleData(id: string) {
             const data: SubtitleResponse = res.subtitle as SubtitleResponse;
             setSubtitleData(data);
 
-            let parsedSubtitles: SubtitleLine[] = [];
-            if (data.subtitles_json) {
-                try {
-                    parsedSubtitles = JSON.parse(data.subtitles_json as string);
-                } catch (e) {
-                    console.error("Failed to parse subtitle_json", e);
-                    toast.error("Failed to read existing subtitles. They may be corrupt.");
-                }
+            const parsedSubtitles = parseSubtitles(data.subtitles_json);
+            if (data.subtitles_json && parsedSubtitles.length === 0) {
+                toast.error("Failed to read existing subtitles. They may be corrupt.");
             }
             setSubtitles(Array.isArray(parsedSubtitles) ? parsedSubtitles : []);
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred');
-            toast.error(err instanceof Error ? err.message : 'An unknown error occurred');
+            const message = getApiErrorMessage(err, 'Failed to load subtitle data.');
+            setError(message);
+            toast.error('Could not load subtitle data', { description: message });
         } finally {
             setIsLoading(false);
         }

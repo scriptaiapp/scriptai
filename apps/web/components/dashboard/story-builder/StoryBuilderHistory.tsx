@@ -67,7 +67,7 @@ export function StoryBuilderHistory({ jobs, isLoading, onView, onDelete }: Story
       </CardHeader>
       <CardContent className="space-y-4">
         {jobs.map((job, idx) => {
-          const config = statusConfig[job.status] || statusConfig.queued
+          const config = (statusConfig[job.status] ?? statusConfig.queued)!
           return (
             <motion.div
               key={job.id}

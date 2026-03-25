@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
-import { api, ApiClientError } from "@/lib/api-client"
+import { api, getApiErrorMessage } from "@/lib/api-client"
 import { downloadFile } from "@/lib/download"
 import { useSSE, type SSEEvent } from "./useSSE"
 
@@ -76,9 +76,15 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
     setIsLoadingJobs(true)
     try {
       const data = await api.get<ThumbnailJob[]>('/api/v1/thumbnail', { requireAuth: true })
+      console.debug("[thumbnail] fetched jobs", {
+        count: data.length,
+        latest: data[0] ? { id: data[0].id, status: data[0].status, updated_at: data[0].updated_at } : null,
+      })
       setPastJobs(data)
-    } catch {
-      toast.error("Failed to load thumbnail jobs")
+    } catch (error) {
+      toast.error("Failed to load thumbnail jobs", {
+        description: getApiErrorMessage(error, "Please try again."),
+      })
     } finally {
       setIsLoadingJobs(false)
     }
@@ -93,6 +99,11 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
       state === "waiting" ? STATUS_MESSAGES.waiting!(p) : STATUS_MESSAGES.default!(p),
     extractResult: (data: SSEEvent) => (data as any).imageUrls ?? null,
     onComplete: (imageUrls) => {
+      console.debug("[thumbnail] SSE complete event", {
+        jobId,
+        thumbnailJobId,
+        imageCount: imageUrls?.length ?? 0,
+      })
       if (imageUrls) {
         setGeneratedImages(imageUrls)
         setCreditsConsumed(imageUrls.length)
@@ -139,17 +150,18 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
         formData,
         { requireAuth: true },
       )
+      console.debug("[thumbnail] generation started", {
+        thumbnailJobId: response.id,
+        queueJobId: response.jobId,
+      })
 
       setThumbnailJobId(response.id)
       setJobId(response.jobId)
       toast.success("Generation started!")
-    } catch (error: any) {
-      let message = "Failed to start generation"
-      if (error instanceof ApiClientError) {
-        message = error.message
-        if (error.statusCode === 403) message = "Insufficient credits. Please upgrade your plan."
-      }
-      toast.error("Generation Failed", { description: message })
+    } catch (error) {
+      toast.error("Generation Failed", {
+        description: getApiErrorMessage(error, "Failed to start generation."),
+      })
       setIsGenerating(false)
       setJobId(null)
     }

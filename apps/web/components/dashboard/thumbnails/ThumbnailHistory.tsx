@@ -70,7 +70,7 @@ export function ThumbnailHistory({ jobs, isLoading, onDownload }: ThumbnailHisto
       </CardHeader>
       <CardContent className="space-y-4">
         {jobs.map((job, idx) => {
-          const config = statusConfig[job.status] || statusConfig.queued
+          const config = (statusConfig[job.status] ?? statusConfig.queued)!
 
           return (
             <motion.div

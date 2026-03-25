@@ -131,3 +131,4 @@ export interface Script {
 }
 
 export * from "./SubtitleTypes";
+export * from "./dubbing";
