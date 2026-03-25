@@ -12,6 +12,8 @@ import {
   STORY_MODE_LABELS,
   AUDIENCE_LEVEL_LABELS,
   calculateStoryBuilderCredits,
+  STORY_BUILDER_CREDIT_MULTIPLIER,
+  TOKENS_PER_CREDIT,
 } from '@repo/validation';
 import { GoogleGenAI } from '@google/genai';
 
@@ -343,7 +345,15 @@ export class StoryBuilderProcessor extends WorkerHost {
       const result = JSON.parse(rawText);
       result.storyMode = storyMode;
 
-      const creditsConsumed = calculateStoryBuilderCredits({ totalTokens });
+      const tokensPerCredit = this.getEnvNumber('TOKENS_PER_CREDIT', TOKENS_PER_CREDIT);
+      const storyBuilderMultiplier = this.getEnvNumber(
+        'STORY_BUILDER_CREDIT_MULTIPLIER',
+        STORY_BUILDER_CREDIT_MULTIPLIER,
+      );
+      const creditsConsumed = calculateStoryBuilderCredits(
+        { totalTokens },
+        { tokensPerCredit, multiplier: storyBuilderMultiplier },
+      );
 
       await job.updateProgress(85);
       await job.log(`Saving results... (${creditsConsumed} credits)`);
@@ -490,5 +500,11 @@ REQUIREMENTS:
       .from('story_builder_jobs')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', jobId);
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

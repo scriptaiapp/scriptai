@@ -11,10 +11,13 @@ import { Queue } from 'bullmq';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SupabaseService } from '../supabase/supabase.service';
-import { hasEnoughCredits, getMinimumCreditsForIdeation } from '@repo/validation';
+import {
+  hasEnoughCredits,
+  getMinimumCreditsForIdeation,
+  IDEATION_CREDIT_MULTIPLIER,
+} from '@repo/validation';
 import { PDFDocument, PDFPage, PDFImage, rgb, StandardFonts, PDFFont } from 'pdf-lib';
 
-const MIN_CREDITS = getMinimumCreditsForIdeation();
 const MAX_IDEA_COUNT = 5;
 const MAX_NICHE_FOCUS_LENGTH = 200;
 const MAX_CONTEXT_LENGTH = 1000;
@@ -67,8 +70,13 @@ export class IdeationService {
     if (!profile.ai_trained) {
       throw new ForbiddenException('AI training is required before generating ideas. Train your AI first.');
     }
-    if (!hasEnoughCredits(profile.credits, MIN_CREDITS)) {
-      throw new ForbiddenException(`Insufficient credits. Need at least ${MIN_CREDITS}, have ${profile.credits}.`);
+    const ideationMultiplier = this.getEnvNumber(
+      'IDEATION_CREDIT_MULTIPLIER',
+      IDEATION_CREDIT_MULTIPLIER,
+    );
+    const minCredits = getMinimumCreditsForIdeation(ideationMultiplier);
+    if (!hasEnoughCredits(profile.credits, minCredits)) {
+      throw new ForbiddenException(`Insufficient credits. Need at least ${minCredits}, have ${profile.credits}.`);
     }
 
     const { count } = await this.supabase
@@ -372,5 +380,11 @@ export class IdeationService {
     const pdfBytes = await pdfDoc.save();
     const filename = `ideation_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
     return { pdfBytes, filename };
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

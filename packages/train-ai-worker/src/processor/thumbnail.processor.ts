@@ -2,7 +2,12 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { createSupabaseClient, getSupabaseServiceEnv, SupabaseClient } from '@repo/supabase';
-import type { ThumbnailRatio } from '@repo/validation';
+import {
+  calculateThumbnailCredits,
+  THUMBNAIL_CREDIT_MULTIPLIER,
+  TOKENS_PER_CREDIT,
+  type ThumbnailRatio,
+} from '@repo/validation';
 import { GoogleGenAI } from '@google/genai';
 
 const BUCKET = 'thumbnails';
@@ -159,7 +164,18 @@ ${prompt}`;
       await job.updateProgress(90);
       await job.log(`${imageUrls.length}/${count} thumbnails generated. Saving...`);
 
-      const creditsToDeduct = Math.ceil(totalConsumedTokens / 1000);
+      const tokensPerCredit = this.getEnvNumber('TOKENS_PER_CREDIT', TOKENS_PER_CREDIT);
+      const thumbnailMultiplier = this.getEnvNumber(
+        'THUMBNAIL_CREDIT_MULTIPLIER',
+        THUMBNAIL_CREDIT_MULTIPLIER,
+      );
+      const creditsToDeduct = calculateThumbnailCredits(
+        { totalTokens: totalConsumedTokens },
+        { tokensPerCredit, multiplier: thumbnailMultiplier },
+      );
+      this.logger.log(
+        `Job ${bullJobId}: generated=${imageUrls.length}, tokens=${totalConsumedTokens}, tokensPerCredit=${tokensPerCredit}, multiplier=${thumbnailMultiplier}, credits=${creditsToDeduct}`,
+      );
 
       const { error: creditError } = await this.supabase.rpc('update_user_credits', {
         user_uuid: userId,
@@ -171,13 +187,14 @@ ${prompt}`;
         await this.updateJob(thumbnailJobId, { status: 'failed', error_message: 'Insufficient credits' });
         throw new Error('Insufficient credits. Please upgrade your plan.');
       }
+      this.logger.log(`Job ${bullJobId}: credits deducted successfully`);
 
       await this.updateJob(thumbnailJobId, {
         status: 'completed',
         image_urls: imageUrls,
         credits_consumed: creditsToDeduct,
-        total_tokens: totalConsumedTokens,
       });
+      this.logger.log(`Job ${bullJobId}: thumbnail_jobs row marked completed`);
       await job.updateProgress(100);
       await job.log(`Done! ${imageUrls.length} thumbnails, ${totalConsumedTokens} tokens consumed, ${creditsToDeduct} credits deducted.`);
 
@@ -185,10 +202,17 @@ ${prompt}`;
     } catch (error: any) {
       await job.log(`Fatal error: ${error.message}`);
       this.logger.error(`Job ${job.id} failed: ${error.message}`, error.stack);
-      await this.updateJob(thumbnailJobId, {
-        status: 'failed',
-        error_message: error.message?.slice(0, 5000),
-      });
+      try {
+        await this.updateJob(thumbnailJobId, {
+          status: 'failed',
+          error_message: error.message?.slice(0, 5000),
+        });
+      } catch (updateError: any) {
+        this.logger.error(
+          `Job ${job.id}: failed to persist failed status for thumbnail job ${thumbnailJobId}: ${updateError?.message}`,
+          updateError?.stack,
+        );
+      }
       throw error;
     }
   }
@@ -256,9 +280,22 @@ ${prompt}`;
   }
 
   private async updateJob(jobId: string, fields: Record<string, any>) {
-    await this.supabase
+    const { error } = await this.supabase
       .from('thumbnail_jobs')
       .update({ ...fields, updated_at: new Date().toISOString() })
       .eq('id', jobId);
+
+    if (error) {
+      this.logger.error(
+        `Failed to update thumbnail_jobs id=${jobId}. fields=${Object.keys(fields).join(', ')} error=${error.message}`,
+      );
+      throw new Error(`thumbnail_jobs update failed: ${error.message}`);
+    }
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

@@ -2,7 +2,11 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { createSupabaseClient, getSupabaseServiceEnv, SupabaseClient } from '@repo/supabase';
-import { calculateCreditsFromTokens } from '@repo/validation';
+import {
+  calculateCreditsFromTokens,
+  SCRIPT_CREDIT_MULTIPLIER,
+  TOKENS_PER_CREDIT,
+} from '@repo/validation';
 import { GoogleGenAI } from '@google/genai';
 
 interface ScriptJobData {
@@ -140,7 +144,12 @@ export class ScriptProcessor extends WorkerHost {
 
       const result = JSON.parse(rawText) as { title: string; script: string };
 
-      const creditsConsumed = calculateCreditsFromTokens({ totalTokens });
+      const tokensPerCredit = this.getEnvNumber('TOKENS_PER_CREDIT', TOKENS_PER_CREDIT);
+      const scriptMultiplier = this.getEnvNumber('SCRIPT_CREDIT_MULTIPLIER', SCRIPT_CREDIT_MULTIPLIER);
+      const creditsConsumed = calculateCreditsFromTokens(
+        { totalTokens },
+        { tokensPerCredit, multiplier: scriptMultiplier, minimumCredits: 1 },
+      );
 
       await job.updateProgress(85);
       await job.log(`Saving script... (${creditsConsumed} credits)`);
@@ -235,5 +244,11 @@ Guidelines:
       .from('scripts')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', jobId);
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

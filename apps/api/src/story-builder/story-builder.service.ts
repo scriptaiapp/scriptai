@@ -7,7 +7,12 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseService } from '../supabase/supabase.service';
-import { type CreateStoryBuilderInput, hasEnoughCredits, getMinimumCreditsForStoryBuilder } from '@repo/validation';
+import {
+  type CreateStoryBuilderInput,
+  hasEnoughCredits,
+  getMinimumCreditsForStoryBuilder,
+  STORY_BUILDER_CREDIT_MULTIPLIER,
+} from '@repo/validation';
 
 @Injectable()
 export class StoryBuilderService {
@@ -23,7 +28,11 @@ export class StoryBuilderService {
       tone, additionalContext, personalized,
     } = input;
 
-    const minCredits = getMinimumCreditsForStoryBuilder();
+    const storyBuilderMultiplier = this.getEnvNumber(
+      'STORY_BUILDER_CREDIT_MULTIPLIER',
+      STORY_BUILDER_CREDIT_MULTIPLIER,
+    );
+    const minCredits = getMinimumCreditsForStoryBuilder(storyBuilderMultiplier);
 
     const { data: profile, error: profileError } = await this.supabaseService
       .getClient()
@@ -180,5 +189,11 @@ export class StoryBuilderService {
 
     if (error || !data) throw new NotFoundException('Profile not found');
     return { aiTrained: data.ai_trained ?? false, credits: data.credits ?? 0 };
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

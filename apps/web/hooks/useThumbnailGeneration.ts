@@ -76,6 +76,10 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
     setIsLoadingJobs(true)
     try {
       const data = await api.get<ThumbnailJob[]>('/api/v1/thumbnail', { requireAuth: true })
+      console.debug("[thumbnail] fetched jobs", {
+        count: data.length,
+        latest: data[0] ? { id: data[0].id, status: data[0].status, updated_at: data[0].updated_at } : null,
+      })
       setPastJobs(data)
     } catch {
       toast.error("Failed to load thumbnail jobs")
@@ -93,6 +97,11 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
       state === "waiting" ? STATUS_MESSAGES.waiting!(p) : STATUS_MESSAGES.default!(p),
     extractResult: (data: SSEEvent) => (data as any).imageUrls ?? null,
     onComplete: (imageUrls) => {
+      console.debug("[thumbnail] SSE complete event", {
+        jobId,
+        thumbnailJobId,
+        imageCount: imageUrls?.length ?? 0,
+      })
       if (imageUrls) {
         setGeneratedImages(imageUrls)
         setCreditsConsumed(imageUrls.length)
@@ -139,6 +148,10 @@ export function useThumbnailGeneration(options?: UseThumbnailGenerationOptions) 
         formData,
         { requireAuth: true },
       )
+      console.debug("[thumbnail] generation started", {
+        thumbnailJobId: response.id,
+        queueJobId: response.jobId,
+      })
 
       setThumbnailJobId(response.id)
       setJobId(response.jobId)

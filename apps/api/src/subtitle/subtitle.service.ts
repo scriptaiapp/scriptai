@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, PayloadTooLargeException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
@@ -7,9 +7,11 @@ import {
   type UpdateSubtitleByIdInput,
   type UploadVideoInput,
   type BurnSubtitleInput,
-  calculateCreditsFromTokens,
+  calculateSubtitleCredits,
   hasEnoughCredits,
-  getMinimumCreditsForGemini,
+  getMinimumCreditsForSubtitleRequest,
+  SUBTITLE_CREDIT_MULTIPLIER,
+  TOKENS_PER_CREDIT,
 } from '@repo/validation';
 import {
   createGoogleAI,
@@ -47,6 +49,12 @@ async function waitForFileActive(ai: GoogleAIInstance, fileName: string, maxWait
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const MAX_VIDEO_DURATION = 10 * 60; // 10 minutes in seconds
+type StorageErrorLike = {
+  message?: string;
+  statusCode?: string | number;
+  code?: string | number;
+  error?: string;
+};
 
 @Injectable()
 export class SubtitleService {
@@ -72,6 +80,42 @@ export class SubtitleService {
     }
   }
 
+  private sanitizeFileName(value: string): string {
+    return value.replace(/[^\w.\-]/g, '_');
+  }
+
+  private getStorageErrorContext(error: unknown): StorageErrorLike {
+    if (error && typeof error === 'object') {
+      return error as StorageErrorLike;
+    }
+    return { message: String(error) };
+  }
+
+  private mapUploadErrorToHttpException(error: unknown): Error {
+    const ctx = this.getStorageErrorContext(error);
+    const status = Number(ctx.statusCode);
+    const code = String(ctx.code ?? '').toLowerCase();
+    const message = String(ctx.message ?? '').toLowerCase();
+
+    if (status === 401 || status === 403 || code.includes('unauthorized') || code.includes('permission') || message.includes('permission') || message.includes('not authorized')) {
+      return new ForbiddenException('Upload permission denied. Please check storage policies.');
+    }
+
+    if (status === 413 || code.includes('entity_too_large') || message.includes('too large')) {
+      return new PayloadTooLargeException('File size must be less than 200MB');
+    }
+
+    if (status === 415 || code.includes('invalid_mime') || message.includes('mime') || message.includes('content type')) {
+      return new BadRequestException('Unsupported video format. Please upload a valid video file.');
+    }
+
+    if (status >= 500 || code.includes('timeout') || code.includes('network') || message.includes('timeout') || message.includes('network')) {
+      return new ServiceUnavailableException('Storage service is currently unavailable. Please try again.');
+    }
+
+    return new InternalServerErrorException('Failed to upload video');
+  }
+
   async create(input: CreateSubtitleInput, userId: string) {
     const { subtitleId, language, targetLanguage, duration } = input;
     let tempFilePath: string | null = null;
@@ -93,7 +137,12 @@ export class SubtitleService {
         throw new ForbiddenException('AI training and YouTube connection are required');
       }
 
-      const minCredits = getMinimumCreditsForGemini();
+      const subtitleMultiplier = this.getEnvNumber(
+        'SUBTITLE_CREDIT_MULTIPLIER',
+        SUBTITLE_CREDIT_MULTIPLIER,
+      );
+      const tokensPerCredit = this.getEnvNumber('TOKENS_PER_CREDIT', TOKENS_PER_CREDIT);
+      const minCredits = getMinimumCreditsForSubtitleRequest(subtitleMultiplier);
       if (!hasEnoughCredits(profileData.credits, minCredits)) {
         await this.logErrorToDB('Insufficient credits', subtitleId);
         throw new ForbiddenException('Insufficient credits. Please upgrade your plan or earn more credits.');
@@ -238,7 +287,10 @@ Your task is to transcribe the provided audio file and generate precise, time-st
       }
 
       const totalTokens = result?.usageMetadata?.totalTokenCount ?? 0;
-      const creditsConsumed = calculateCreditsFromTokens({ totalTokens });
+      const creditsConsumed = calculateSubtitleCredits(
+        { totalTokens },
+        { tokensPerCredit, multiplier: subtitleMultiplier },
+      );
 
       if (!hasEnoughCredits(profileData.credits, creditsConsumed)) {
         await this.logErrorToDB('Insufficient credits for token usage', subtitleId);
@@ -434,7 +486,10 @@ Your task is to transcribe the provided audio file and generate precise, time-st
       throw new BadRequestException('Video duration must be 10 minutes or less');
     }
 
-    const newFileName = `${userId}/${Date.now()}_${file.originalname}`;
+    const safeOriginalName = this.sanitizeFileName(file.originalname);
+    const newFileName = `${userId}/${Date.now()}_${safeOriginalName}`;
+
+    this.logger.log(`Subtitle upload started: userId=${userId}, filename=${safeOriginalName}, mimeType=${file.mimetype}, size=${file.size}, duration=${parsedDuration}`);
 
     try {
       const { error: uploadError } = await this.supabaseService
@@ -449,7 +504,11 @@ Your task is to transcribe the provided audio file and generate precise, time-st
         throw uploadError;
       }
     } catch (err) {
-      throw new InternalServerErrorException('Failed to upload video');
+      const ctx = this.getStorageErrorContext(err);
+      this.logger.error(
+        `Subtitle upload failed: userId=${userId}, filename=${safeOriginalName}, statusCode=${ctx.statusCode ?? 'n/a'}, code=${ctx.code ?? 'n/a'}, message=${ctx.message ?? 'n/a'}`,
+      );
+      throw this.mapUploadErrorToHttpException(err);
     } finally {
       if (file.path) {
         await fs.unlink(file.path).catch(() => null);
@@ -482,6 +541,9 @@ Your task is to transcribe the provided audio file and generate precise, time-st
         .single();
 
     if (subtitleInsertError) {
+      this.logger.error(
+        `Subtitle job creation failed after upload: userId=${userId}, filename=${safeOriginalName}, message=${subtitleInsertError.message}, code=${subtitleInsertError.code ?? 'n/a'}`,
+      );
       throw new InternalServerErrorException(
         'Failed to create subtitle job',
       );
@@ -533,5 +595,11 @@ Your task is to transcribe the provided audio file and generate precise, time-st
         fs.unlink(outputPath).catch(() => null),
       ]);
     }
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

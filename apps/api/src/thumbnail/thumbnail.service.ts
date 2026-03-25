@@ -8,10 +8,14 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseService } from '../supabase/supabase.service';
-import { type CreateThumbnailInput, hasEnoughCredits } from '@repo/validation';
+import {
+  type CreateThumbnailInput,
+  hasEnoughCredits,
+  THUMBNAIL_CREDIT_MULTIPLIER,
+  getMinimumCreditsForThumbnailRequest,
+} from '@repo/validation';
 
 const BUCKET = 'thumbnails';
-const CREDITS_PER_THUMBNAIL = 1;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
@@ -35,7 +39,11 @@ export class ThumbnailService {
     if (videoLink) this.validateVideoLink(videoLink);
 
     // ── Check profile + credits ──
-    const requiredCredits = generateCount * CREDITS_PER_THUMBNAIL;
+    const thumbnailMultiplier = this.getEnvNumber(
+      'THUMBNAIL_CREDIT_MULTIPLIER',
+      THUMBNAIL_CREDIT_MULTIPLIER,
+    );
+    const requiredCredits = getMinimumCreditsForThumbnailRequest(generateCount, thumbnailMultiplier);
     const { data: profile, error: profileError } = await this.supabaseService
       .getClient()
       .from('profiles')
@@ -279,5 +287,11 @@ export class ThumbnailService {
     if (mimetype.includes('png')) return 'png';
     if (mimetype.includes('webp')) return 'webp';
     return 'jpg';
+  }
+
+  private getEnvNumber(key: string, fallback: number): number {
+    const raw = process.env[key];
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }
