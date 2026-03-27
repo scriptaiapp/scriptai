@@ -87,7 +87,7 @@ export class ThumbnailController {
         completed: 'Thumbnails generated!',
         failed: 'Generation failed',
       },
-      extractResult: (job) => ({ imageUrls: job.returnvalue?.imageUrls }),
+      extractResult: (job) => ({ imageUrls: job.returnValue?.imageUrls }),
     });
   }
 }
