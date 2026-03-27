@@ -31,7 +31,7 @@ export class ThumbnailController {
   constructor(
     @InjectQueue('thumbnail') private readonly queue: Queue,
     private readonly thumbnailService: ThumbnailService,
-  ) {}
+  ) { }
 
   @Post('generate')
   @UseGuards(SupabaseAuthGuard)
@@ -87,7 +87,7 @@ export class ThumbnailController {
         completed: 'Thumbnails generated!',
         failed: 'Generation failed',
       },
-      extractResult: (job) => ({ imageUrls: job.returnValue?.imageUrls }),
+      extractResult: (job) => ({ imageUrls: job.returnvalue?.imageUrls }),
     });
   }
 }

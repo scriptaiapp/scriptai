@@ -280,16 +280,18 @@ ${prompt}`;
   }
 
   private async updateJob(jobId: string, fields: Record<string, any>) {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('thumbnail_jobs')
       .update({ ...fields, updated_at: new Date().toISOString() })
-      .eq('id', jobId);
+      .eq('id', jobId)
+      .select('id')
+      .single();
 
-    if (error) {
+    if (error || !data) {
       this.logger.error(
-        `Failed to update thumbnail_jobs id=${jobId}. fields=${Object.keys(fields).join(', ')} error=${error.message}`,
+        `Failed to update thumbnail_jobs id=${jobId}. fields=${Object.keys(fields).join(', ')} error=${error?.message ?? 'no rows updated (RLS or missing row)'}`,
       );
-      throw new Error(`thumbnail_jobs update failed: ${error.message}`);
+      throw new Error(`thumbnail_jobs update failed: ${error?.message ?? 'row not found or RLS blocked'}`);
     }
   }
 

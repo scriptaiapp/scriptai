@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -21,6 +22,8 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg
 
 @Injectable()
 export class ThumbnailService {
+  private readonly logger = new Logger(ThumbnailService.name);
+
   constructor(
     private readonly supabaseService: SupabaseService,
     @InjectQueue('thumbnail') private readonly queue: Queue,
@@ -134,7 +137,10 @@ export class ThumbnailService {
       .single();
 
     if (jobError || !job) {
-      throw new InternalServerErrorException('Failed to create thumbnail job');
+      this.logger.error(`thumbnail_jobs INSERT failed: ${jobError?.message}`, jobError);
+      throw new InternalServerErrorException(
+        `Failed to create thumbnail job: ${jobError?.message || 'unknown error'}`,
+      );
     }
 
     // ── Queue BullMQ job ──

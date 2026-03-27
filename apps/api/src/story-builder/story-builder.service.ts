@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -16,6 +17,8 @@ import {
 
 @Injectable()
 export class StoryBuilderService {
+  private readonly logger = new Logger(StoryBuilderService.name);
+
   constructor(
     private readonly supabaseService: SupabaseService,
     @InjectQueue('story-builder') private readonly queue: Queue,
@@ -97,7 +100,10 @@ export class StoryBuilderService {
       .single();
 
     if (jobError || !job) {
-      throw new InternalServerErrorException('Failed to create story builder job');
+      this.logger.error(`story_builder_jobs INSERT failed: ${jobError?.message}`, jobError);
+      throw new InternalServerErrorException(
+        `Failed to create story builder job: ${jobError?.message || 'unknown error'}`,
+      );
     }
 
     const bullJobId = `story-${userId}-${Date.now()}`;

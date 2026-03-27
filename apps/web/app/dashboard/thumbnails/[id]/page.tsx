@@ -40,19 +40,39 @@ export default function ThumbnailPage() {
     const jobId = params.id as string
 
     useEffect(() => {
+        if (!jobId) return
+        let cancelled = false
+        let intervalId: ReturnType<typeof setInterval> | null = null
+
         const fetchJob = async () => {
-            if (!jobId) return
-            setIsLoading(true)
             const data = await getThumbnail(jobId)
+            if (cancelled) return null
             if (!data) {
                 toast.error("Thumbnail not found")
                 router.push("/dashboard/thumbnails")
-                return
+                return null
             }
             setJob(data)
             setIsLoading(false)
+            return data
         }
-        fetchJob()
+
+        fetchJob().then((data) => {
+            if (cancelled || !data) return
+            if (data.status === "queued" || data.status === "processing") {
+                intervalId = setInterval(async () => {
+                    const updated = await fetchJob()
+                    if (!updated || (updated.status !== "queued" && updated.status !== "processing")) {
+                        if (intervalId) clearInterval(intervalId)
+                    }
+                }, 3000)
+            }
+        })
+
+        return () => {
+            cancelled = true
+            if (intervalId) clearInterval(intervalId)
+        }
     }, [jobId, router])
 
     const handleDelete = async () => {
