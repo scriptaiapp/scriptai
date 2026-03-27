@@ -15,7 +15,7 @@ import {
 import {
   RefreshCw, Zap, Target, Repeat, Shuffle, Heart, Megaphone,
   Timer, FileText, Copy, Check, TrendingUp, BarChart3,
-  AlertTriangle, Layers, Flame, Eye, ArrowUpRight, ChevronRight,
+  AlertTriangle, Layers, Flame, Eye, ArrowUpRight, ChevronRight, Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
 import type { StoryBuilderResult, TensionMapping, SectionScore } from "@repo/validation"
@@ -188,8 +188,15 @@ export function StoryBuilderResults({ result, onRegenerate, isGenerating }: Stor
           <Button variant="outline" size="sm" onClick={copyFullBlueprint} className="gap-1.5">
             <Copy className="h-3.5 w-3.5" /> Copy All
           </Button>
-          <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isGenerating} className="gap-1.5">
-            <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRegenerate}
+            disabled={isGenerating}
+            className="gap-1.5"
+          >
+            {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Regenerate
           </Button>
         </div>
       </div>

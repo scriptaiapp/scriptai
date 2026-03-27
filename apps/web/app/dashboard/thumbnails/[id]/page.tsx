@@ -7,20 +7,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { downloadFile } from "@/lib/download"
-import { ArrowLeft, Download, Loader2, ImageIcon, Clock, Ratio, Sparkles, AlertCircle, ExternalLink, Trash2, Coins, Link as LinkIcon } from "lucide-react"
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-    AlertDialogFooter,
-} from "@/components/ui/alert-dialog"
+    ArrowLeft, Download, ImageIcon, Clock, Ratio, Sparkles,
+    AlertCircle, Trash2, Coins, Link as LinkIcon, Pencil, RefreshCw,
+} from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getThumbnail, deleteThumbnail, type ThumbnailJob } from "@/lib/api/getThumbnails"
+import { getThumbnail, type ThumbnailJob } from "@/lib/api/getThumbnails"
+import {
+    ViewImageModal,
+    EditThumbnailModal,
+    DeleteImageModal,
+    RegenerateThumbnailModal,
+    DeleteBatchModal,
+} from "@/components/dashboard/thumbnails/thumbnail-modals"
+
+type ModalState =
+    | { type: null }
+    | { type: "view"; index: number; url: string }
+    | { type: "edit"; index: number }
+    | { type: "delete-image"; index: number; url: string }
+    | { type: "regenerate" }
+    | { type: "delete-batch" }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     queued: { label: "Queued", variant: "outline" },
@@ -33,11 +40,11 @@ export default function ThumbnailPage() {
     const router = useRouter()
     const params = useParams()
     const [job, setJob] = useState<ThumbnailJob | null>(null)
-    const [loading, setLoading] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [deletingImage, setDeletingImage] = useState<number | null>(null)
+    const [modal, setModal] = useState<ModalState>({ type: null })
 
     const jobId = params.id as string
+    const closeModal = () => setModal({ type: null })
 
     useEffect(() => {
         if (!jobId) return
@@ -75,18 +82,6 @@ export default function ThumbnailPage() {
         }
     }, [jobId, router])
 
-    const handleDelete = async () => {
-        setLoading(true)
-        const success = await deleteThumbnail(jobId)
-        if (success) {
-            toast.success("Thumbnail deleted!")
-            router.push("/dashboard/thumbnails")
-        } else {
-            toast.error("Failed to delete thumbnail")
-        }
-        setLoading(false)
-    }
-
     const handleDownload = useCallback(
         (imageUrl: string, index: number) => downloadFile(imageUrl, `thumbnail_${index + 1}.png`),
         [],
@@ -94,10 +89,7 @@ export default function ThumbnailPage() {
 
     const handleDeleteImage = (index: number) => {
         if (!job) return
-        setDeletingImage(index)
-        const updatedUrls = job.image_urls.filter((_, i) => i !== index)
-        setJob({ ...job, image_urls: updatedUrls })
-        setDeletingImage(null)
+        setJob({ ...job, image_urls: job.image_urls.filter((_, i) => i !== index) })
         toast.success("Image removed from view")
     }
 
@@ -115,6 +107,7 @@ export default function ThumbnailPage() {
     if (!job) return null
 
     const config = statusConfig[job.status] ?? { label: "Unknown", variant: "outline" as const }
+    const imageCount = job.image_urls?.length ?? 0
 
     return (
         <div className="container py-8">
@@ -134,9 +127,32 @@ export default function ThumbnailPage() {
             </div>
 
             <div className="space-y-6">
+                {/* ─── Details Card ─── */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Details</CardTitle>
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                            <CardTitle>Details</CardTitle>
+                            {job.status === "completed" && imageCount > 0 && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1.5"
+                                        onClick={() => setModal({ type: "regenerate" })}
+                                    >
+                                        <RefreshCw className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50"
+                                        onClick={() => setModal({ type: "delete-batch" })}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
@@ -197,12 +213,13 @@ export default function ThumbnailPage() {
                     </CardContent>
                 </Card>
 
+                {/* ─── Generated Images Card ─── */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Generated Images</CardTitle>
                         <CardDescription>
-                            {job.image_urls?.length
-                                ? `${job.image_urls.length} thumbnail${job.image_urls.length > 1 ? "s" : ""} generated`
+                            {imageCount
+                                ? `${imageCount} thumbnail${imageCount > 1 ? "s" : ""} generated`
                                 : "No images generated yet"}
                         </CardDescription>
                     </CardHeader>
@@ -214,45 +231,39 @@ export default function ThumbnailPage() {
                             </div>
                         )}
 
-                        {job.image_urls?.length > 0 ? (
+                        {imageCount > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {job.image_urls.map((url, i) => (
                                     <div key={url} className="relative group rounded-lg overflow-hidden border bg-slate-50 dark:bg-slate-800/50">
                                         <img
                                             src={url}
                                             alt={`Thumbnail ${i + 1}`}
-                                            className="w-full h-auto object-cover"
+                                            className="w-full h-auto object-cover cursor-pointer"
                                             loading="lazy"
+                                            onClick={() => setModal({ type: "view", index: i, url })}
                                         />
                                         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button
-                                                variant="secondary"
-                                                size="icon"
-                                                className="h-8 w-8 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm hover:bg-white dark:hover:bg-slate-900"
-                                                onClick={() => handleDownload(url, i)}
+                                            <IconBtn
                                                 title="Download"
-                                            >
-                                                <Download className="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                                variant="secondary"
-                                                size="icon"
-                                                className="h-8 w-8 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm hover:bg-white dark:hover:bg-slate-900"
-                                                onClick={() => window.open(url, "_blank")}
-                                                title="Open in new tab"
-                                            >
-                                                <ExternalLink className="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                                variant="secondary"
-                                                size="icon"
-                                                className="h-8 w-8 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500"
-                                                onClick={() => handleDeleteImage(i)}
-                                                disabled={deletingImage === i}
-                                                title="Remove image"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
+                                                onClick={() => handleDownload(url, i)}
+                                                icon={<Download className="h-3.5 w-3.5" />}
+                                            />
+                                            <IconBtn
+                                                title="Edit"
+                                                onClick={() => setModal({ type: "edit", index: i })}
+                                                icon={<Pencil className="h-3.5 w-3.5" />}
+                                            />
+                                            <IconBtn
+                                                title="Regenerate"
+                                                onClick={() => setModal({ type: "regenerate" })}
+                                                icon={<RefreshCw className="h-3.5 w-3.5" />}
+                                            />
+                                            <IconBtn
+                                                title="Delete"
+                                                onClick={() => setModal({ type: "delete-image", index: i, url })}
+                                                icon={<Trash2 className="h-3.5 w-3.5" />}
+                                                destructive
+                                            />
                                         </div>
                                     </div>
                                 ))}
@@ -269,42 +280,58 @@ export default function ThumbnailPage() {
                         )}
                     </CardContent>
                 </Card>
-
-                <div className="flex justify-start">
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50 transition-all"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    "Delete Thumbnail"
-                                )}
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete this thumbnail job and all generated images.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
             </div>
+
+            {/* ─── Modals ─── */}
+            {modal.type === "view" && (
+                <ViewImageModal open onClose={closeModal} imageUrl={modal.url} imageIndex={modal.index} />
+            )}
+            {modal.type === "edit" && (
+                <EditThumbnailModal open onClose={closeModal} job={job} imageIndex={modal.index} />
+            )}
+            {modal.type === "delete-image" && (
+                <DeleteImageModal
+                    open
+                    onClose={closeModal}
+                    imageUrl={modal.url}
+                    imageIndex={modal.index}
+                    onConfirm={() => handleDeleteImage(modal.index)}
+                />
+            )}
+            {modal.type === "regenerate" && (
+                <RegenerateThumbnailModal open onClose={closeModal} job={job} />
+            )}
+            {modal.type === "delete-batch" && (
+                <DeleteBatchModal
+                    open
+                    onClose={closeModal}
+                    jobId={jobId}
+                    imageCount={imageCount}
+                    onSuccess={() => router.push("/dashboard/thumbnails")}
+                />
+            )}
         </div>
+    )
+}
+
+function IconBtn({ title, onClick, icon, destructive }: {
+    title: string
+    onClick: () => void
+    icon: React.ReactNode
+    destructive?: boolean
+}) {
+    return (
+        <Button
+            variant="secondary"
+            size="icon"
+            className={`h-8 w-8 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm ${destructive
+                ? "hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500"
+                : "hover:bg-white dark:hover:bg-slate-900"
+                }`}
+            onClick={onClick}
+            title={title}
+        >
+            {icon}
+        </Button>
     )
 }
