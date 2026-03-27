@@ -14,7 +14,6 @@ import { createJobSSE } from '../common/sse';
 @ApiTags('story-builder')
 @ApiBearerAuth()
 @Controller('story-builder')
-@UseGuards(SupabaseAuthGuard)
 export class StoryBuilderController {
   constructor(
     @InjectQueue('story-builder') private readonly queue: Queue,
@@ -22,6 +21,7 @@ export class StoryBuilderController {
   ) {}
 
   @Post('generate')
+  @UseGuards(SupabaseAuthGuard)
   async generate(
     @Body(new ZodValidationPipe(CreateStoryBuilderSchema)) body: CreateStoryBuilderInput,
     @Req() req: AuthRequest,
@@ -30,21 +30,25 @@ export class StoryBuilderController {
   }
 
   @Get('profile-status')
+  @UseGuards(SupabaseAuthGuard)
   async profileStatus(@Req() req: AuthRequest) {
     return this.storyBuilderService.getProfileStatus(getUserId(req));
   }
 
   @Get()
+  @UseGuards(SupabaseAuthGuard)
   async listJobs(@Req() req: AuthRequest) {
     return this.storyBuilderService.listJobs(getUserId(req));
   }
 
   @Get(':id')
+  @UseGuards(SupabaseAuthGuard)
   async getJob(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.storyBuilderService.getJob(id, getUserId(req));
   }
 
   @Delete(':id')
+  @UseGuards(SupabaseAuthGuard)
   async deleteJob(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.storyBuilderService.deleteJob(id, getUserId(req));
   }

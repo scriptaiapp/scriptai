@@ -90,6 +90,19 @@ export default function NewStoryBuilderPage() {
                 isGenerating={hook.isGenerating}
               />
             </motion.div>
+          ) : hook.isGenerating ? (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StoryBuilderProgress
+                progress={hook.progress}
+                statusMessage={hook.statusMessage}
+              />
+            </motion.div>
           ) : (
             <motion.div
               key="form"
@@ -131,13 +144,6 @@ export default function NewStoryBuilderPage() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                  {hook.isGenerating && (
-                    <StoryBuilderProgress
-                      progress={hook.progress}
-                      statusMessage={hook.statusMessage}
-                    />
-                  )}
-
                   <div className="rounded-lg border bg-slate-50 dark:bg-slate-800/50 p-5 space-y-3">
                     <h3 className="font-semibold text-sm">What you&apos;ll get</h3>
                     <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">

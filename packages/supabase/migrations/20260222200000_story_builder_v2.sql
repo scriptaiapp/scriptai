@@ -1,12 +1,25 @@
 -- Story Builder v2: Add new columns for structure templates, story modes, audience level, and pacing analysis
 
--- New content types (drop old check, add new)
+-- New content types (drop old check, normalize existing rows, add/validate new check)
 ALTER TABLE "public"."story_builder_jobs" DROP CONSTRAINT IF EXISTS "story_builder_jobs_content_type_check";
-ALTER TABLE "public"."story_builder_jobs" ADD CONSTRAINT "story_builder_jobs_content_type_check"
-  CHECK (content_type IN ('educational_breakdown', 'commentary', 'documentary', 'case_study', 'personal_story', 'listicle', 'tutorial'));
 
--- Update existing rows with old content types to new mapping
-UPDATE "public"."story_builder_jobs" SET content_type = 'tutorial' WHERE content_type IN ('vlog', 'review', 'story', 'educational', 'entertainment', 'news');
+-- Normalize legacy/invalid values before enforcing the new enum-like check.
+UPDATE "public"."story_builder_jobs"
+SET content_type = CASE
+  WHEN lower(trim(coalesce(content_type, ''))) IN (
+    'educational_breakdown', 'commentary', 'documentary', 'case_study', 'personal_story', 'listicle', 'tutorial'
+  ) THEN lower(trim(content_type))
+  WHEN lower(trim(coalesce(content_type, ''))) IN ('vlog', 'review', 'story', 'educational', 'entertainment', 'news') THEN 'tutorial'
+  ELSE 'tutorial'
+END;
+
+ALTER TABLE "public"."story_builder_jobs"
+  ADD CONSTRAINT "story_builder_jobs_content_type_check"
+  CHECK (content_type IN ('educational_breakdown', 'commentary', 'documentary', 'case_study', 'personal_story', 'listicle', 'tutorial'))
+  NOT VALID;
+
+ALTER TABLE "public"."story_builder_jobs"
+  VALIDATE CONSTRAINT "story_builder_jobs_content_type_check";
 
 -- Add new columns
 ALTER TABLE "public"."story_builder_jobs"
@@ -28,10 +41,20 @@ ALTER TABLE "public"."user_style"
   ADD COLUMN IF NOT EXISTS "avg_segment_length" numeric;
 
 -- Service role full access
-CREATE POLICY IF NOT EXISTS "Allow service role full access story_builder"
-ON "public"."story_builder_jobs"
-AS permissive
-FOR ALL
-TO service_role
-USING (true)
-WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'story_builder_jobs'
+      AND policyname = 'Allow service role full access story_builder'
+  ) THEN
+    CREATE POLICY "Allow service role full access story_builder"
+    ON "public"."story_builder_jobs"
+    AS permissive
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+  END IF;
+END $$;
