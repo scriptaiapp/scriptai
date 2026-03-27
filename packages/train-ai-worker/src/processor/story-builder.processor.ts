@@ -358,7 +358,7 @@ export class StoryBuilderProcessor extends WorkerHost {
       await job.updateProgress(85);
       await job.log(`Saving results... (${creditsConsumed} credits)`);
 
-      await this.supabase
+      const { data: updated, error: updateError } = await this.supabase
         .from('story_builder_jobs')
         .update({
           status: 'completed',
@@ -367,7 +367,14 @@ export class StoryBuilderProcessor extends WorkerHost {
           total_tokens: totalTokens,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', storyJobId);
+        .eq('id', storyJobId)
+        .select('id')
+        .single();
+
+      if (updateError || !updated) {
+        this.logger.error(`story_builder_jobs completion update failed for id=${storyJobId}: ${updateError?.message ?? 'no rows updated'}`);
+        throw new Error(`story_builder_jobs update failed: ${updateError?.message ?? 'row not found or RLS blocked'}`);
+      }
 
       const { error: creditError } = await this.supabase.rpc('update_user_credits', {
         user_uuid: userId,
@@ -387,14 +394,11 @@ export class StoryBuilderProcessor extends WorkerHost {
       await job.log(`Fatal error: ${error.message}`);
       this.logger.error(`Story builder job ${job.id} failed: ${error.message}`, error.stack);
 
-      await this.supabase
-        .from('story_builder_jobs')
-        .update({
-          status: 'failed',
-          error_message: error.message?.slice(0, 5000),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', storyJobId);
+      try {
+        await this.updateJobStatus(storyJobId, 'failed', error.message?.slice(0, 5000));
+      } catch (updateErr: any) {
+        this.logger.error(`Failed to persist failed status for story job ${storyJobId}: ${updateErr?.message}`);
+      }
 
       throw error;
     }
@@ -495,11 +499,20 @@ REQUIREMENTS:
 6. All timestamps must be realistic for ${durationLabel}`;
   }
 
-  private async updateJobStatus(jobId: string, status: string) {
-    await this.supabase
+  private async updateJobStatus(jobId: string, status: string, errorMessage?: string) {
+    const fields: Record<string, any> = { status, updated_at: new Date().toISOString() };
+    if (errorMessage !== undefined) fields.error_message = errorMessage;
+
+    const { data, error } = await this.supabase
       .from('story_builder_jobs')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', jobId);
+      .update(fields)
+      .eq('id', jobId)
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      this.logger.error(`story_builder_jobs status update failed for id=${jobId}: ${error?.message ?? 'no rows updated'}`);
+    }
   }
 
   private getEnvNumber(key: string, fallback: number): number {

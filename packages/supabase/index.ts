@@ -1,12 +1,12 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CookieOptions, createServerClient } from '@supabase/ssr';
 
-// Generic client for backend (no cookies, handled by JWT token)
+// Server-side client for API & workers (service_role key, no session management)
 export const createSupabaseClient = (supabaseUrl: string, supabaseKey: string): SupabaseClient => {
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
-      autoRefreshToken: true,
-      persistSession: true,
+      autoRefreshToken: false,
+      persistSession: false,
     },
   });
 };
