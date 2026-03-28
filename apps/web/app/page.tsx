@@ -6,14 +6,13 @@ import Footer from "@/components/footer"
 import { SparklesCore } from "@/components/ui/sparkles"
 import { MButton } from "@/components/ui/moving-border"
 import { motion } from "motion/react"
-import ProblemSection from "@/components/landingPage/ProblemSection"
-import SolutionCard from "@/components/landingPage/SolutionSection"
 import { BackgroundBeams } from "@/components/ui/background-beams"
 import HowItWorks from "@/components/landingPage/HowItWorks"
 import PricingSection from "@/components/landingPage/PricingSection"
 import FeatureSection from "@/components/landingPage/FeatureSection"
 import FAQSection from "@/components/landingPage/FAQSection"
 import WhyCreatorAI from "@/components/landingPage/WhyCreatorAI"
+import ReviewsMarquee from "@/components/landingPage/ReviewsMarquee"
 import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from 'next/dynamic'
 import { useEffect } from "react"
@@ -162,20 +161,20 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="bg-white dark:bg-slate-800 py-24">
-            <ProblemSection />
-          </section>
-
-          <section id="solutions" className="py-20 bg-slate-50 dark:bg-slate-900">
-            <SolutionCard />
-          </section>
-
           <section id="features" className="py-20 bg-white dark:bg-slate-800">
             <FeatureSection />
           </section>
 
           <section id="how-it-works" className="relative py-16 sm:py-20 lg:py-24 bg-slate-50 dark:bg-slate-900 overflow-hidden">
             <HowItWorks />
+          </section>
+
+          <section
+            id="reviews"
+            aria-label="Demo testimonials"
+            className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-slate-800 overflow-hidden"
+          >
+            <ReviewsMarquee />
           </section>
 
           <section id="why-creator-ai" className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-slate-800">
