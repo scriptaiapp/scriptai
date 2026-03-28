@@ -35,34 +35,10 @@ async function sendWelcomeEmail(
           
           <p>We're excited to have you join <strong>Creator AI</strong>. 🚀</p>
           <p>
-            Start exploring your dashboard here 👉 
+            Open your dashboard:
             <a href="https://tryscriptai.com/dashboard" style="color: #4F46E5; text-decoration: none; font-weight: bold;">
               Go to Dashboard
             </a>
-          </p>
-
-          <h2 style="margin-top: 30px; color: #111;">🎥 Quick Start Guide</h2>
-          <p>Watch this short video to learn how to test the features:</p>
-          <div style="margin: 20px 0; text-align: center;">
-            <a href="https://drive.google.com/file/d/1CPbW40HmE2Xh8WumJeCs0PvKcpa4U1Yo/preview"
-              style="background-color: #4F46E5; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
-              ▶ Watch Guide Video
-            </a>
-          </div>
-
-          <h2 style="margin-top: 30px; color: #111;">📝 Quick Feedback</h2>
-          <p>
-            We’d love to hear your thoughts! It’ll only take a minute.  
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScLoa3gQRo44ygVofL-pY-HKgNwWRfP72qUKN6yaG7UZngFwA/viewform?usp=header" 
-              style="color: #4F46E5; font-weight: bold; text-decoration: none;">
-              Share Feedback
-            </a>
-          </p>
-
-          <h2 style="margin-top: 30px; color: #111;">🤝 Referral Program</h2>
-          <p>
-            Invite friends to join Creator AI and earn <strong>${CREDITS_PER_REFERRAL} free credits</strong>!  
-            Simply share your referral link from the dashboard — when they sign up, you'll both get ${CREDITS_PER_REFERRAL} credits.
           </p>
 
           <p style="margin-top: 30px;">Have any questions? Just reply to this email or reach us at 
