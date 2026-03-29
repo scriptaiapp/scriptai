@@ -59,10 +59,10 @@ export default function ContactPage() {
   }
 
   return (
-    <>
+    <div className="flex min-h-[100dvh] flex-col">
       <LandingPageNavbar />
       <AuroraBackground>
-        <div className="relative grid min-h-screen w-full grid-cols-1 items-start justify-center gap-8 px-4 pt-24 md:grid-cols-2 md:items-center md:px-8 md:pt-0 lg:px-16">
+        <div className="relative mx-3 mb-6 mt-4 box-border grid w-full max-w-[min(100%,calc(100vw-1.5rem))] flex-1 grid-cols-1 items-start justify-center gap-8 px-3 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:mx-5 sm:mt-6 sm:px-4 sm:py-8 md:mx-auto md:max-w-7xl md:grid-cols-2 md:items-center md:px-8 md:py-10 lg:px-12">
 
         {/* Left Column: Brand Messaging */}
         <motion.div
@@ -145,6 +145,6 @@ export default function ContactPage() {
         </div>
       </AuroraBackground>
       <Footer />
-    </>
+    </div>
   )
 }

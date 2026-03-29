@@ -16,6 +16,8 @@ import { useSupabase } from "@/components/supabase-provider";
 import { registerUserSchema } from "@repo/validation";
 import { api } from "@/lib/api-client";
 import { AuroraBackground } from "@/components/ui/aurora-background";
+import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar";
+import Footer from "@/components/footer";
 import { motion, AnimatePresence } from "motion/react";
 import logo from "@/public/dark-logo.png";
 import * as z from "zod";
@@ -205,8 +207,10 @@ function SignupForm() {
   if (user) return null;
 
   return (
-    <AuroraBackground>
-      <div className="relative grid min-h-screen w-full grid-cols-1 items-start justify-center gap-8 px-4 pt-16 md:grid-cols-2 md:items-center md:px-8 md:pt-0 lg:px-16">
+    <div className="flex min-h-[100dvh] flex-col">
+      <LandingPageNavbar />
+      <AuroraBackground>
+        <div className="relative mx-3 mb-6 mt-4 box-border grid w-full max-w-[min(100%,calc(100vw-1.5rem))] flex-1 grid-cols-1 items-start justify-center gap-8 px-3 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:mx-5 sm:mt-6 sm:px-4 sm:py-8 md:mx-auto md:max-w-7xl md:grid-cols-2 md:items-center md:px-8 md:py-10 lg:px-12">
         <motion.div
           initial={{ opacity: 0.0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -414,7 +418,9 @@ function SignupForm() {
           </Card>
         </motion.div>
       </div>
-    </AuroraBackground>
+      </AuroraBackground>
+      <Footer />
+    </div>
   );
 }
 

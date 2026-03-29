@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSupabase } from "@/components/supabase-provider"
 import { toast } from "sonner"
-import { Boxes, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { loginUserSchema } from "@repo/validation"
 import { ZodError } from "zod"
 
@@ -20,6 +20,7 @@ import logo from "@/public/dark-logo.png"
 import { AuroraBackground } from "@/components/ui/aurora-background"
 import { motion } from "motion/react"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
+import Footer from "@/components/footer"
 
 // IMPROVEMENT: More descriptive constant name and corrected placeholder.
 const formFields = [
@@ -165,9 +166,10 @@ export default function LoginPage() {
   }
 
   return (
-    <>
+    <div className="flex min-h-[100dvh] flex-col">
+      <LandingPageNavbar />
       <AuroraBackground>
-        <div className="relative grid min-h-screen w-full grid-cols-1 items-start justify-center gap-8 px-4 pt-24 md:grid-cols-2 md:items-center md:px-8 md:pt-0 lg:px-16">
+        <div className="relative mx-3 mb-6 mt-4 box-border grid w-full max-w-[min(100%,calc(100vw-1.5rem))] flex-1 grid-cols-1 items-start justify-center gap-8 px-3 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:mx-5 sm:mt-6 sm:px-4 sm:py-8 md:mx-auto md:max-w-7xl md:grid-cols-2 md:items-center md:px-8 md:py-10 lg:px-12">
 
           {/* ## Left Column: Brand Messaging (hidden on mobile) ## */}
           <motion.div
@@ -285,7 +287,8 @@ export default function LoginPage() {
           </motion.div>
         </div>
       </AuroraBackground>
-    </>
+      <Footer />
+    </div>
 
   )
 }
