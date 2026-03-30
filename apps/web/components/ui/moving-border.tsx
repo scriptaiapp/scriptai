@@ -32,7 +32,7 @@ export function MButton({
     return (
         <Component
             className={cn(
-                "relative h-10 w-36 overflow-hidden bg-transparent p-[1px] text-xl",
+                "relative inline-flex w-fit min-h-10 max-w-full overflow-hidden bg-transparent p-[1px] text-xl",
                 containerClassName,
             )}
             style={{
@@ -56,7 +56,7 @@ export function MButton({
 
             <div
                 className={cn(
-                    "relative flex h-full w-full items-center justify-center border border-slate-800 bg-slate-900/[0.8] text-sm text-white antialiased backdrop-blur-xl",
+                    "relative inline-flex min-h-10 max-w-full min-w-0 shrink-0 items-center justify-center gap-0 border border-slate-800 bg-slate-900/[0.8] px-4 py-2 text-sm text-white antialiased backdrop-blur-xl",
                     className,
                 )}
                 style={{

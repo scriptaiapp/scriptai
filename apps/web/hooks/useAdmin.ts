@@ -5,6 +5,8 @@ import type {
   BlogPost,
   MailMessage,
   Activity,
+  JobPost,
+  JobApplication,
   PaginatedResponse,
 } from '@repo/validation';
 
@@ -139,6 +141,50 @@ export function useAdminMails(page = 1, status?: string) {
   return { ...data, loading, refresh: fetchMails };
 }
 
+export function useAdminJobs(page = 1, status?: string) {
+  const [data, setData] = useState<PaginatedResponse<JobPost> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchJobs = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (status) params.set('status', status);
+      const res = await api.get<PaginatedResponse<JobPost>>(`/api/v1/admin/jobs?${params}`, AUTH);
+      setData(res);
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, status]);
+
+  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+  return { ...data, loading, refresh: fetchJobs };
+}
+
+export function useAdminApplications(page = 1, status?: string) {
+  const [data, setData] = useState<PaginatedResponse<JobApplication> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchApplications = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (status) params.set('status', status);
+      const res = await api.get<PaginatedResponse<JobApplication>>(`/api/v1/admin/applications?${params}`, AUTH);
+      setData(res);
+    } catch (err) {
+      console.error('Failed to fetch applications:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, status]);
+
+  useEffect(() => { fetchApplications(); }, [fetchApplications]);
+  return { ...data, loading, refresh: fetchApplications };
+}
+
 export const adminApi = {
   updateUser: (userId: string, updates: Record<string, unknown>) =>
     api.put(`/api/v1/admin/users/${userId}`, updates, AUTH),
@@ -160,4 +206,18 @@ export const adminApi = {
     api.put(`/api/v1/admin/mails/${id}`, { status }, AUTH),
   updateSaleStatus: (id: string, status: string) =>
     api.put(`/api/v1/admin/affiliates/sales/${id}`, { status }, AUTH),
+  getJob: (id: string) =>
+    api.get<JobPost>(`/api/v1/admin/jobs/${id}`, AUTH),
+  createJob: (data: Partial<JobPost>) =>
+    api.post<JobPost>('/api/v1/admin/jobs', data, AUTH),
+  updateJob: (id: string, data: Partial<JobPost>) =>
+    api.put<JobPost>(`/api/v1/admin/jobs/${id}`, data, AUTH),
+  deleteJob: (id: string) =>
+    api.delete(`/api/v1/admin/jobs/${id}`, AUTH),
+  getApplication: (id: string) =>
+    api.get<JobApplication>(`/api/v1/admin/applications/${id}`, AUTH),
+  updateApplicationStatus: (id: string, status: string, notes?: string) =>
+    api.put(`/api/v1/admin/applications/${id}`, { status, notes }, AUTH),
+  deleteApplication: (id: string) =>
+    api.delete(`/api/v1/admin/applications/${id}`, AUTH),
 };

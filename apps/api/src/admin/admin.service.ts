@@ -25,6 +25,7 @@ export class AdminService {
       salesRes,
       revenueRes,
       mailsRes,
+      applicationsRes,
     ] = await Promise.all([
       this.db.from('profiles').select('id', { count: 'exact', head: true }),
       this.db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales_rep'),
@@ -34,6 +35,7 @@ export class AdminService {
       this.db.from('affiliate_sales').select('id', { count: 'exact', head: true }).eq('status', 'confirmed'),
       this.db.from('affiliate_sales').select('amount').in('status', ['confirmed', 'paid']),
       this.db.from('mail_messages').select('id', { count: 'exact', head: true }).eq('status', 'unread'),
+      this.db.from('job_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     const totalRevenue = revenueRes.data?.reduce((sum, r) => sum + Number(r.amount || 0), 0) ?? 0;
@@ -47,6 +49,7 @@ export class AdminService {
       totalSales: salesRes.count ?? 0,
       totalRevenue,
       unreadMails: mailsRes.count ?? 0,
+      pendingApplications: applicationsRes.count ?? 0,
     };
   }
 
@@ -301,6 +304,130 @@ export class AdminService {
 
     if (error) throw new BadRequestException(error.message);
     return data;
+  }
+
+  // ==================== JOB POSTS CRUD ====================
+
+  async getJobPosts(page = 1, limit = 20, status?: string) {
+    let query = this.db
+      .from('job_posts')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (status) query = query.eq('status', status);
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async getJobPost(id: string) {
+    const { data, error } = await this.db
+      .from('job_posts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) throw new NotFoundException('Job post not found');
+    return data;
+  }
+
+  async createJobPost(job: {
+    title: string;
+    team: string;
+    location?: string;
+    type?: string;
+    description: string;
+    requirements?: string;
+    status?: string;
+  }) {
+    const { data, error } = await this.db
+      .from('job_posts')
+      .insert(job)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async updateJobPost(id: string, updates: Record<string, unknown>) {
+    const { data, error } = await this.db
+      .from('job_posts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async deleteJobPost(id: string) {
+    const { error } = await this.db
+      .from('job_posts')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new BadRequestException(error.message);
+    return { success: true };
+  }
+
+  // ==================== JOB APPLICATIONS ====================
+
+  async getApplications(page = 1, limit = 20, status?: string) {
+    let query = this.db
+      .from('job_applications')
+      .select('*, job_posts(title, team)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (status) query = query.eq('status', status);
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async getApplication(id: string) {
+    const { data, error } = await this.db
+      .from('job_applications')
+      .select('*, job_posts(title, team, location, type)')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) throw new NotFoundException('Application not found');
+    return data;
+  }
+
+  async updateApplicationStatus(id: string, status: string, reviewedBy: string, notes?: string) {
+    const updates: Record<string, unknown> = {
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+    };
+    if (notes !== undefined) updates.notes = notes;
+
+    const { data, error } = await this.db
+      .from('job_applications')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async deleteApplication(id: string) {
+    const { error } = await this.db
+      .from('job_applications')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new BadRequestException(error.message);
+    return { success: true };
   }
 
   // ==================== AFFILIATES (Admin view) ====================
