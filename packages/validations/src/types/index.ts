@@ -21,6 +21,7 @@ export interface AdminDashboardStats {
   totalSales: number
   totalRevenue: number
   unreadMails: number
+  pendingApplications: number
 }
 
 export interface SalesRepDashboardStats {
@@ -115,6 +116,49 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   limit: number
+}
+
+export type JobTeam = 'Engineering' | 'AI' | 'Design' | 'Marketing' | 'Business' | string
+
+export const DEV_TEAMS: string[] = ['Engineering', 'AI']
+
+export type JobCategory = 'engineering' | 'ai' | 'design' | 'marketing' | 'business' | 'other'
+
+export interface JobPost {
+  id: string
+  title: string
+  team: JobTeam
+  location: string
+  type: string
+  category: JobCategory
+  description: string
+  requirements?: string
+  status: 'active' | 'inactive' | 'closed'
+  created_at: string
+  updated_at: string
+}
+
+export interface JobApplication {
+  id: string
+  job_post_id?: string
+  position: string
+  full_name: string
+  email: string
+  phone?: string
+  linkedin_url: string
+  github_url?: string
+  portfolio_url?: string
+  resume_file_path?: string
+  cover_letter_file_path?: string
+  experience: string
+  problem_solving: string
+  status: 'pending' | 'reviewing' | 'shortlisted' | 'rejected' | 'hired'
+  notes?: string
+  reviewed_by?: string
+  reviewed_at?: string
+  created_at: string
+  updated_at: string
+  job_posts?: { title: string; team: string }
 }
 
 export interface Script {

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import Lenis from "lenis"
@@ -17,9 +17,9 @@ import {
   Rocket,
   Users,
   Globe,
-  Zap,
-  Coffee,
 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import type { JobPost } from "@repo/validation"
 
 const values = [
   {
@@ -55,41 +55,22 @@ const perks = [
   "Unlimited PTO (with encouraged minimums)",
 ]
 
-const openings = [
-  {
-    title: "Senior Full-Stack Engineer",
-    team: "Engineering",
-    location: "Remote",
-    type: "Full-time",
-    description: "Build and scale our core platform using Next.js, NestJS, and AI integrations. You'll work across the stack on features used by thousands of creators.",
-  },
-  {
-    title: "AI / ML Engineer",
-    team: "AI",
-    location: "Remote",
-    type: "Full-time",
-    description: "Design and improve our AI training pipeline, personalization models, and content generation systems. Experience with LLMs and fine-tuning required.",
-  },
-  {
-    title: "Product Designer",
-    team: "Design",
-    location: "Remote",
-    type: "Full-time",
-    description: "Own the end-to-end design of our product — from research to wireframes to polished UI. Work closely with engineers and talk to real users weekly.",
-  },
-  {
-    title: "Content Marketing Lead",
-    team: "Marketing",
-    location: "Remote",
-    type: "Full-time",
-    description: "Own our blog, social presence, and content strategy. Create content that helps YouTubers grow while driving awareness for Creator AI.",
-  },
-]
-
 export default function CareersPage() {
+  const [openings, setOpenings] = useState<JobPost[]>([])
+
   useEffect(() => {
     const lenis = new Lenis({ autoRaf: true })
     return () => lenis.destroy()
+  }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from("job_posts")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: true })
+      .then(({ data }) => { if (data) setOpenings(data) })
   }, [])
 
   return (
@@ -126,7 +107,7 @@ export default function CareersPage() {
               </p>
               <a href="#openings">
                 <MButton
-                  className="bg-zinc-900 text-white hover:bg-zinc-800 shadow-md"
+                  className="bg-zinc-900 text-white hover:bg-zinc-800 shadow-md p-4"
                   borderClassName="border border-purple-500/60"
                 >
                   View Open Positions
@@ -147,14 +128,11 @@ export default function CareersPage() {
               transition={{ duration: 0.6 }}
               className="text-center mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                What We Believe In
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">What We Believe In</h2>
               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
                 Our values shape how we work, what we build, and who we hire.
               </p>
             </motion.div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {values.map((value, i) => (
                 <motion.div
@@ -188,14 +166,9 @@ export default function CareersPage() {
               transition={{ duration: 0.6 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                Perks & Benefits
-              </h2>
-              <p className="text-slate-600 text-lg">
-                We take care of our team so they can focus on building great things.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Perks & Benefits</h2>
+              <p className="text-slate-600 text-lg">We take care of our team so they can focus on building great things.</p>
             </motion.div>
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -227,18 +200,14 @@ export default function CareersPage() {
               transition={{ duration: 0.6 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                Open Positions
-              </h2>
-              <p className="text-slate-600 text-lg">
-                Find the role that's right for you. All positions are fully remote.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Open Positions</h2>
+              <p className="text-slate-600 text-lg">Find the role that's right for you.</p>
             </motion.div>
 
             <div className="space-y-4">
               {openings.map((job, i) => (
                 <motion.div
-                  key={job.title}
+                  key={job.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -265,7 +234,7 @@ export default function CareersPage() {
                       </div>
                     </div>
                     <Link
-                      href="/contact-us"
+                      href={`/careers/apply?position=${encodeURIComponent(job.title)}&id=${job.id}`}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors self-start sm:self-center"
                     >
                       Apply
@@ -275,6 +244,10 @@ export default function CareersPage() {
                   <p className="text-sm text-slate-600">{job.description}</p>
                 </motion.div>
               ))}
+
+              {openings.length === 0 && (
+                <div className="text-center py-12 text-slate-500">Loading positions...</div>
+              )}
             </div>
 
             <motion.div
@@ -288,7 +261,7 @@ export default function CareersPage() {
                 Don't see a role that fits? We're always looking for talented people.
               </p>
               <Link
-                href="/contact-us"
+                href="/careers/apply"
                 className="text-purple-600 font-medium hover:text-purple-800 transition-colors"
               >
                 Send us your resume →

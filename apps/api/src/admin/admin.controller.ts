@@ -188,6 +188,88 @@ export class AdminController {
     return this.adminService.updateMailStatus(id, body.status, this.getUserId(req));
   }
 
+  // ==================== JOB POSTS CRUD ====================
+
+  @Get('jobs')
+  getJobs(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.adminService.getJobPosts(Number(page) || 1, Number(limit) || 20, status);
+  }
+
+  @Get('jobs/:id')
+  getJob(@Param('id') id: string) {
+    return this.adminService.getJobPost(id);
+  }
+
+  @Post('jobs')
+  createJob(
+    @Body() body: {
+      title: string;
+      team: string;
+      location?: string;
+      type?: string;
+      description: string;
+      requirements?: string;
+      status?: string;
+    },
+    @Req() req: AuthRequest,
+  ) {
+    this.adminService.logActivity(this.getUserId(req), 'create_job', 'job_post', undefined, { title: body.title });
+    return this.adminService.createJobPost(body);
+  }
+
+  @Put('jobs/:id')
+  updateJob(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthRequest,
+  ) {
+    this.adminService.logActivity(this.getUserId(req), 'update_job', 'job_post', id);
+    return this.adminService.updateJobPost(id, body);
+  }
+
+  @Delete('jobs/:id')
+  deleteJob(@Param('id') id: string, @Req() req: AuthRequest) {
+    this.adminService.logActivity(this.getUserId(req), 'delete_job', 'job_post', id);
+    return this.adminService.deleteJobPost(id);
+  }
+
+  // ==================== JOB APPLICATIONS ====================
+
+  @Get('applications')
+  getApplications(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.adminService.getApplications(Number(page) || 1, Number(limit) || 20, status);
+  }
+
+  @Get('applications/:id')
+  getApplication(@Param('id') id: string) {
+    return this.adminService.getApplication(id);
+  }
+
+  @Put('applications/:id')
+  updateApplicationStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string; notes?: string },
+    @Req() req: AuthRequest,
+  ) {
+    const userId = this.getUserId(req);
+    this.adminService.logActivity(userId, 'update_application', 'job_application', id, body);
+    return this.adminService.updateApplicationStatus(id, body.status, userId, body.notes);
+  }
+
+  @Delete('applications/:id')
+  deleteApplication(@Param('id') id: string, @Req() req: AuthRequest) {
+    this.adminService.logActivity(this.getUserId(req), 'delete_application', 'job_application', id);
+    return this.adminService.deleteApplication(id);
+  }
+
   // ==================== AFFILIATES ====================
 
   @Get('affiliates/links')
