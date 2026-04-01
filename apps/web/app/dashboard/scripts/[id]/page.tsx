@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card"
 import { toast } from "sonner"
 import {
   ArrowLeft, Loader2, CreditCard, Trash2, Save, Download, RefreshCw, Plus,
@@ -13,7 +13,7 @@ import {
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter,
-} from "@/components/ui/alert-dialog"
+} from "@repo/ui/alert-dialog"
 import { ScriptContentEditor } from "@/components/dashboard/scripts/ScriptContentEditor"
 import { ScriptLoaderSkeleton } from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton"
 import { ScriptMetadata } from "@/components/dashboard/scripts/ScriptMetadata"

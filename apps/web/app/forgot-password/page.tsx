@@ -9,9 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "motion/react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
+import { Label } from "@repo/ui/label";
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@repo/ui/card";
 import { Loader2, Mail, ArrowLeft } from "lucide-react";
 
 import logo from "@/public/dark-logo.png";

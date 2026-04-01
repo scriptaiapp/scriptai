@@ -13,13 +13,12 @@
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "utils": "@repo/ui/lib/utils",
+    "ui": "@repo/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
   "registries": {
-    "@magicui": "https://magicui.design/r/{name}",
-    "@aceternity": "https://ui.aceternity.com/registry/{name}.json"
+    "@magicui": "https://magicui.design/r/{name}"
   }
 }

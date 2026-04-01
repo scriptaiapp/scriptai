@@ -2,11 +2,11 @@
 
 import Footer from "@/components/footer"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
-import { SparklesCore } from "@/components/ui/sparkles"
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
-import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards"
-import { BackgroundBeams } from "@/components/ui/background-beams"
-import { MButton } from "@/components/ui/moving-border"
+import { SparklesCore } from "@repo/ui/sparkles"
+import { TextGenerateEffect } from "@repo/ui/text-generate-effect"
+import { InfiniteMovingCards } from "@repo/ui/infinite-moving-cards"
+import { BackgroundBeams } from "@repo/ui/background-beams"
+import { MButton } from "@repo/ui/moving-border"
 import { motion } from "motion/react"
 import Link from "next/link"
 import {

@@ -3,22 +3,22 @@
 import { useState } from "react"
 import { useSalesRepInvited, useSalesRepLinks, salesRepApi } from "@/hooks/useSalesRep"
 import { Plus, Trash2, ChevronLeft, ChevronRight, UserPlus, Mail } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 
 export default function SalesRepInvitedPage() {

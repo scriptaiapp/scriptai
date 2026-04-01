@@ -1,9 +1,9 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@repo/ui/input";
+import { Label } from "@repo/ui/label";
+import { Button } from "@repo/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card";
 import { useSettings } from "@/hooks/useSettings"; // Imported the hook
 import { Loader2, Save, Shield } from "lucide-react";
 import {
@@ -12,8 +12,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { ImageDropzone } from "@/components/ui/image-dropzone";
+} from "@repo/ui/select";
+import { ImageDropzone } from "@repo/ui/image-dropzone";
 import { useEffect, useState } from "react";
 import { useSupabase } from "../../supabase-provider";
 import { supportedLanguages } from "@repo/config"; //

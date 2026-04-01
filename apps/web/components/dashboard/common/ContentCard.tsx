@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@repo/ui/card";
+import { Button } from "@repo/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@repo/ui/dropdown-menu";
 import {
     FileText,
     BookOpen,
@@ -32,7 +32,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@repo/ui/alert-dialog";
 import { toast } from "sonner";
 
 const itemVariants = {

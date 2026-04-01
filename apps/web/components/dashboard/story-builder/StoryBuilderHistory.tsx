@@ -1,11 +1,11 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { Badge } from "@repo/ui/badge"
+import { Button } from "@repo/ui/button"
 import { Clock, BookOpen, AlertCircle, Eye, Trash2 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@repo/ui/skeleton"
 import { CONTENT_TYPE_LABELS, VIDEO_DURATION_LABELS, STORY_MODE_LABELS } from "@repo/validation"
 import type { StoryBuilderJob } from "@/hooks/useStoryBuilder"
 

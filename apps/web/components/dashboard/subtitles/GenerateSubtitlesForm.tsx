@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from "@repo/ui/button";
+import { Label } from "@repo/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/select";
 import { Loader2, Sparkles, Clock, Zap, Globe, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 

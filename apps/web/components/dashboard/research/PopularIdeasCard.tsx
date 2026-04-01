@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card";
 import { TrendingUp, Lightbulb, Zap, BarChart3 } from "lucide-react";
 
 /**

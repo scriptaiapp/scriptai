@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useSalesRepSales } from "@/hooks/useSalesRep"
 import { ChevronLeft, ChevronRight, DollarSign } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 
 export default function SalesRepSalesPage() {
   const [page, setPage] = useState(1)

@@ -6,11 +6,11 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+} from "@repo/ui/select"
+import { Label } from "@repo/ui/label"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
+import { Switch } from "@repo/ui/switch"
 
 interface FormStep2Props {
     tone: string

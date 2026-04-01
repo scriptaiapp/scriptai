@@ -3,20 +3,20 @@
 import { useState } from "react"
 import { useAdminMails, adminApi } from "@/hooks/useAdmin"
 import { ChevronLeft, ChevronRight, Mail, Eye, Archive, Reply, MailOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 import type { MailMessage } from "@repo/validation"
 

@@ -3,14 +3,14 @@
 import { useState } from "react"
 import { useAdminActivities } from "@/hooks/useAdmin"
 import { ChevronLeft, ChevronRight, Activity as ActivityIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 
 const actionIcons: Record<string, string> = {
   create: "text-green-400",

@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
+import { Progress } from "@repo/ui/progress";
 import { Loader2, CheckCircle2, Brain, TrendingUp, Lightbulb, Shield, Save } from "lucide-react";
 
 const steps = [

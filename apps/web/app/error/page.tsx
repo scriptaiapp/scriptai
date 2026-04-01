@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
-import { MButton } from "@/components/ui/moving-border"
-import { SparklesCore } from "@/components/ui/sparkles"
+import { MButton } from "@repo/ui/moving-border"
+import { SparklesCore } from "@repo/ui/sparkles"
 import { AlertTriangle, Home as HomeIcon } from "lucide-react"
 import {MotionDiv} from "@/components/MotionComponents/MotionDiv";
 import {MotionH1} from "@/components/MotionComponents/MotionH1";

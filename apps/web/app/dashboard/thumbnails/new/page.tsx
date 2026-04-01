@@ -9,8 +9,8 @@ import { ThumbnailForm } from "@/components/dashboard/thumbnails/ThumbnailForm"
 import { ThumbnailOutputPanel } from "@/components/dashboard/thumbnails/ThumbnailOutputPanel"
 import { VideoFrameModal } from "@/components/dashboard/thumbnails/VideoFrameModal"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@repo/ui/skeleton"
+import { Badge } from "@repo/ui/badge"
 import { FileText, Clapperboard } from "lucide-react"
 
 function NewThumbnailPageInner() {

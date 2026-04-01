@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import { Plus, Trash2, Search, MoreVertical } from 'lucide-react';
 import { SubtitleLine } from '@repo/validation';
 import { SubtitleEmptyState } from './SubtitleEmptyState';
@@ -10,7 +10,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@repo/ui/dropdown-menu";
 import { SubtitleList } from "@/components/dashboard/subtitles/SubtitleList";
 
 type SubtitleEditorPanelProps = {

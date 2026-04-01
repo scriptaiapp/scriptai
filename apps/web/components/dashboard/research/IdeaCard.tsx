@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
+import { Button } from "@repo/ui/button";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@repo/ui/collapsible";
 import {
   ChevronDown, TrendingUp, TrendingDown, Minus,
   ExternalLink, FileText, Clapperboard, ImageIcon, Target,

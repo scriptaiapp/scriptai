@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
 import { toast } from "sonner"
 import { useSupabase } from "@/components/supabase-provider"
 import { Plus, Search } from "lucide-react"

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@repo/ui/badge"
 import { CheckCircle2, XCircle, Youtube, Bot, Coins } from "lucide-react"
 
 interface TrainAIHeaderProps {

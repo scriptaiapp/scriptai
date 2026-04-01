@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import {
     Download,
     Loader2,

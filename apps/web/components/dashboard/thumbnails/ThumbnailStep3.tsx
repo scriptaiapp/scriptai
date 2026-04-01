@@ -2,8 +2,8 @@
 
 import { useRef, useCallback } from "react"
 import { useDropzone } from "react-dropzone"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { Label } from "@repo/ui/label"
+import { Button } from "@repo/ui/button"
 import { UploadCloud, X, Image as ImageIcon, User } from "lucide-react"
 
 interface ThumbnailStep3Props {

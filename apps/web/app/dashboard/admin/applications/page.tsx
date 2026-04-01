@@ -11,22 +11,22 @@ import {
   Trash2,
   Download,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+} from "@repo/ui/dialog"
+import { Textarea } from "@repo/ui/textarea"
+import { Label } from "@repo/ui/label"
 import { toast } from "sonner"
 import type { JobApplication } from "@repo/validation"
 

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
+import { Badge } from "@repo/ui/badge";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";

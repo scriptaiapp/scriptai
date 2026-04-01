@@ -1,12 +1,12 @@
 "use client";
 import React from "react";
 import { issueTypes } from "../../../../packages/ui/src/utils/data";
-import { Button } from "../ui/button";
-import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Textarea } from "../ui/textarea";
+import { Button } from "@repo/ui/button";
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@repo/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/select";
+import { Textarea } from "@repo/ui/textarea";
 import { toast } from "sonner";
-import { Input } from "../ui/input";
+import { Input } from "@repo/ui/input";
 import { IconBugFilled } from "@tabler/icons-react";
 import { api } from "@/lib/api-client";
 

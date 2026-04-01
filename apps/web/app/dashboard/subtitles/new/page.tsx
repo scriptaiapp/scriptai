@@ -4,12 +4,12 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { SubtitleUploader } from "@/components/dashboard/subtitles/subtitleUploader";
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Sparkles, Gem, ArrowUpRight, ArrowLeft, FileText } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@repo/ui/button";
+import { Badge } from "@repo/ui/badge";
+import { Skeleton } from "@repo/ui/skeleton";
 
 function NewSubtitlePageInner() {
     const searchParams = useSearchParams();

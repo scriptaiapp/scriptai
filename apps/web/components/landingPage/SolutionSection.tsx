@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { CardSpotlight } from "@/components/ui/card-spotlight";
+import { CardSpotlight } from "@repo/ui/card-spotlight";
 import { Video, Zap, CheckCircle, Target } from "lucide-react";
 
 export default function SolutionCard() {

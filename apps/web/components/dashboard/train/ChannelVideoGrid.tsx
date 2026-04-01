@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { motion } from "motion/react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { Loader2, RefreshCw, Upload, CheckCircle2, Eye, Search } from "lucide-react"
 import { useChannelVideos, type ChannelVideo } from "@/hooks/useChannelVideos"
 

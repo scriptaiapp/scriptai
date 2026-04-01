@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import { ArrowLeft } from 'lucide-react';
 
 import error404 from '@/public/error-404.png';

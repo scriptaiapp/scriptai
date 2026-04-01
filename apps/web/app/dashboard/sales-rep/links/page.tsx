@@ -3,15 +3,15 @@
 import { useState } from "react"
 import { useSalesRepLinks, salesRepApi } from "@/hooks/useSalesRep"
 import { Plus, Trash2, Edit, Copy, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 
 export default function SalesRepLinksPage() {

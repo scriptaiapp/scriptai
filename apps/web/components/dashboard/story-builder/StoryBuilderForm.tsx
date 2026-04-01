@@ -1,20 +1,20 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
+import { Label } from "@repo/ui/label"
+import { Textarea } from "@repo/ui/textarea"
+import { Switch } from "@repo/ui/switch"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+} from "@repo/ui/select"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@repo/ui/card"
+import { Badge } from "@repo/ui/badge"
 import {
   Loader2, Sparkles, BookOpen, Users, Clock, Film, Palette, Wand2,
   ArrowRight, Lightbulb, Clapperboard, GraduationCap,

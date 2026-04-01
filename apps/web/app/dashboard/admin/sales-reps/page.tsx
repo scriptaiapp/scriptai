@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useAdminSalesReps, adminApi } from "@/hooks/useAdmin"
 import { Plus, Trash2, ChevronLeft, ChevronRight, Copy, Check, Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 
 function generatePassword(length = 14): string {

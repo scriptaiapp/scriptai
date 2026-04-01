@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@repo/ui/skeleton";
+import { Card } from "@repo/ui/card";
 
 export function SubtitleEditorSkeleton() {
     return (

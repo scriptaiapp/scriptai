@@ -8,10 +8,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+} from "@repo/ui/card";
+import { Progress } from "@repo/ui/progress";
+import { Skeleton } from "@repo/ui/skeleton";
+import { Badge } from "@repo/ui/badge";
 import { useBilling } from "@/hooks/useBilling";
 import { api } from "@/lib/api-client";
 import {

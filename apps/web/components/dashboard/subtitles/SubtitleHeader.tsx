@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import { Save, Download, Loader2, Undo2, Redo2, ArrowLeft } from 'lucide-react';
 
 type SubtitleHeaderProps = {

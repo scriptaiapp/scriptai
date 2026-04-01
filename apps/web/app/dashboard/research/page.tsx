@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
+import { Badge } from "@repo/ui/badge";
 import { toast } from "sonner";
 import { Search, Plus, Trash2, Download, MoreHorizontal, ExternalLink, Loader2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@repo/ui/card";
 import { EmptySvg } from "@/components/dashboard/common/EmptySvg";
 import ContentCardSkeleton from "@/components/dashboard/common/skeleton/ContentCardSkeleton";
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired";
@@ -18,11 +18,11 @@ import { api, ApiClientError } from "@/lib/api-client";
 import type { IdeationJob } from "@repo/validation";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@repo/ui/dropdown-menu";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@repo/ui/alert-dialog";
 
 const STATUS_COLORS: Record<string, string> = {
   completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",

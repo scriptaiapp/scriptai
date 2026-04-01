@@ -4,14 +4,14 @@ import {
     CardHeader,
     CardTitle,
     CardDescription
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@repo/ui/card"
+import { Skeleton } from "@repo/ui/skeleton"
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger
-} from "@/components/ui/tabs"
+} from "@repo/ui/tabs"
 
 export function ReferralPageSkeleton() {
     return (

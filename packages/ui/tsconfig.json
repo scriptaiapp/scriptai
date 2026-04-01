@@ -1,7 +1,23 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "jsx": "react-jsx",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": false,
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@repo/ui/*": ["./src/*"]
+    }
   },
   "include": ["src", "index.ts"],
   "exclude": ["node_modules", "dist"]

@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@repo/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/avatar";
 import { LogOut, Settings, UserPlus, Coins, BarChart3, Gift } from "lucide-react";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@repo/ui/separator";
 
 export default function DashboardHeader() {
   const pathname = usePathname();

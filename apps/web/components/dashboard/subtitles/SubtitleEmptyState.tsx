@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import { Upload, Sparkles, FileText } from 'lucide-react';
 import { GenerateSubtitlesForm } from './GenerateSubtitlesForm';
 
