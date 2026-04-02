@@ -10,23 +10,23 @@ import {
   Trash2,
   Briefcase,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
+import { Label } from "@repo/ui/label"
+import { Textarea } from "@repo/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 import type { JobPost } from "@repo/validation"
 

@@ -4,8 +4,8 @@ import { useState } from "react"
 import { motion } from "motion/react"
 import {
   Card, CardContent, CardHeader, CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@repo/ui/card"
+import { Button } from "@repo/ui/button"
 import {
   Copy, Check, Download, RefreshCw, Save, CreditCard, Plus,
   Loader2, Sparkles, PenTool, Upload, CheckCircle2,

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { api } from "@/lib/api-client"
 import { ChevronLeft, ChevronRight, Link2, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import type { AffiliateLink, PaginatedResponse } from "@repo/validation"
 
 export default function AdminAffiliatesPage() {

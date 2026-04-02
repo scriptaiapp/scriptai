@@ -1,8 +1,8 @@
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card"
+import { Label } from "@repo/ui/label"
+import { Switch } from "@repo/ui/switch"
 import { useSettings } from "@/hooks/useSettings"
 import { Bell, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"

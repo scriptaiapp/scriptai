@@ -8,7 +8,7 @@ import Lenis from "lenis"
 import "lenis/dist/lenis.css"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
-import { SparklesCore } from "@/components/ui/sparkles"
+import { SparklesCore } from "@repo/ui/sparkles"
 import {
   ArrowLeft,
   Calendar,

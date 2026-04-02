@@ -3,8 +3,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from "@repo/ui/button";
+import { Card } from "@repo/ui/card";
 import Link from 'next/link';
 
 import { SubtitleHeader } from '@/components/dashboard/subtitles/SubtitleHeader';

@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion"
 import { BookText, CheckCircle, Clock, Hash, Languages, Link as LinkIcon, Smile, Sparkles, XCircle } from "lucide-react"
 import { InfoItem } from "./InfoItem";
 

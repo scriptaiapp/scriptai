@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { Badge } from "@repo/ui/badge"
 import { toast } from "sonner"
 import {
     ArrowLeft, Trash2, RefreshCw, Plus, Loader2,
@@ -14,7 +14,7 @@ import {
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter,
-} from "@/components/ui/alert-dialog"
+} from "@repo/ui/alert-dialog"
 import { StoryBuilderResults } from "@/components/dashboard/story-builder/StoryBuilderResults"
 import { ScriptLoaderSkeleton } from "@/components/dashboard/scripts/skeleton/scriptLoaderSkeleton"
 import { api } from "@/lib/api-client"

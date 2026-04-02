@@ -3,12 +3,12 @@
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card";
+import { Button } from "@repo/ui/button";
+import { Badge } from "@repo/ui/badge";
+import { Progress } from "@repo/ui/progress";
+import { Separator } from "@repo/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@repo/ui/tooltip";
 import {
   ArrowRight, Check, Unlink, FileText, Search, Image,
   MessageSquare, Clapperboard, Lightbulb, Sparkles,

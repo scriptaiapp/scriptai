@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from "react"
 import { api } from "@/lib/api-client"
 import { adminApi } from "@/hooks/useAdmin"
 import { ChevronLeft, ChevronRight, DollarSign } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import { toast } from "sonner"
 import type { AffiliateSale, PaginatedResponse } from "@repo/validation"
 

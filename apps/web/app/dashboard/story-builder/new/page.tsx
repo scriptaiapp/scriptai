@@ -9,8 +9,8 @@ import { StoryBuilderForm } from "@/components/dashboard/story-builder/StoryBuil
 import { StoryBuilderProgress } from "@/components/dashboard/story-builder/StoryBuilderProgress"
 import { StoryBuilderResults } from "@/components/dashboard/story-builder/StoryBuilderResults"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@repo/ui/skeleton"
+import { Badge } from "@repo/ui/badge"
 import { Sparkles } from "lucide-react"
 
 export default function NewStoryBuilderPage() {

@@ -1,7 +1,7 @@
 "use client";
 import { Link, ArrowRight } from "lucide-react";
-import { BackgroundBeams } from "../ui/background-beams";
-import { MButton } from "../ui/moving-border";
+import { BackgroundBeams } from "@repo/ui/background-beams";
+import { MButton } from "@repo/ui/moving-border";
 
 export default function CTASection() {
     return (

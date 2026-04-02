@@ -4,21 +4,21 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAdminBlogs, adminApi } from "@/hooks/useAdmin"
 import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
+} from "@repo/ui/dialog"
 import { toast } from "sonner"
 import type { BlogPost } from "@repo/validation"
 

@@ -1,9 +1,9 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { Progress } from "@repo/ui/progress"
+import { Button } from "@repo/ui/button"
 import { Bot, CheckCircle2, Loader2, Sparkles, Square, Upload, type LucideIcon } from "lucide-react"
 
 export interface GenerationProgressStep {

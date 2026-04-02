@@ -3,23 +3,34 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    ".": {
-      "import": "./index.ts"
-    }
+    ".": "./index.ts",
+    "./lib/utils": "./src/lib/utils.ts",
+    "./kibo-ui/video-player": "./src/kibo-ui/video-player/index.tsx",
+    "./*": "./src/*.tsx"
   },
   "scripts": {
     "lint": "echo 'No source JavaScript files to lint'",
     "generate:component": "turbo gen react-component"
   },
+  "peerDependencies": {
+    "@radix-ui/react-slot": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": ">=0.400.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "tailwind-merge": "^2.6.0"
+  },
   "dependencies": {
+    "media-chrome": "^4.13.1",
     "sonner": "^1.7.1"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^1.12.4",
-    "@types/node": "^20.11.24",
     "@types/eslint": "^8.56.5",
+    "@types/node": "^20.11.24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.0.0",

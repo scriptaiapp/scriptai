@@ -1,9 +1,9 @@
 "use client"
 import { motion } from "motion/react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/card"
+import { Input } from "@repo/ui/input"
+import { Progress } from "@repo/ui/progress"
 import { X, Loader2, RefreshCw, Upload, Plus } from "lucide-react"
 import React from "react"
 

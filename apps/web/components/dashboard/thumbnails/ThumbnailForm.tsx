@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 
 import ScriptGenerationStepper from "@/components/dashboard/scripts/ScriptGenerationStepper"

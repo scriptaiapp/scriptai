@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
+import { Skeleton } from "@repo/ui/skeleton"
+import { Card, CardContent, CardHeader, CardFooter } from "@repo/ui/card"
 
 export function TrainAIPageSkeleton() {
     return (

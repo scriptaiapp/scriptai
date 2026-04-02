@@ -2,16 +2,16 @@
 
 import { useState } from "react"
 import { motion } from "motion/react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { Button } from "@repo/ui/button"
+import { Badge } from "@repo/ui/badge"
+import { Progress } from "@repo/ui/progress"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@repo/ui/accordion"
 import {
   RefreshCw, Zap, Target, Repeat, Shuffle, Heart, Megaphone,
   Timer, FileText, Copy, Check, TrendingUp, BarChart3,

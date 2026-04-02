@@ -8,8 +8,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@repo/ui/card"
+import { Button } from "@repo/ui/button"
 import { Download, RefreshCw } from "lucide-react"
 import { ThumbnailProgress } from "./ThumbnailProgress"
 import { GenerationPlaceholder } from "@/components/dashboard/common/GenerationPlaceholder"

@@ -8,10 +8,10 @@ import { motion } from "motion/react";
 import logo from "@/public/dark-logo.png";
 import { IconBrandDiscordFilled as Discord, IconBrandLinkedin as Linkedin, IconBrandX as Twitter, IconBrandGithub as Github, IconBrandFacebook as Facebook } from '@tabler/icons-react';
 import { footerItems } from '@repo/ui';
-import { FloatingDock } from "@/components/ui/floating-dock";
+import { FloatingDock } from "@repo/ui/floating-dock";
 import ReportIssue from './issue/report-an-issue';
 
-const World = dynamic(() => import("@/components/ui/globe").then((m) => m.World), {
+const World = dynamic(() => import("@repo/ui/globe").then((m) => m.World), {
   ssr: false,
 });
 

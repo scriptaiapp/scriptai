@@ -1,9 +1,9 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@repo/ui/skeleton"
 import {
   Card,
   CardContent,
   CardHeader,
-} from "@/components/ui/card"
+} from "@repo/ui/card"
 
 export function ScriptLoaderSkeleton() {
   return (

@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Button } from "../ui/button"
-import { WobbleCard } from "../ui/wobble-card"
+import { Button } from "@repo/ui/button"
+import { WobbleCard } from "@repo/ui/wobble-card"
 import { motion } from "motion/react"
 import { useSupabase } from "../supabase-provider"
 

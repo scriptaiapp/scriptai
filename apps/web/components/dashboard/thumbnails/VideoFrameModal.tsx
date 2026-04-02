@@ -8,9 +8,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
+} from "@repo/ui/dialog"
+import { Button } from "@repo/ui/button"
+import { Slider } from "@repo/ui/slider"
 import { Camera, Play, Pause } from "lucide-react"
 
 interface VideoFrameModalProps {

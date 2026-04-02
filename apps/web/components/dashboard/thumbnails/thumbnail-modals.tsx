@@ -3,14 +3,14 @@
 import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useDropzone } from "react-dropzone"
-import { Button } from "@/components/ui/button"
+import { Button } from "@repo/ui/button"
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle,
     DialogDescription, DialogFooter,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
+} from "@repo/ui/dialog"
+import { Label } from "@repo/ui/label"
+import { Textarea } from "@repo/ui/textarea"
+import { Input } from "@repo/ui/input"
 import { Loader2, Download, UploadCloud, X, Image as ImageIcon, User } from "lucide-react"
 import { toast } from "sonner"
 import { api, getApiErrorMessage } from "@/lib/api-client"

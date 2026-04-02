@@ -3,11 +3,11 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { OTPInput } from "@/components/ui/otp-input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card";
+import { Button } from "@repo/ui/button";
+import { Input } from "@repo/ui/input";
+import { Label } from "@repo/ui/label";
+import { OTPInput } from "@repo/ui/otp-input";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { api } from "@/lib/api-client";

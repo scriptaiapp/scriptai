@@ -4,15 +4,15 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { adminApi } from "@/hooks/useAdmin"
 import { ArrowLeft, Save } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@repo/ui/select"
 import { toast } from "sonner"
 
 export default function NewBlogPage() {

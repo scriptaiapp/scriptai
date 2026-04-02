@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react"
 import { useDropzone } from "react-dropzone"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Label } from "@repo/ui/label"
+import { Input } from "@repo/ui/input"
+import { Button } from "@repo/ui/button"
 import { UploadCloud, X, File as FileIcon, Plus, Link } from "lucide-react"
 
 interface FormStep3Props {

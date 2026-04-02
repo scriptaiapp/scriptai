@@ -1,7 +1,7 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@repo/ui/label"
+import { Textarea } from "@repo/ui/textarea"
 
 
 /**

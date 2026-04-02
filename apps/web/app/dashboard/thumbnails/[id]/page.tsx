@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/card"
+import { Badge } from "@repo/ui/badge"
 import { toast } from "sonner"
 import { downloadFile } from "@/lib/download"
 import {
     ArrowLeft, Download, ImageIcon, Clock, Ratio, Sparkles,
     AlertCircle, Trash2, Coins, Link as LinkIcon, Pencil, RefreshCw,
 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@repo/ui/skeleton"
 import { getThumbnail, type ThumbnailJob } from "@/lib/api/getThumbnails"
 import {
     ViewImageModal,

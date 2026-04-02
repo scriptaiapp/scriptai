@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card"
+import { Label } from "@repo/ui/label"
 import { toast } from "sonner"
 import { ArrowLeft, Download, Loader2, Trash2, CheckCircle2, Languages, Video, Music } from "lucide-react"
 import {
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   AlertDialogFooter,
-} from "@/components/ui/alert-dialog"
+} from "@repo/ui/alert-dialog"
 import { useSupabase } from "@/components/supabase-provider"
 import { getDubbing, deleteDubbing } from "@/lib/api/getDubbings"
 import { DubResponse, supportedLanguages } from "@repo/validation"

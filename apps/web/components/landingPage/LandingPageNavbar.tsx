@@ -15,11 +15,11 @@ import {
   MobileNavHeader,
   MobileNavToggle,
   MobileNavMenu,
-} from "@/components/ui/resizable-navbar"
+} from "@repo/ui/resizable-navbar"
 import { ShimmerButton } from "@/components/magicui/shimmer-button"
 import { Gift, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Button } from "../ui/button"
+import { Button } from "@repo/ui/button"
 
 const FEATURE_IMAGES: Record<string, string> = {
   "AI Studio": "/ai studio page.png",

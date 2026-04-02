@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@repo/ui/button"
+import { Card, CardContent } from "@repo/ui/card"
 import { Clock, Video, Wand2, Music, Type, Layers, Sparkles } from "lucide-react"
 
 const FEATURES = [

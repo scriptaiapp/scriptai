@@ -1,8 +1,8 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Label } from "@repo/ui/label"
+import { Input } from "@repo/ui/input"
+import { Button } from "@repo/ui/button"
 import type { ThumbnailRatio } from "@/hooks/useThumbnailGeneration"
 
 const ratioOptions: { value: ThumbnailRatio; label: string; desc: string }[] = [

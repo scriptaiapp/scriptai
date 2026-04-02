@@ -2,10 +2,10 @@
 
 import { useState, useRef, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+import { Label } from "@repo/ui/label"
+import { Input } from "@repo/ui/input"
+import { Textarea } from "@repo/ui/textarea"
+import { Button } from "@repo/ui/button"
 import { Copy, Check, Pencil } from "lucide-react"
 import { cn } from "@/lib/utils"
 

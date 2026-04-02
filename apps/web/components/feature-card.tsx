@@ -1,5 +1,5 @@
 import type React from "react";
-import { GlowingEffect } from "./ui/glowing-effect";
+import { GlowingEffect } from "@repo/ui/glowing-effect";
 
 interface FeatureCardProps {
   icon: React.ReactNode;

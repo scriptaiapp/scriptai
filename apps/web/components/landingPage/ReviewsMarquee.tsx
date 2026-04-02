@@ -3,7 +3,7 @@
 import { Star } from "lucide-react"
 import { motion } from "motion/react"
 
-import { Marquee } from "@/components/ui/marquee"
+import { Marquee } from "@repo/ui/marquee"
 import { LANDING_DUMMY_REVIEWS } from "@/lib/landing-dummy-reviews"
 import { cn } from "@/lib/utils"
 

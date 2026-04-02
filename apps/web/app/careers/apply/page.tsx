@@ -1,18 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useMemo, useRef } from "react"
+import { Suspense, useState, useEffect, useMemo, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 import { ArrowLeft, Loader2, MapPin, Briefcase, Upload, FileCheck } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { SparklesCore } from "@/components/ui/sparkles"
+import { Button } from "@repo/ui/button"
+import { Input } from "@repo/ui/input"
+import { Label } from "@repo/ui/label"
+import { Textarea } from "@repo/ui/textarea"
+import { SparklesCore } from "@repo/ui/sparkles"
 import LandingPageNavbar from "@/components/landingPage/LandingPageNavbar"
 import Footer from "@/components/footer"
 import { createClient } from "@/lib/supabase/client"
@@ -45,6 +45,14 @@ const initialFormData: FormData = {
 }
 
 export default function ApplyPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-purple-600" /></div>}>
+      <ApplyPageContent />
+    </Suspense>
+  )
+}
+
+function ApplyPageContent() {
   const searchParams = useSearchParams()
   const position = searchParams.get("position") || ""
   const jobPostId = searchParams.get("id") || ""

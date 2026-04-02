@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { SubtitleLine } from '@repo/validation';
 import { SubtitleItem } from './SubtitleItem';
-import { Button } from '@/components/ui/button';
+import { Button } from "@repo/ui/button";
 import { ArrowDownCircle } from 'lucide-react';
 
 const MemoizedSubtitleItem = React.memo(SubtitleItem);
