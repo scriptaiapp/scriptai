@@ -23,6 +23,7 @@ import { IdeationModule } from './ideation/ideation.module';
 import { BillingModule } from './billing/billing.module';
 import { AdminModule } from './admin/admin.module';
 import { SalesRepModule } from './sales-rep/sales-rep.module';
+import { AffiliateModule } from './affiliate/affiliate.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { SalesRepModule } from './sales-rep/sales-rep.module';
     BillingModule,
     AdminModule,
     SalesRepModule,
+    AffiliateModule,
   ],
   controllers: [AppController, HealthController],
   providers: [],

@@ -115,6 +115,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get("ref")
+      if (ref) localStorage.setItem("affiliate_ref", ref)
+    }
+  }, [])
+
+  useEffect(() => {
     let mounted = true
 
     if (!sessionPromise) {

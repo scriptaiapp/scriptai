@@ -5,6 +5,7 @@ import type {
   AffiliateLink,
   AffiliateSale,
   InvitedUser,
+  LsAffiliate,
   PaginatedResponse,
 } from '@repo/validation';
 
@@ -88,6 +89,26 @@ export function useSalesRepSales(page = 1) {
 
   useEffect(() => { fetchSales(); }, [fetchSales]);
   return { ...data, loading, refresh: fetchSales };
+}
+
+export function useSalesRepLsTracking() {
+  const [data, setData] = useState<LsAffiliate | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTracking = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get<LsAffiliate | null>('/api/v1/sales-rep/ls-tracking', AUTH);
+      setData(res);
+    } catch {
+      console.error('Failed to fetch LS tracking');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchTracking(); }, [fetchTracking]);
+  return { data, loading, refresh: fetchTracking };
 }
 
 export const salesRepApi = {

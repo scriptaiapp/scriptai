@@ -41,7 +41,7 @@ interface SubscriptionRecord {
 export interface LsWebhookEvent {
   meta: {
     event_name: string;
-    custom_data?: { user_id?: string; plan_id?: string };
+    custom_data?: { user_id?: string; plan_id?: string; affiliate_code?: string };
   };
   data: {
     id: string;
@@ -159,7 +159,7 @@ export class BillingService {
     };
   }
 
-  async createCheckoutSession(userId: string, planId: string) {
+  async createCheckoutSession(userId: string, planId: string, affiliateCode?: string) {
     this.initLemonSqueezy();
     const supabase = this.supabaseService.getClient();
 
@@ -199,7 +199,11 @@ export class BillingService {
       checkoutData: {
         email: profile.email,
         name: profile.full_name ?? undefined,
-        custom: { user_id: userId, plan_id: planId },
+        custom: {
+          user_id: userId,
+          plan_id: planId,
+          ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
+        },
       },
     };
 
@@ -357,6 +361,12 @@ export class BillingService {
         .update({ credits: plan.credits_monthly })
         .eq('user_id', userId);
     }
+
+    await this.trackAffiliateConversion(
+      event,
+      userId,
+      plan?.credits_monthly ?? 0,
+    );
 
     this.logger.log(`Subscription created for user ${userId}`);
   }
@@ -522,6 +532,74 @@ export class BillingService {
 
     if (digestBuf.length !== signatureBuf.length) return false;
     return crypto.timingSafeEqual(digestBuf, signatureBuf);
+  }
+
+  // --- Affiliate conversion tracking ---
+
+  private async trackAffiliateConversion(
+    event: LsWebhookEvent,
+    userId: string,
+    planPrice: number,
+  ) {
+    const affiliateCode = event.meta.custom_data?.affiliate_code;
+    const supabase = this.supabaseService.getClient();
+
+    try {
+      let affiliateLink: { id: string; sales_rep_id: string; commission_rate: number } | null = null;
+
+      if (affiliateCode) {
+        const { data } = await supabase
+          .from('affiliate_links')
+          .select('id, sales_rep_id, commission_rate')
+          .eq('code', affiliateCode)
+          .eq('is_active', true)
+          .single();
+        affiliateLink = data;
+      }
+
+      if (!affiliateLink) {
+        const { data: invite } = await supabase
+          .from('invited_users')
+          .select('invited_by, affiliate_link_id, affiliate_links(id, sales_rep_id, commission_rate)')
+          .eq('registered_user_id', userId)
+          .not('affiliate_link_id', 'is', null)
+          .maybeSingle();
+
+        if (invite?.affiliate_links && !Array.isArray(invite.affiliate_links)) {
+          affiliateLink = invite.affiliate_links as unknown as typeof affiliateLink;
+        }
+      }
+
+      if (!affiliateLink) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('user_id', userId)
+        .single();
+
+      const amount = planPrice;
+      const commission = (amount * affiliateLink.commission_rate) / 100;
+
+      await supabase.from('affiliate_sales').insert({
+        affiliate_link_id: affiliateLink.id,
+        sales_rep_id: affiliateLink.sales_rep_id,
+        customer_id: userId,
+        customer_email: profile?.email ?? null,
+        amount,
+        commission,
+        status: 'pending',
+      });
+
+      await supabase
+        .from('invited_users')
+        .update({ status: 'subscribed' })
+        .eq('registered_user_id', userId);
+
+      this.logger.log(`Affiliate sale tracked for code ${affiliateCode ?? 'invite'}, rep ${affiliateLink.sales_rep_id}`);
+    } catch (err) {
+      this.logger.error(`Affiliate tracking failed: ${err}`);
+    }
   }
 
   // --- Helpers ---

@@ -68,9 +68,12 @@ export function useBilling() {
   const subscribe = useCallback(async (planId: string) => {
     setCheckoutLoading(planId);
     try {
+      const affiliateCode = typeof window !== "undefined"
+        ? localStorage.getItem("affiliate_ref") ?? undefined
+        : undefined;
       const { url } = await api.post<{ url: string }>(
         "/api/v1/billing/checkout",
-        { planId },
+        { planId, affiliateCode },
         { requireAuth: true },
       );
       if (url) window.location.href = url;

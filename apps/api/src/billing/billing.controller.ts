@@ -50,11 +50,11 @@ export class BillingController {
   @UseGuards(SupabaseAuthGuard)
   createCheckoutSession(
     @Req() req: AuthRequest,
-    @Body() body: { planId: string },
+    @Body() body: { planId: string; affiliateCode?: string },
   ) {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedException();
-    return this.billingService.createCheckoutSession(userId, body.planId);
+    return this.billingService.createCheckoutSession(userId, body.planId, body.affiliateCode);
   }
 
   @Post('portal')

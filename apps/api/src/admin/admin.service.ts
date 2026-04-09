@@ -26,6 +26,7 @@ export class AdminService {
       revenueRes,
       mailsRes,
       applicationsRes,
+      affiliateRequestsRes,
     ] = await Promise.all([
       this.db.from('profiles').select('id', { count: 'exact', head: true }),
       this.db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales_rep'),
@@ -36,6 +37,7 @@ export class AdminService {
       this.db.from('affiliate_sales').select('amount').in('status', ['confirmed', 'paid']),
       this.db.from('mail_messages').select('id', { count: 'exact', head: true }).eq('status', 'unread'),
       this.db.from('job_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      this.db.from('affiliate_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     const totalRevenue = revenueRes.data?.reduce((sum, r) => sum + Number(r.amount || 0), 0) ?? 0;
@@ -50,6 +52,7 @@ export class AdminService {
       totalRevenue,
       unreadMails: mailsRes.count ?? 0,
       pendingApplications: applicationsRes.count ?? 0,
+      pendingAffiliateRequests: affiliateRequestsRes.count ?? 0,
     };
   }
 
@@ -458,6 +461,32 @@ export class AdminService {
     const { data, error } = await this.db
       .from('affiliate_sales')
       .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  private static readonly ALLOWED_LINK_FIELDS = new Set([
+    'label', 'target_url', 'commission_rate', 'is_active', 'ls_affiliate_id',
+  ]);
+
+  async updateAffiliateLink(id: string, updates: Record<string, unknown>) {
+    const filtered: Record<string, unknown> = {};
+    for (const key of Object.keys(updates)) {
+      if (AdminService.ALLOWED_LINK_FIELDS.has(key)) {
+        filtered[key] = updates[key];
+      }
+    }
+    if (Object.keys(filtered).length === 0) {
+      throw new BadRequestException('No valid fields to update');
+    }
+
+    const { data, error } = await this.db
+      .from('affiliate_links')
+      .update(filtered)
       .eq('id', id)
       .select()
       .single();

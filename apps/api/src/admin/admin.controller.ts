@@ -288,6 +288,16 @@ export class AdminController {
     return this.adminService.getAllAffiliateSales(Number(page) || 1, Number(limit) || 20);
   }
 
+  @Put('affiliates/links/:id')
+  updateAffiliateLink(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthRequest,
+  ) {
+    this.adminService.logActivity(this.getUserId(req), 'update_affiliate_link', 'affiliate_link', id, body);
+    return this.adminService.updateAffiliateLink(id, body);
+  }
+
   @Put('affiliates/sales/:id')
   updateAffiliateSaleStatus(
     @Param('id') id: string,

@@ -1,0 +1,227 @@
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { SupabaseService } from '../supabase/supabase.service';
+import { lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
+
+interface LsAffiliateAttributes {
+  store_id: number;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  share_domain: string;
+  status: string;
+  products: unknown;
+  application_note: string;
+  total_earnings: number;
+  unpaid_earnings: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface LsAffiliateData {
+  type: string;
+  id: string;
+  attributes: LsAffiliateAttributes;
+}
+
+@Injectable()
+export class AffiliateService {
+  private readonly logger = new Logger(AffiliateService.name);
+  private lsInitialized = false;
+
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private get db() {
+    const client = this.supabaseService.getAdminClient();
+    if (!client) throw new BadRequestException('Admin client not configured');
+    return client;
+  }
+
+  private initLemonSqueezy() {
+    if (this.lsInitialized) return;
+    const apiKey = this.configService.get<string>('LEMONSQUEEZY_API_KEY');
+    if (!apiKey) throw new BadRequestException('Lemon Squeezy not configured');
+    lemonSqueezySetup({ apiKey });
+    this.lsInitialized = true;
+  }
+
+  // ==================== USER: Apply to become affiliate ====================
+
+  async submitRequest(userId: string, data: {
+    full_name: string;
+    email: string;
+    website?: string;
+    social_media?: string;
+    audience_size?: string;
+    promotion_method?: string;
+    reason: string;
+  }) {
+    const { data: existing } = await this.db
+      .from('affiliate_requests')
+      .select('id, status')
+      .eq('user_id', userId)
+      .in('status', ['pending', 'approved'])
+      .maybeSingle();
+
+    if (existing) {
+      throw new BadRequestException(
+        existing.status === 'pending'
+          ? 'You already have a pending request'
+          : 'You are already an approved affiliate',
+      );
+    }
+
+    const { data: request, error } = await this.db
+      .from('affiliate_requests')
+      .insert({ user_id: userId, ...data })
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return request;
+  }
+
+  async getRequestStatus(userId: string) {
+    const { data, error } = await this.db
+      .from('affiliate_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  // ==================== ADMIN: Manage affiliate requests ====================
+
+  async getRequests(page = 1, limit = 20, status?: string) {
+    let query = this.db
+      .from('affiliate_requests')
+      .select('*, profiles!affiliate_requests_user_fkey(full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (status) query = query.eq('status', status);
+
+    const { data, error, count } = await query;
+    if (error) throw new BadRequestException(error.message);
+    return { data, total: count ?? 0, page, limit };
+  }
+
+  async reviewRequest(requestId: string, reviewedBy: string, action: 'approved' | 'denied' | 'pending', adminNotes?: string) {
+    const { data: request, error: fetchErr } = await this.db
+      .from('affiliate_requests')
+      .select('*')
+      .eq('id', requestId)
+      .single();
+
+    if (fetchErr || !request) throw new NotFoundException('Request not found');
+    if (request.status === action) throw new BadRequestException(`Request is already ${action}`);
+
+    const updates: Record<string, unknown> = {
+      status: action,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+    };
+    if (adminNotes !== undefined) updates.admin_notes = adminNotes;
+
+    const { data, error } = await this.db
+      .from('affiliate_requests')
+      .update(updates)
+      .eq('id', requestId)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  // ==================== ADMIN: Create affiliate link for a rep ====================
+
+  async createAffiliateLinkForRep(adminId: string, body: {
+    sales_rep_id: string;
+    code: string;
+    label?: string;
+    target_url?: string;
+    commission_rate?: number;
+    ls_affiliate_id?: string;
+  }) {
+    const { data: rep } = await this.db
+      .from('profiles')
+      .select('user_id, role')
+      .eq('user_id', body.sales_rep_id)
+      .single();
+
+    if (!rep) throw new NotFoundException('Sales rep not found');
+
+    const { data, error } = await this.db
+      .from('affiliate_links')
+      .insert({
+        sales_rep_id: body.sales_rep_id,
+        code: body.code,
+        label: body.label,
+        target_url: body.target_url || '/',
+        commission_rate: body.commission_rate ?? 10,
+        ls_affiliate_id: body.ls_affiliate_id || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  // ==================== ADMIN: Fetch LS affiliates ====================
+
+  async getLsAffiliates() {
+    this.initLemonSqueezy();
+    const apiKey = this.configService.get<string>('LEMONSQUEEZY_API_KEY');
+    const storeId = this.configService.get<string>('LEMONSQUEEZY_STORE_ID');
+
+    const url = storeId
+      ? `https://api.lemonsqueezy.com/v1/affiliates?filter[store_id]=${storeId}`
+      : 'https://api.lemonsqueezy.com/v1/affiliates';
+
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      this.logger.error(`LS affiliates fetch failed: ${response.status}`);
+      throw new BadRequestException('Failed to fetch Lemon Squeezy affiliates');
+    }
+
+    const json = await response.json() as { data: LsAffiliateData[] };
+
+    return (json.data || []).map((item) => ({
+      id: item.id,
+      user_name: item.attributes.user_name,
+      user_email: item.attributes.user_email,
+      share_domain: item.attributes.share_domain,
+      status: item.attributes.status,
+      total_earnings: item.attributes.total_earnings,
+      unpaid_earnings: item.attributes.unpaid_earnings,
+      created_at: item.attributes.created_at,
+      updated_at: item.attributes.updated_at,
+    }));
+  }
+
+  async getLsAffiliateSignupUrl(): Promise<string> {
+    const storeId = this.configService.get<string>('LEMONSQUEEZY_STORE_ID');
+    return `https://app.lemonsqueezy.com/affiliates/store/${storeId || ''}`;
+  }
+}

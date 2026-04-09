@@ -113,4 +113,11 @@ export class SalesRepController {
       Number(limit) || 20,
     );
   }
+
+  // ==================== LS AFFILIATE TRACKING ====================
+
+  @Get('ls-tracking')
+  getLsTracking(@Req() req: AuthRequest) {
+    return this.salesRepService.getLsAffiliateData(this.getUserId(req));
+  }
 }

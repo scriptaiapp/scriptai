@@ -1,7 +1,7 @@
 "use client"
 
-import { useSalesRepStats } from "@/hooks/useSalesRep"
-import { Link2, Users, DollarSign, TrendingUp, Clock } from "lucide-react"
+import { useSalesRepStats, useSalesRepLsTracking } from "@/hooks/useSalesRep"
+import { Link2, Users, DollarSign, TrendingUp, Clock, Zap, Wallet } from "lucide-react"
 
 function StatCard({ label, value, icon: Icon, color }: {
   label: string
@@ -26,6 +26,7 @@ function StatCard({ label, value, icon: Icon, color }: {
 
 export default function SalesRepDashboardPage() {
   const { stats, loading } = useSalesRepStats()
+  const { data: lsData, loading: lsLoading } = useSalesRepLsTracking()
 
   if (loading) {
     return (
@@ -63,7 +64,45 @@ export default function SalesRepDashboardPage() {
           icon={Clock}
           color="bg-yellow-600"
         />
+        <StatCard
+          label="Paid Out"
+          value={`$${(stats?.paidCommission ?? 0).toFixed(2)}`}
+          icon={Wallet}
+          color="bg-cyan-600"
+        />
       </div>
+
+      {!lsLoading && lsData && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+            <Zap className="h-5 w-5 text-yellow-400" />
+            Lemon Squeezy Affiliate Tracking
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+              <p className="text-sm text-slate-400">LS Status</p>
+              <p className={`text-lg font-bold mt-1 ${
+                lsData.status === "active" ? "text-green-400" :
+                lsData.status === "pending" ? "text-yellow-400" : "text-red-400"
+              }`}>
+                {lsData.status.charAt(0).toUpperCase() + lsData.status.slice(1)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+              <p className="text-sm text-slate-400">Total LS Earnings</p>
+              <p className="text-lg font-bold text-emerald-400 mt-1">
+                ${(lsData.total_earnings / 100).toFixed(2)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+              <p className="text-sm text-slate-400">Unpaid Earnings</p>
+              <p className="text-lg font-bold text-yellow-400 mt-1">
+                ${(lsData.unpaid_earnings / 100).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
