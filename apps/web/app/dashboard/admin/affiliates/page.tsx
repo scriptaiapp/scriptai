@@ -256,7 +256,7 @@ function LinksTab() {
           <form onSubmit={handleCreate} className="space-y-4 py-4">
             <div>
               <label className="text-sm text-slate-400 mb-1 block">Sales Rep *</label>
-              <Select value={form.sales_rep_id} onValueChange={(v) => setForm({ ...form, sales_rep_id: v })}>
+              <Select value={form.sales_rep_id} onValueChange={(v: string) => setForm({ ...form, sales_rep_id: v })}>
                 <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
                   <SelectValue placeholder="Select a sales rep" />
                 </SelectTrigger>
@@ -400,7 +400,7 @@ function RequestsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Select value={statusFilter || "all"} onValueChange={(v) => { setStatusFilter(v === "all" ? undefined : v); setPage(1) }}>
+        <Select value={statusFilter || "all"} onValueChange={(v: string) => { setStatusFilter(v === "all" ? undefined : v); setPage(1) }}>
           <SelectTrigger className="w-36 bg-slate-800 border-slate-700 text-slate-300 text-xs h-8">
             <SelectValue placeholder="Filter status" />
           </SelectTrigger>
@@ -639,7 +639,7 @@ function SalesTab() {
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{new Date(sale.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
-                      <Select value={sale.status} onValueChange={(v) => handleStatusChange(sale.id, v)}>
+                      <Select value={sale.status} onValueChange={(v: string) => handleStatusChange(sale.id, v)}>
                         <SelectTrigger className="w-28 h-7 bg-slate-800 border-slate-700 text-slate-300 text-xs">
                           <SelectValue />
                         </SelectTrigger>

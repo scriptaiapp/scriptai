@@ -438,23 +438,47 @@ export class AdminService {
   async getAllAffiliateLinks(page = 1, limit = 20) {
     const { data, error, count } = await this.db
       .from('affiliate_links')
-      .select('*, profiles!affiliate_links_rep_fkey(full_name, email)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw new BadRequestException(error.message);
-    return { data, total: count ?? 0, page, limit };
+
+    const repIds = [...new Set((data ?? []).map((l) => l.sales_rep_id))];
+    const { data: profiles } = repIds.length
+      ? await this.db.from('profiles').select('user_id, full_name, email').in('user_id', repIds)
+      : { data: [] };
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+    const enriched = (data ?? []).map((l) => ({
+      ...l,
+      profiles: profileMap.get(l.sales_rep_id) ?? null,
+    }));
+
+    return { data: enriched, total: count ?? 0, page, limit };
   }
 
   async getAllAffiliateSales(page = 1, limit = 20) {
     const { data, error, count } = await this.db
       .from('affiliate_sales')
-      .select('*, affiliate_links(code, label), profiles!affiliate_sales_rep_fkey(full_name, email)', { count: 'exact' })
+      .select('*, affiliate_links(code, label)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw new BadRequestException(error.message);
-    return { data, total: count ?? 0, page, limit };
+
+    const repIds = [...new Set((data ?? []).map((s) => s.sales_rep_id))];
+    const { data: profiles } = repIds.length
+      ? await this.db.from('profiles').select('user_id, full_name, email').in('user_id', repIds)
+      : { data: [] };
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+    const enriched = (data ?? []).map((s) => ({
+      ...s,
+      profiles: profileMap.get(s.sales_rep_id) ?? null,
+    }));
+
+    return { data: enriched, total: count ?? 0, page, limit };
   }
 
   async updateAffiliateSaleStatus(id: string, status: string) {

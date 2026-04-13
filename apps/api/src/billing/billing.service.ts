@@ -362,11 +362,10 @@ export class BillingService {
         .eq('user_id', userId);
     }
 
-    await this.trackAffiliateConversion(
-      event,
-      userId,
-      plan?.credits_monthly ?? 0,
-    );
+    const affiliateCode = event.meta.custom_data?.affiliate_code;
+    if (affiliateCode) {
+      await this.trackAffiliateConversion(affiliateCode, userId, planId, supabase);
+    }
 
     this.logger.log(`Subscription created for user ${userId}`);
   }
@@ -455,6 +454,8 @@ export class BillingService {
         .update({ credits: plan.credits_monthly })
         .eq('user_id', sub.user_id);
     }
+
+    await this.trackRenewalCommission(sub.user_id, sub.plan_id, supabase);
   }
 
   // --- Usage history ---
@@ -534,74 +535,6 @@ export class BillingService {
     return crypto.timingSafeEqual(digestBuf, signatureBuf);
   }
 
-  // --- Affiliate conversion tracking ---
-
-  private async trackAffiliateConversion(
-    event: LsWebhookEvent,
-    userId: string,
-    planPrice: number,
-  ) {
-    const affiliateCode = event.meta.custom_data?.affiliate_code;
-    const supabase = this.supabaseService.getClient();
-
-    try {
-      let affiliateLink: { id: string; sales_rep_id: string; commission_rate: number } | null = null;
-
-      if (affiliateCode) {
-        const { data } = await supabase
-          .from('affiliate_links')
-          .select('id, sales_rep_id, commission_rate')
-          .eq('code', affiliateCode)
-          .eq('is_active', true)
-          .single();
-        affiliateLink = data;
-      }
-
-      if (!affiliateLink) {
-        const { data: invite } = await supabase
-          .from('invited_users')
-          .select('invited_by, affiliate_link_id, affiliate_links(id, sales_rep_id, commission_rate)')
-          .eq('registered_user_id', userId)
-          .not('affiliate_link_id', 'is', null)
-          .maybeSingle();
-
-        if (invite?.affiliate_links && !Array.isArray(invite.affiliate_links)) {
-          affiliateLink = invite.affiliate_links as unknown as typeof affiliateLink;
-        }
-      }
-
-      if (!affiliateLink) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('user_id', userId)
-        .single();
-
-      const amount = planPrice;
-      const commission = (amount * affiliateLink.commission_rate) / 100;
-
-      await supabase.from('affiliate_sales').insert({
-        affiliate_link_id: affiliateLink.id,
-        sales_rep_id: affiliateLink.sales_rep_id,
-        customer_id: userId,
-        customer_email: profile?.email ?? null,
-        amount,
-        commission,
-        status: 'pending',
-      });
-
-      await supabase
-        .from('invited_users')
-        .update({ status: 'subscribed' })
-        .eq('registered_user_id', userId);
-
-      this.logger.log(`Affiliate sale tracked for code ${affiliateCode ?? 'invite'}, rep ${affiliateLink.sales_rep_id}`);
-    } catch (err) {
-      this.logger.error(`Affiliate tracking failed: ${err}`);
-    }
-  }
-
   // --- Helpers ---
 
   private async getStarterPlan(): Promise<PlanRecord | null> {
@@ -612,6 +545,94 @@ export class BillingService {
       .eq('name', 'Starter')
       .single();
     return data;
+  }
+
+  private async trackAffiliateConversion(
+    code: string,
+    customerId: string,
+    planId: string,
+    supabase: ReturnType<typeof this.supabaseService.getClient>,
+  ) {
+    const { data: link } = await supabase
+      .from('affiliate_links')
+      .select('id, commission_rate, sales_rep_id')
+      .eq('code', code)
+      .eq('is_active', true)
+      .single();
+
+    if (!link) return;
+
+    const { data: existing } = await supabase
+      .from('affiliate_sales')
+      .select('id')
+      .eq('affiliate_link_id', link.id)
+      .eq('customer_id', customerId)
+      .maybeSingle();
+    if (existing) return;
+
+    const { data: plan } = await supabase
+      .from('plans')
+      .select('price_monthly')
+      .eq('id', planId)
+      .single();
+
+    const amount = plan?.price_monthly ?? 0;
+    const commission = Number(((amount * link.commission_rate) / 100).toFixed(2));
+
+    await supabase.from('affiliate_sales').insert({
+      affiliate_link_id: link.id,
+      sales_rep_id: link.sales_rep_id,
+      customer_id: customerId,
+      amount,
+      commission,
+      status: 'pending',
+    });
+
+    this.logger.log(`Affiliate conversion tracked for code ${code}`);
+  }
+
+  private async trackRenewalCommission(
+    userId: string,
+    planId: string,
+    supabase: ReturnType<typeof this.supabaseService.getClient>,
+  ) {
+    const { data: original } = await supabase
+      .from('affiliate_sales')
+      .select('affiliate_link_id, sales_rep_id')
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!original) return;
+
+    const { data: link } = await supabase
+      .from('affiliate_links')
+      .select('commission_rate, is_active')
+      .eq('id', original.affiliate_link_id)
+      .single();
+
+    if (!link?.is_active) return;
+
+    const { data: plan } = await supabase
+      .from('plans')
+      .select('price_monthly')
+      .eq('id', planId)
+      .single();
+
+    const amount = plan?.price_monthly ?? 0;
+    const commission = Number(((amount * link.commission_rate) / 100).toFixed(2));
+
+    await supabase.from('affiliate_sales').insert({
+      affiliate_link_id: original.affiliate_link_id,
+      sales_rep_id: original.sales_rep_id,
+      customer_id: userId,
+      amount,
+      commission,
+      status: 'pending',
+    });
+
+    this.logger.log(`Renewal commission tracked for user ${userId}`);
   }
 
   private mapLsStatus(status: string): string {

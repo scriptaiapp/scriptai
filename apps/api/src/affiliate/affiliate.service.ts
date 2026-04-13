@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
+import { Resend } from 'resend';
 
 interface LsAffiliateAttributes {
   store_id: number;
@@ -32,12 +33,18 @@ interface LsAffiliateData {
 @Injectable()
 export class AffiliateService {
   private readonly logger = new Logger(AffiliateService.name);
+  private readonly resend: Resend | null = null;
+  private readonly adminEmail: string;
   private lsInitialized = false;
 
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    if (apiKey) this.resend = new Resend(apiKey);
+    this.adminEmail = this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL') || 'afrinxnahar@gmail.com';
+  }
 
   private get db() {
     const client = this.supabaseService.getAdminClient();
@@ -86,7 +93,51 @@ export class AffiliateService {
       .single();
 
     if (error) throw new BadRequestException(error.message);
+
+    this.notifyAdminNewApplication(data).catch((err) =>
+      this.logger.error(`Failed to send affiliate notification: ${err}`),
+    );
+
     return request;
+  }
+
+  private async notifyAdminNewApplication(data: {
+    full_name: string;
+    email: string;
+    website?: string;
+    social_media?: string;
+    audience_size?: string;
+    promotion_method?: string;
+    reason: string;
+  }) {
+    if (!this.resend) return;
+
+    const esc = (s?: string) =>
+      (s ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    await this.resend.emails.send({
+      from: 'Creator AI <notifications@tryscriptai.com>',
+      to: this.adminEmail,
+      subject: `New Affiliate Application from ${data.full_name}`,
+      html: `<div style="font-family:Arial,sans-serif;color:#333;background:#f9f9f9;padding:20px">
+        <div style="background:#fff;padding:24px;border-radius:8px;max-width:560px;margin:auto">
+          <h2 style="color:#4F46E5;margin-top:0">New Affiliate Application</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <tr><td style="padding:8px 0;color:#888;width:140px">Name</td><td style="padding:8px 0">${esc(data.full_name)}</td></tr>
+            <tr><td style="padding:8px 0;color:#888">Email</td><td style="padding:8px 0">${esc(data.email)}</td></tr>
+            <tr><td style="padding:8px 0;color:#888">Website</td><td style="padding:8px 0">${esc(data.website)}</td></tr>
+            <tr><td style="padding:8px 0;color:#888">Social Media</td><td style="padding:8px 0">${esc(data.social_media)}</td></tr>
+            <tr><td style="padding:8px 0;color:#888">Audience Size</td><td style="padding:8px 0">${esc(data.audience_size)}</td></tr>
+            <tr><td style="padding:8px 0;color:#888">Promotion Method</td><td style="padding:8px 0">${esc(data.promotion_method)}</td></tr>
+          </table>
+          <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+          <p style="color:#888;font-size:13px;margin-bottom:4px"><strong>Reason</strong></p>
+          <p style="white-space:pre-line;margin-top:0">${esc(data.reason)}</p>
+          <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+          <p style="font-size:12px;color:#aaa">Received ${new Date().toUTCString()}</p>
+        </div>
+      </div>`,
+    });
   }
 
   async getRequestStatus(userId: string) {
@@ -107,7 +158,7 @@ export class AffiliateService {
   async getRequests(page = 1, limit = 20, status?: string) {
     let query = this.db
       .from('affiliate_requests')
-      .select('*, profiles!affiliate_requests_user_fkey(full_name, email)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
