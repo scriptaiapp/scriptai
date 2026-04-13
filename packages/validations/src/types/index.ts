@@ -22,6 +22,7 @@ export interface AdminDashboardStats {
   totalRevenue: number
   unreadMails: number
   pendingApplications: number
+  pendingAffiliateRequests: number
 }
 
 export interface SalesRepDashboardStats {
@@ -30,6 +31,7 @@ export interface SalesRepDashboardStats {
   totalInvited: number
   totalCommission: number
   pendingCommission: number
+  paidCommission: number
 }
 
 export interface BlogPost {
@@ -58,6 +60,38 @@ export interface AffiliateLink {
   commission_rate: number
   click_count: number
   is_active: boolean
+  ls_affiliate_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AffiliateRequest {
+  id: string
+  user_id: string
+  full_name: string
+  email: string
+  website?: string
+  social_media?: string
+  audience_size?: string
+  promotion_method?: string
+  reason: string
+  status: 'pending' | 'approved' | 'denied'
+  reviewed_by?: string
+  reviewed_at?: string
+  admin_notes?: string
+  created_at: string
+  updated_at: string
+  profiles?: { full_name: string; email: string }
+}
+
+export interface LsAffiliate {
+  id: string
+  user_name: string
+  user_email: string
+  share_domain: string
+  status: 'active' | 'pending' | 'disabled'
+  total_earnings: number
+  unpaid_earnings: number
   created_at: string
   updated_at: string
 }

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@repo/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/avatar";
-import { LogOut, Settings, UserPlus, Coins, BarChart3, Gift } from "lucide-react";
+import { LogOut, Settings, UserPlus, Coins, BarChart3, Gift, Handshake } from "lucide-react";
 import { useSupabase } from "@/components/supabase-provider";
 import { toast } from "sonner";
 import { Separator } from "@repo/ui/separator";
@@ -122,6 +122,12 @@ export default function DashboardHeader() {
                   <Button variant="ghost" className="w-full justify-start gap-2 px-2">
                     <UserPlus className="h-4 w-4" />
                     Referrals
+                  </Button>
+                </Link>
+                <Link href="/dashboard/settings?tab=affiliate">
+                  <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+                    <Handshake className="h-4 w-4" />
+                    Become an Affiliate
                   </Button>
                 </Link>
               </div>

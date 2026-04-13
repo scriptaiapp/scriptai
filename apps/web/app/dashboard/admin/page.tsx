@@ -11,6 +11,7 @@ import {
   TrendingUp,
   UserPlus,
   Briefcase,
+  Handshake,
 } from "lucide-react"
 
 function StatCard({ label, value, icon: Icon, color }: {
@@ -72,6 +73,7 @@ export default function AdminDashboardPage() {
         />
         <StatCard label="Unread Mails" value={stats?.unreadMails ?? 0} icon={Mail} color="bg-red-600" />
         <StatCard label="Pending Applications" value={stats?.pendingApplications ?? 0} icon={Briefcase} color="bg-pink-600" />
+        <StatCard label="Affiliate Requests" value={stats?.pendingAffiliateRequests ?? 0} icon={Handshake} color="bg-indigo-600" />
       </div>
     </div>
   )

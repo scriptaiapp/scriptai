@@ -7,6 +7,8 @@ import type {
   Activity,
   JobPost,
   JobApplication,
+  AffiliateRequest,
+  LsAffiliate,
   PaginatedResponse,
 } from '@repo/validation';
 
@@ -185,6 +187,48 @@ export function useAdminApplications(page = 1, status?: string) {
   return { ...data, loading, refresh: fetchApplications };
 }
 
+export function useAdminAffiliateRequests(page = 1, status?: string) {
+  const [data, setData] = useState<PaginatedResponse<AffiliateRequest> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (status) params.set('status', status);
+      const res = await api.get<PaginatedResponse<AffiliateRequest>>(`/api/v1/affiliate/requests?${params}`, AUTH);
+      setData(res);
+    } catch (err) {
+      console.error('Failed to fetch affiliate requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, status]);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+  return { ...data, loading, refresh: fetchRequests };
+}
+
+export function useAdminLsAffiliates() {
+  const [affiliates, setAffiliates] = useState<LsAffiliate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAffiliates = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await api.get<LsAffiliate[]>('/api/v1/affiliate/admin/ls-affiliates', AUTH);
+      setAffiliates(data);
+    } catch (err) {
+      console.error('Failed to fetch LS affiliates:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAffiliates(); }, [fetchAffiliates]);
+  return { affiliates, loading, refresh: fetchAffiliates };
+}
+
 export const adminApi = {
   updateUser: (userId: string, updates: Record<string, unknown>) =>
     api.put(`/api/v1/admin/users/${userId}`, updates, AUTH),
@@ -204,6 +248,8 @@ export const adminApi = {
     api.get<BlogPost>(`/api/v1/admin/blogs/${id}`, AUTH),
   updateMailStatus: (id: string, status: string) =>
     api.put(`/api/v1/admin/mails/${id}`, { status }, AUTH),
+  updateAffiliateLink: (id: string, updates: Record<string, unknown>) =>
+    api.put(`/api/v1/admin/affiliates/links/${id}`, updates, AUTH),
   updateSaleStatus: (id: string, status: string) =>
     api.put(`/api/v1/admin/affiliates/sales/${id}`, { status }, AUTH),
   getJob: (id: string) =>
@@ -220,4 +266,16 @@ export const adminApi = {
     api.put(`/api/v1/admin/applications/${id}`, { status, notes }, AUTH),
   deleteApplication: (id: string) =>
     api.delete(`/api/v1/admin/applications/${id}`, AUTH),
+  reviewAffiliateRequest: (id: string, status: 'approved' | 'denied' | 'pending', admin_notes?: string) =>
+    api.put(`/api/v1/affiliate/requests/${id}`, { status, admin_notes }, AUTH),
+  createAffiliateLinkForRep: (data: {
+    sales_rep_id: string;
+    code: string;
+    label?: string;
+    target_url?: string;
+    commission_rate?: number;
+    ls_affiliate_id?: string;
+  }) => api.post('/api/v1/affiliate/admin/create-link', data, AUTH),
+  getLsSignupUrl: () =>
+    api.get<string>('/api/v1/affiliate/admin/ls-signup-url', AUTH),
 };

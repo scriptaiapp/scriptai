@@ -26,6 +26,7 @@ export class AdminService {
       revenueRes,
       mailsRes,
       applicationsRes,
+      affiliateRequestsRes,
     ] = await Promise.all([
       this.db.from('profiles').select('id', { count: 'exact', head: true }),
       this.db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales_rep'),
@@ -36,6 +37,7 @@ export class AdminService {
       this.db.from('affiliate_sales').select('amount').in('status', ['confirmed', 'paid']),
       this.db.from('mail_messages').select('id', { count: 'exact', head: true }).eq('status', 'unread'),
       this.db.from('job_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      this.db.from('affiliate_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     const totalRevenue = revenueRes.data?.reduce((sum, r) => sum + Number(r.amount || 0), 0) ?? 0;
@@ -50,6 +52,7 @@ export class AdminService {
       totalRevenue,
       unreadMails: mailsRes.count ?? 0,
       pendingApplications: applicationsRes.count ?? 0,
+      pendingAffiliateRequests: affiliateRequestsRes.count ?? 0,
     };
   }
 
@@ -435,29 +438,79 @@ export class AdminService {
   async getAllAffiliateLinks(page = 1, limit = 20) {
     const { data, error, count } = await this.db
       .from('affiliate_links')
-      .select('*, profiles!affiliate_links_rep_fkey(full_name, email)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw new BadRequestException(error.message);
-    return { data, total: count ?? 0, page, limit };
+
+    const repIds = [...new Set((data ?? []).map((l) => l.sales_rep_id))];
+    const { data: profiles } = repIds.length
+      ? await this.db.from('profiles').select('user_id, full_name, email').in('user_id', repIds)
+      : { data: [] };
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+    const enriched = (data ?? []).map((l) => ({
+      ...l,
+      profiles: profileMap.get(l.sales_rep_id) ?? null,
+    }));
+
+    return { data: enriched, total: count ?? 0, page, limit };
   }
 
   async getAllAffiliateSales(page = 1, limit = 20) {
     const { data, error, count } = await this.db
       .from('affiliate_sales')
-      .select('*, affiliate_links(code, label), profiles!affiliate_sales_rep_fkey(full_name, email)', { count: 'exact' })
+      .select('*, affiliate_links(code, label)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw new BadRequestException(error.message);
-    return { data, total: count ?? 0, page, limit };
+
+    const repIds = [...new Set((data ?? []).map((s) => s.sales_rep_id))];
+    const { data: profiles } = repIds.length
+      ? await this.db.from('profiles').select('user_id, full_name, email').in('user_id', repIds)
+      : { data: [] };
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+    const enriched = (data ?? []).map((s) => ({
+      ...s,
+      profiles: profileMap.get(s.sales_rep_id) ?? null,
+    }));
+
+    return { data: enriched, total: count ?? 0, page, limit };
   }
 
   async updateAffiliateSaleStatus(id: string, status: string) {
     const { data, error } = await this.db
       .from('affiliate_sales')
       .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  private static readonly ALLOWED_LINK_FIELDS = new Set([
+    'label', 'target_url', 'commission_rate', 'is_active', 'ls_affiliate_id',
+  ]);
+
+  async updateAffiliateLink(id: string, updates: Record<string, unknown>) {
+    const filtered: Record<string, unknown> = {};
+    for (const key of Object.keys(updates)) {
+      if (AdminService.ALLOWED_LINK_FIELDS.has(key)) {
+        filtered[key] = updates[key];
+      }
+    }
+    if (Object.keys(filtered).length === 0) {
+      throw new BadRequestException('No valid fields to update');
+    }
+
+    const { data, error } = await this.db
+      .from('affiliate_links')
+      .update(filtered)
       .eq('id', id)
       .select()
       .single();

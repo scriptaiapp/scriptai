@@ -68,9 +68,21 @@ export function useBilling() {
   const subscribe = useCallback(async (planId: string) => {
     setCheckoutLoading(planId);
     try {
+      let affiliateCode: string | undefined;
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("affiliate_ref");
+          if (raw) {
+            const { code, ts } = JSON.parse(raw) as { code: string; ts: number };
+            const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+            if (Date.now() - ts < THIRTY_DAYS) affiliateCode = code;
+            else localStorage.removeItem("affiliate_ref");
+          }
+        } catch { /* ignore malformed data */ }
+      }
       const { url } = await api.post<{ url: string }>(
         "/api/v1/billing/checkout",
-        { planId },
+        { planId, affiliateCode },
         { requireAuth: true },
       );
       if (url) window.location.href = url;

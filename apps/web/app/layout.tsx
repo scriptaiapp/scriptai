@@ -9,6 +9,7 @@ import { SupabaseProvider } from "@/components/supabase-provider"
 import { Analytics } from "@vercel/analytics/next"
 import { siteConfig, createMetadata } from "@/lib/seo"
 import JsonLd from "@/components/JsonLd"
+import Script from "next/script"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -78,6 +79,14 @@ export default function RootLayout({
             <Toaster closeButton={true} richColors />
           </SupabaseProvider>
         </ThemeProvider>
+        {process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_SLUG && (
+          <>
+            <Script id="ls-affiliate-config" strategy="afterInteractive">
+              {`window.lemonSqueezyAffiliateConfig = { store: "${process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_SLUG}" }`}
+            </Script>
+            <Script src="https://lmsqueezy.com/affiliate.js" strategy="afterInteractive" />
+          </>
+        )}
         <SpeedInsights />
         <Analytics />
       </body>

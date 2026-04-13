@@ -41,7 +41,7 @@ interface SubscriptionRecord {
 export interface LsWebhookEvent {
   meta: {
     event_name: string;
-    custom_data?: { user_id?: string; plan_id?: string };
+    custom_data?: { user_id?: string; plan_id?: string; affiliate_code?: string };
   };
   data: {
     id: string;
@@ -159,7 +159,7 @@ export class BillingService {
     };
   }
 
-  async createCheckoutSession(userId: string, planId: string) {
+  async createCheckoutSession(userId: string, planId: string, affiliateCode?: string) {
     this.initLemonSqueezy();
     const supabase = this.supabaseService.getClient();
 
@@ -199,7 +199,11 @@ export class BillingService {
       checkoutData: {
         email: profile.email,
         name: profile.full_name ?? undefined,
-        custom: { user_id: userId, plan_id: planId },
+        custom: {
+          user_id: userId,
+          plan_id: planId,
+          ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
+        },
       },
     };
 
@@ -358,6 +362,11 @@ export class BillingService {
         .eq('user_id', userId);
     }
 
+    const affiliateCode = event.meta.custom_data?.affiliate_code;
+    if (affiliateCode) {
+      await this.trackAffiliateConversion(affiliateCode, userId, planId, supabase);
+    }
+
     this.logger.log(`Subscription created for user ${userId}`);
   }
 
@@ -445,6 +454,8 @@ export class BillingService {
         .update({ credits: plan.credits_monthly })
         .eq('user_id', sub.user_id);
     }
+
+    await this.trackRenewalCommission(sub.user_id, sub.plan_id, supabase);
   }
 
   // --- Usage history ---
@@ -534,6 +545,94 @@ export class BillingService {
       .eq('name', 'Starter')
       .single();
     return data;
+  }
+
+  private async trackAffiliateConversion(
+    code: string,
+    customerId: string,
+    planId: string,
+    supabase: ReturnType<typeof this.supabaseService.getClient>,
+  ) {
+    const { data: link } = await supabase
+      .from('affiliate_links')
+      .select('id, commission_rate, sales_rep_id')
+      .eq('code', code)
+      .eq('is_active', true)
+      .single();
+
+    if (!link) return;
+
+    const { data: existing } = await supabase
+      .from('affiliate_sales')
+      .select('id')
+      .eq('affiliate_link_id', link.id)
+      .eq('customer_id', customerId)
+      .maybeSingle();
+    if (existing) return;
+
+    const { data: plan } = await supabase
+      .from('plans')
+      .select('price_monthly')
+      .eq('id', planId)
+      .single();
+
+    const amount = plan?.price_monthly ?? 0;
+    const commission = Number(((amount * link.commission_rate) / 100).toFixed(2));
+
+    await supabase.from('affiliate_sales').insert({
+      affiliate_link_id: link.id,
+      sales_rep_id: link.sales_rep_id,
+      customer_id: customerId,
+      amount,
+      commission,
+      status: 'pending',
+    });
+
+    this.logger.log(`Affiliate conversion tracked for code ${code}`);
+  }
+
+  private async trackRenewalCommission(
+    userId: string,
+    planId: string,
+    supabase: ReturnType<typeof this.supabaseService.getClient>,
+  ) {
+    const { data: original } = await supabase
+      .from('affiliate_sales')
+      .select('affiliate_link_id, sales_rep_id')
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!original) return;
+
+    const { data: link } = await supabase
+      .from('affiliate_links')
+      .select('commission_rate, is_active')
+      .eq('id', original.affiliate_link_id)
+      .single();
+
+    if (!link?.is_active) return;
+
+    const { data: plan } = await supabase
+      .from('plans')
+      .select('price_monthly')
+      .eq('id', planId)
+      .single();
+
+    const amount = plan?.price_monthly ?? 0;
+    const commission = Number(((amount * link.commission_rate) / 100).toFixed(2));
+
+    await supabase.from('affiliate_sales').insert({
+      affiliate_link_id: original.affiliate_link_id,
+      sales_rep_id: original.sales_rep_id,
+      customer_id: userId,
+      amount,
+      commission,
+      status: 'pending',
+    });
+
+    this.logger.log(`Renewal commission tracked for user ${userId}`);
   }
 
   private mapLsStatus(status: string): string {
