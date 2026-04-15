@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@repo/ui/button";
@@ -11,11 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Switch } from "@repo/ui/switch";
 import { Skeleton } from "@repo/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion";
-import { Sparkles, Loader2, ArrowLeft, TrendingUp, Brain, Lightbulb, Shield, Search, Youtube } from "lucide-react";
+import { Sparkles, Loader2, ArrowLeft, TrendingUp, Brain, Lightbulb, Shield, Search, Youtube, Lock } from "lucide-react";
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired";
 import IdeationProgress from "@/components/dashboard/research/IdeationProgress";
+import PremiumGateModal from "@/components/dashboard/research/PremiumGateModal";
 import { useIdeation } from "@/hooks/useIdeation";
+import { useCurrentPlan } from "@/hooks/useCurrentPlan";
 import Link from "next/link";
+
+const STARTER_MAX_IDEAS = 2;
 
 const NICHE_EXAMPLES = [
   "AI tools for small business owners",
@@ -32,6 +36,8 @@ const HOW_IT_WORKS_STEPS = [
 
 export default function NewIdeationPage() {
   const router = useRouter();
+  const { isStarter } = useCurrentPlan();
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const {
     context, setContext,
     nicheFocus, setNicheFocus,
@@ -46,6 +52,12 @@ export default function NewIdeationPage() {
     aiTrained, credits, isLoadingProfile,
     handleGenerate,
   } = useIdeation();
+
+  useEffect(() => {
+    if (isStarter && ideaCount > STARTER_MAX_IDEAS) {
+      setIdeaCount(STARTER_MAX_IDEAS);
+    }
+  }, [isStarter, ideaCount, setIdeaCount]);
 
   useEffect(() => {
     if (generatedResult && activeJobDbId) {
@@ -195,20 +207,36 @@ export default function NewIdeationPage() {
                   <div>
                     <Label>Number of Ideas</Label>
                     <div className="flex gap-2 mt-1.5">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <button
-                          key={n}
-                          onClick={() => setIdeaCount(n)}
-                          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            ideaCount === n
-                              ? "bg-purple-600 text-white"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          }`}
-                        >
-                          {n}
-                        </button>
-                      ))}
+                      {[1, 2, 3, 4, 5].map((n) => {
+                        const locked = isStarter && n > STARTER_MAX_IDEAS;
+                        return (
+                          <button
+                            key={n}
+                            onClick={() => locked ? setPremiumModalOpen(true) : setIdeaCount(n)}
+                            className={`relative flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                              ideaCount === n && !locked
+                                ? "bg-purple-600 text-white shadow-sm"
+                                : locked
+                                  ? "bg-slate-50 dark:bg-slate-800/60 text-slate-300 dark:text-slate-600 cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            }`}
+                          >
+                            <span className={locked ? "opacity-50" : ""}>{n}</span>
+                            {locked && (
+                              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 shadow-sm">
+                                <Lock className="h-2 w-2 text-white" />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {isStarter && (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1.5">
+                        <Sparkles className="h-3 w-3 text-purple-500" />
+                        Upgrade to Creator+ for up to 5 ideas per run
+                      </p>
+                    )}
                   </div>
 
                   <div className="pt-4 border-t dark:border-slate-800 flex items-center justify-between">
@@ -259,6 +287,12 @@ export default function NewIdeationPage() {
       </div>
 
       {content}
+
+      <PremiumGateModal
+        open={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        featureLabel="Generating more than 2 ideas"
+      />
     </motion.div>
   );
 }

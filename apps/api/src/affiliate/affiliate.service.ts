@@ -117,7 +117,11 @@ export class AffiliateService {
 
     if (error) throw new BadRequestException(error.message);
 
-    this.notifyAdminNewApplication(data).catch((err) =>
+    this.notifyAdminNewApplication({
+      ...data,
+      full_name: fullName,
+      email,
+    }).catch((err) =>
       this.logger.error(`Failed to send affiliate notification: ${err}`),
     );
 

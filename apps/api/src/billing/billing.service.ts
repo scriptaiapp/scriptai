@@ -100,37 +100,7 @@ export class BillingService {
 
     const starterPlan = await this.getStarterPlan();
 
-    // Monthly credit reset for free plan (no LS subscription)
-    if (subscription && !subscription.ls_subscription_id && subscription.current_period_end) {
-      const periodEnd = new Date(subscription.current_period_end);
-      if (periodEnd <= new Date()) {
-        const now = new Date();
-        const newPeriodEnd = new Date(now);
-        newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1);
-
-        await supabase
-          .from('subscriptions')
-          .update({
-            current_period_start: now.toISOString(),
-            current_period_end: newPeriodEnd.toISOString(),
-          })
-          .eq('id', subscription.id);
-
-        const resetCredits =
-          subscription.plans?.credits_monthly ?? starterPlan?.credits_monthly ?? 500;
-        await supabase
-          .from('profiles')
-          .update({ credits: resetCredits })
-          .eq('user_id', userId);
-
-        if (profile) profile.credits = resetCredits;
-      }
-    } else if (!subscription && starterPlan) {
-      // First-time free user: create a free-plan subscription record for tracking
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
-
+    if (!subscription && starterPlan) {
       await supabase.from('subscriptions').insert({
         user_id: userId,
         plan_id: starterPlan.id,
@@ -138,8 +108,8 @@ export class BillingService {
         ls_customer_id: null,
         ls_order_id: null,
         status: 'active',
-        current_period_start: now.toISOString(),
-        current_period_end: periodEnd.toISOString(),
+        current_period_start: new Date().toISOString(),
+        current_period_end: null,
       });
     }
 
@@ -293,10 +263,6 @@ export class BillingService {
     const starter = await this.getStarterPlan();
     if (!starter) return;
 
-    const now = new Date();
-    const periodEnd = new Date(now);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
-
     await supabase.from('subscriptions').insert({
       user_id: userId,
       plan_id: starter.id,
@@ -304,14 +270,9 @@ export class BillingService {
       ls_customer_id: null,
       ls_order_id: null,
       status: 'active',
-      current_period_start: now.toISOString(),
-      current_period_end: periodEnd.toISOString(),
+      current_period_start: new Date().toISOString(),
+      current_period_end: null,
     });
-
-    await supabase
-      .from('profiles')
-      .update({ credits: starter.credits_monthly })
-      .eq('user_id', userId);
   }
 
   // --- Webhook handlers ---
