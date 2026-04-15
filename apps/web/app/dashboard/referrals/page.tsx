@@ -354,7 +354,7 @@ export default function Referrals() {
                     </div>
                     <div className="text-right">
                       <Badge variant="default" className="mb-2 bg-green-600 hover:bg-green-700">
-                        +{referral.credits_awarded || 5} Credits
+                        +{referral.credits_awarded || 250} Credits
                       </Badge>
                       <p className="text-xs text-green-600 dark:text-green-400 font-medium">
                         Successfully Completed

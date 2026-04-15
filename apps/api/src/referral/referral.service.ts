@@ -164,16 +164,11 @@ export class ReferralService {
       }
     }
 
-    const referralData: Record<string, unknown> = {
+    const referralData = {
       referrer_id: referrer.id,
       referral_code: referralCode,
-      status: referredUserId ? 'completed' : 'pending',
+      status: 'pending' as const,
       referred_email: userEmail.toLowerCase(),
-      ...(referredUserId && {
-        referred_user_id: referredUserId,
-        completed_at: new Date().toISOString(),
-        credits_awarded: CREDITS_PER_REFERRAL,
-      }),
     };
 
     const { data: createdReferral, error: createError } = await supabase
@@ -188,6 +183,23 @@ export class ReferralService {
       }
       this.logger.error('Failed to create referral:', createError);
       throw new InternalServerErrorException('Failed to create referral');
+    }
+
+    if (referredUserId) {
+      const { error: completionError } = await supabase
+        .from('referrals')
+        .update({
+          status: 'completed',
+          referred_user_id: referredUserId,
+          credits_awarded: CREDITS_PER_REFERRAL,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', createdReferral.id);
+
+      if (completionError) {
+        this.logger.error('Failed to complete referral:', completionError);
+        throw new InternalServerErrorException('Failed to complete referral');
+      }
     }
 
     return {
