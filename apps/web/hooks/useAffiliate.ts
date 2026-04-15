@@ -26,8 +26,6 @@ export function useAffiliateStatus() {
 
 export const affiliateApi = {
   apply: (data: {
-    full_name: string;
-    email: string;
     website?: string;
     social_media?: string;
     audience_size?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAffiliateStatus, affiliateApi } from "@/hooks/useAffiliate";
 import { useSupabase } from "@/components/supabase-provider";
 import { Button } from "@repo/ui/button";
@@ -23,6 +23,14 @@ export function AffiliateStatus() {
     reason: "",
   });
 
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      full_name: profile?.full_name || prev.full_name || "",
+      email: user?.email || prev.email || "",
+    }));
+  }, [profile?.full_name, user?.email]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.full_name || !form.email || !form.reason) {
@@ -31,7 +39,13 @@ export function AffiliateStatus() {
     }
     try {
       setSubmitting(true);
-      await affiliateApi.apply(form);
+      await affiliateApi.apply({
+        website: form.website || undefined,
+        social_media: form.social_media || undefined,
+        audience_size: form.audience_size || undefined,
+        promotion_method: form.promotion_method || undefined,
+        reason: form.reason,
+      });
       toast.success("Application submitted successfully!");
       refresh();
     } catch {
@@ -178,8 +192,8 @@ export function AffiliateStatus() {
               <Input
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder={user?.email || "Your email"}
+                disabled
                 required
               />
             </div>
