@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -63,8 +64,8 @@ export class AffiliateService {
   // ==================== USER: Apply to become affiliate ====================
 
   async submitRequest(userId: string, data: {
-    full_name: string;
-    email: string;
+    full_name?: string;
+    email?: string;
     website?: string;
     social_media?: string;
     audience_size?: string;
@@ -86,9 +87,31 @@ export class AffiliateService {
       );
     }
 
+    const { data: profile, error: profileError } = await this.db
+      .from('profiles')
+      .select('full_name, name, email')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError || !profile?.email) {
+      throw new BadRequestException('Unable to load your profile information');
+    }
+
+    const fullName = profile.full_name || profile.name || profile.email;
+    const email = profile.email;
+
     const { data: request, error } = await this.db
       .from('affiliate_requests')
-      .insert({ user_id: userId, ...data })
+      .insert({
+        user_id: userId,
+        full_name: fullName,
+        email,
+        website: data.website,
+        social_media: data.social_media,
+        audience_size: data.audience_size,
+        promotion_method: data.promotion_method,
+        reason: data.reason,
+      })
       .select()
       .single();
 
@@ -194,7 +217,53 @@ export class AffiliateService {
       .single();
 
     if (error) throw new BadRequestException(error.message);
+
+    if (action === 'approved') {
+      await this.sendAffiliateApprovalEmail({
+        recipientEmail: request.email,
+        recipientName: request.full_name,
+        adminNotes,
+      });
+    }
+
     return data;
+  }
+
+  private async sendAffiliateApprovalEmail(input: {
+    recipientEmail: string;
+    recipientName: string;
+    adminNotes?: string;
+  }) {
+    if (!this.resend) {
+      this.logger.warn('RESEND_API_KEY not configured, cannot send affiliate approval email');
+      throw new InternalServerErrorException('Approval email service is not configured');
+    }
+
+    const affiliateLink = this.getLsAffiliateSignupUrl();
+    const esc = (value: string) =>
+      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const safeName = esc(input.recipientName || 'there');
+    const safeNotes = input.adminNotes ? esc(input.adminNotes) : '';
+
+    try {
+      await this.resend.emails.send({
+        from: 'Creator AI <notifications@tryscriptai.com>',
+        to: input.recipientEmail,
+        subject: 'Your affiliate application was approved',
+        html: `<div style="font-family:Arial,sans-serif;color:#333;line-height:1.6;max-width:600px;margin:auto;padding:20px">
+          <h2 style="color:#4F46E5;margin-top:0">You are approved as a Creator AI affiliate</h2>
+          <p>Hi ${safeName},</p>
+          <p>Your affiliate application has been approved. Use the link below to continue:</p>
+          <p><a href="${affiliateLink}" style="color:#4F46E5;font-weight:600">Open your affiliate link</a></p>
+          ${safeNotes ? `<p><strong>Note from admin:</strong><br/>${safeNotes}</p>` : ''}
+          <p style="margin-top:20px">Thanks,<br/>Creator AI Team</p>
+        </div>`,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send affiliate approval email: ${error}`);
+      throw new InternalServerErrorException('Failed to send approval email');
+    }
   }
 
   // ==================== ADMIN: Create affiliate link for a rep ====================
@@ -271,7 +340,7 @@ export class AffiliateService {
     }));
   }
 
-  async getLsAffiliateSignupUrl(): Promise<string> {
+  getLsAffiliateSignupUrl(): string {
     const storeId = this.configService.get<string>('LEMONSQUEEZY_STORE_ID');
     return `https://app.lemonsqueezy.com/affiliates/store/${storeId || ''}`;
   }
