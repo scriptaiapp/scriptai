@@ -17,7 +17,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from "@repo/ui/badge"
 import {
   Loader2, Sparkles, BookOpen, Users, Clock, Film, Palette, Wand2,
-  ArrowRight, Lightbulb, Clapperboard, GraduationCap,
+  ArrowRight, Lightbulb, Clapperboard, GraduationCap, Lock,
 } from "lucide-react"
 import {
   VIDEO_DURATIONS,
@@ -34,6 +34,8 @@ import {
   type AudienceLevel,
 } from "@repo/validation"
 import type { IdeationJob } from "@repo/validation"
+
+const STARTER_STORY_MODES: StoryMode[] = ["conversational", "minimal"]
 
 interface StoryBuilderFormProps {
   videoTopic: string
@@ -62,6 +64,8 @@ interface StoryBuilderFormProps {
   onSelectIdea: (ideationId: string, ideaIndex: number, ideaTitle: string) => void
   selectedIdeationId?: string
   selectedIdeaIndex?: number
+  isStarter?: boolean
+  onPremiumClick?: () => void
 }
 
 const STORY_MODE_DESCRIPTIONS: Record<StoryMode, string> = {
@@ -86,6 +90,7 @@ export function StoryBuilderForm({
   aiTrained, isGenerating, onGenerate,
   ideationJobs, isLoadingIdeations, onSelectIdea,
   selectedIdeationId, selectedIdeaIndex,
+  isStarter, onPremiumClick,
 }: StoryBuilderFormProps) {
   const allIdeas = ideationJobs.flatMap(job =>
     (job.result?.ideas || []).map((idea, idx) => ({
@@ -235,27 +240,42 @@ export function StoryBuilderForm({
               <Clapperboard className="h-4 w-4" />
               Story Mode
             </Label>
-            <Select
-              value={storyMode}
-              onValueChange={(v) => setStoryMode(v as StoryMode)}
-              disabled={isGenerating}
-            >
-              <SelectTrigger id="storyMode">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STORY_MODES.map((sm) => (
-                  <SelectItem key={sm} value={sm}>
-                    <div className="flex flex-col">
-                      <span>{STORY_MODE_LABELS[sm]}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-2">
+              {STORY_MODES.map((sm) => {
+                const locked = isStarter && !STARTER_STORY_MODES.includes(sm)
+                return (
+                  <button
+                    key={sm}
+                    type="button"
+                    onClick={() => locked ? onPremiumClick?.() : setStoryMode(sm)}
+                    disabled={isGenerating}
+                    className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                      storyMode === sm && !locked
+                        ? "bg-purple-600 text-white shadow-sm"
+                        : locked
+                          ? "bg-slate-50 dark:bg-slate-800/60 text-slate-300 dark:text-slate-600 cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    <span className={locked ? "opacity-50" : ""}>{STORY_MODE_LABELS[sm]}</span>
+                    {locked && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 shadow-sm">
+                        <Lock className="h-2 w-2 text-white" />
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {STORY_MODE_DESCRIPTIONS[storyMode]}
             </p>
+            {isStarter && (
+              <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-purple-500" />
+                Upgrade to Creator+ to unlock all story modes
+              </p>
+            )}
           </div>
         </div>
 

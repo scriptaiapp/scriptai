@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "motion/react"
 import { useStoryBuilder } from "@/hooks/useStoryBuilder"
 import { useSupabase } from "@/components/supabase-provider"
+import { useCurrentPlan } from "@/hooks/useCurrentPlan"
 import { StoryBuilderForm } from "@/components/dashboard/story-builder/StoryBuilderForm"
 import { StoryBuilderProgress } from "@/components/dashboard/story-builder/StoryBuilderProgress"
 import { StoryBuilderResults } from "@/components/dashboard/story-builder/StoryBuilderResults"
 import { AITrainingRequired } from "@/components/dashboard/common/AITrainingRequired"
+import PremiumGateModal from "@/components/dashboard/research/PremiumGateModal"
 import { Skeleton } from "@repo/ui/skeleton"
 import { Badge } from "@repo/ui/badge"
 import { Sparkles } from "lucide-react"
@@ -17,6 +19,8 @@ export default function NewStoryBuilderPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { profile, profileLoading } = useSupabase()
+  const { isStarter } = useCurrentPlan()
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false)
 
   const hook = useStoryBuilder({
     onComplete: (id) => router.push(`/dashboard/story-builder/${id}`),
@@ -140,6 +144,8 @@ export default function NewStoryBuilderPage() {
                     onSelectIdea={hook.handleSelectIdea}
                     selectedIdeationId={hook.selectedIdeationId}
                     selectedIdeaIndex={hook.selectedIdeaIndex}
+                    isStarter={isStarter}
+                    onPremiumClick={() => setPremiumModalOpen(true)}
                   />
                 </div>
 
@@ -195,6 +201,12 @@ export default function NewStoryBuilderPage() {
           )}
         </AnimatePresence>
       )}
+
+      <PremiumGateModal
+        open={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        featureLabel="Premium story modes"
+      />
     </motion.div>
   )
 }
