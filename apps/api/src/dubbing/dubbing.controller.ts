@@ -14,12 +14,12 @@ export class DubbingController {
   @Post()
   @UseGuards(SupabaseAuthGuard)
   async create(@Req() req: AuthRequest, @Body() dto: CreateDubInput) {
-    return this.service.createDub();
+    return this.service.createDub(dto, req.user!.id);
   }
 
   @Sse('status/:projectId')
   status(@Param('projectId') projectId: string) {
-    return this.service.streamDubbingStatus();
+    return this.service.streamDubbingStatus(projectId);
   }
 
   @Get()
