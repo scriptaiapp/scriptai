@@ -51,8 +51,7 @@ export default function DubbingList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dubbingToDelete, setDubbingToDelete] = useState<string | null>(null)
 
-  // Easy toggle — change to false when feature goes live
-  const isComingSoon = true
+  const isComingSoon = false
 
   useEffect(() => {
     const fetchDubbings = async () => {

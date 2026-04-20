@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Req, Sse, Param, UseGuards, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -13,13 +13,24 @@ import { createJobSSE } from '../common/sse';
 export const TRAIN_AI_CANCEL_PREFIX = 'train-ai:cancel:';
 
 @ApiTags('train-ai')
-@ApiBearerAuth()
 @Controller('train-ai')
 export class TrainAiController {
   constructor(@InjectQueue('train-ai') private readonly queue: Queue) { }
 
   @Post()
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Queue train-ai job (min 3 video URLs)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['videoUrls'],
+      properties: {
+        videoUrls: { type: 'array', items: { type: 'string', format: 'uri' }, minItems: 3 },
+        isRetraining: { type: 'boolean', default: false },
+      },
+    },
+  })
   async trainAi(
     @Req() req: AuthRequest,
     @Body(new ZodValidationPipe(trainAiSchema)) dto: TrainAiDto
@@ -32,6 +43,9 @@ export class TrainAiController {
 
   @Post('stop/:jobId')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Stop or cancel a train-ai job' })
+  @ApiParam({ name: 'jobId' })
   async stopTraining(
     @Req() req: AuthRequest,
     @Param('jobId') jobId: string,
@@ -61,6 +75,11 @@ export class TrainAiController {
   }
 
   @Sse('status/:jobId')
+  @ApiOperation({
+    summary: 'SSE: train-ai job status',
+    description: 'No Bearer required on this route in the current implementation.',
+  })
+  @ApiParam({ name: 'jobId' })
   status(@Param('jobId') jobId: string, @Req() req: AuthRequest): Observable<MessageEvent> {
     return createJobSSE({
       queue: this.queue,

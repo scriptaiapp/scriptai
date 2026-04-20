@@ -50,7 +50,6 @@ export default function DubbingDetailPage() {
           router.push("/dashboard/dubbing")
           return
         }
-        console.log('data', data);
         setDubbing(data);
       } catch (error: any) {
         toast.error("Error loading dubbing", {
