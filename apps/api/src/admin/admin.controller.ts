@@ -11,7 +11,7 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { RolesGuard, Roles } from '../guards/roles.guard';
@@ -34,6 +34,7 @@ export class AdminController {
   // ==================== DASHBOARD ====================
 
   @Get('stats')
+  @ApiOperation({ summary: 'Admin dashboard aggregate stats' })
   getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
@@ -41,6 +42,11 @@ export class AdminController {
   // ==================== USERS ====================
 
   @Get('users')
+  @ApiOperation({ summary: 'Paginated users with filters' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'role', required: false })
   getUsers(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -56,11 +62,16 @@ export class AdminController {
   }
 
   @Get('users/:userId')
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiParam({ name: 'userId' })
   getUser(@Param('userId') userId: string) {
     return this.adminService.getUser(userId);
   }
 
   @Put('users/:userId')
+  @ApiOperation({ summary: 'Update user fields' })
+  @ApiParam({ name: 'userId' })
+  @ApiBody({ schema: { type: 'object', additionalProperties: true } })
   updateUser(
     @Param('userId') userId: string,
     @Body() body: Record<string, unknown>,
@@ -71,6 +82,8 @@ export class AdminController {
   }
 
   @Delete('users/:userId')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiParam({ name: 'userId' })
   deleteUser(@Param('userId') userId: string, @Req() req: AuthRequest) {
     this.adminService.logActivity(this.getUserId(req), 'delete_user', 'user', userId);
     return this.adminService.deleteUser(userId);
@@ -79,6 +92,9 @@ export class AdminController {
   // ==================== SALES REPS ====================
 
   @Get('sales-reps')
+  @ApiOperation({ summary: 'List sales reps' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   getSalesReps(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -87,6 +103,18 @@ export class AdminController {
   }
 
   @Post('sales-reps')
+  @ApiOperation({ summary: 'Create sales rep user' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'name', 'password'],
+      properties: {
+        email: { type: 'string', format: 'email' },
+        name: { type: 'string' },
+        password: { type: 'string' },
+      },
+    },
+  })
   createSalesRep(
     @Body() body: { email: string; name: string; password: string },
     @Req() req: AuthRequest,
@@ -96,6 +124,8 @@ export class AdminController {
   }
 
   @Delete('sales-reps/:userId')
+  @ApiOperation({ summary: 'Remove sales rep role' })
+  @ApiParam({ name: 'userId' })
   removeSalesRep(@Param('userId') userId: string, @Req() req: AuthRequest) {
     this.adminService.logActivity(this.getUserId(req), 'remove_sales_rep', 'sales_rep', userId);
     return this.adminService.removeSalesRepRole(userId);
@@ -104,6 +134,10 @@ export class AdminController {
   // ==================== BLOGS ====================
 
   @Get('blogs')
+  @ApiOperation({ summary: 'Paginated blog posts' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
   getBlogs(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -113,11 +147,31 @@ export class AdminController {
   }
 
   @Get('blogs/:id')
+  @ApiOperation({ summary: 'Get blog post' })
+  @ApiParam({ name: 'id' })
   getBlog(@Param('id') id: string) {
     return this.adminService.getBlog(id);
   }
 
   @Post('blogs')
+  @ApiOperation({ summary: 'Create blog post' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title', 'slug', 'content'],
+      properties: {
+        title: { type: 'string' },
+        slug: { type: 'string' },
+        excerpt: { type: 'string' },
+        content: { type: 'string' },
+        cover_image_url: { type: 'string' },
+        category: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+        status: { type: 'string' },
+        featured: { type: 'boolean' },
+      },
+    },
+  })
   createBlog(
     @Body() body: {
       title: string;
@@ -138,6 +192,9 @@ export class AdminController {
   }
 
   @Put('blogs/:id')
+  @ApiOperation({ summary: 'Update blog post' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ schema: { type: 'object', additionalProperties: true } })
   updateBlog(
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
@@ -148,6 +205,8 @@ export class AdminController {
   }
 
   @Delete('blogs/:id')
+  @ApiOperation({ summary: 'Delete blog post' })
+  @ApiParam({ name: 'id' })
   deleteBlog(@Param('id') id: string, @Req() req: AuthRequest) {
     this.adminService.logActivity(this.getUserId(req), 'delete_blog', 'blog', id);
     return this.adminService.deleteBlog(id);
@@ -156,6 +215,10 @@ export class AdminController {
   // ==================== ACTIVITIES ====================
 
   @Get('activities')
+  @ApiOperation({ summary: 'Admin activity log' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'entityType', required: false })
   getActivities(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -171,6 +234,10 @@ export class AdminController {
   // ==================== MAILS ====================
 
   @Get('mails')
+  @ApiOperation({ summary: 'Outbound mail log' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
   getMails(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -180,6 +247,9 @@ export class AdminController {
   }
 
   @Put('mails/:id')
+  @ApiOperation({ summary: 'Update mail delivery status' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ schema: { type: 'object', required: ['status'], properties: { status: { type: 'string' } } } })
   updateMailStatus(
     @Param('id') id: string,
     @Body() body: { status: string },
@@ -191,6 +261,10 @@ export class AdminController {
   // ==================== JOB POSTS CRUD ====================
 
   @Get('jobs')
+  @ApiOperation({ summary: 'List job posts' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
   getJobs(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -200,11 +274,29 @@ export class AdminController {
   }
 
   @Get('jobs/:id')
+  @ApiOperation({ summary: 'Get job post' })
+  @ApiParam({ name: 'id' })
   getJob(@Param('id') id: string) {
     return this.adminService.getJobPost(id);
   }
 
   @Post('jobs')
+  @ApiOperation({ summary: 'Create job post' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title', 'team', 'description'],
+      properties: {
+        title: { type: 'string' },
+        team: { type: 'string' },
+        location: { type: 'string' },
+        type: { type: 'string' },
+        description: { type: 'string' },
+        requirements: { type: 'string' },
+        status: { type: 'string' },
+      },
+    },
+  })
   createJob(
     @Body() body: {
       title: string;
@@ -222,6 +314,9 @@ export class AdminController {
   }
 
   @Put('jobs/:id')
+  @ApiOperation({ summary: 'Update job post' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ schema: { type: 'object', additionalProperties: true } })
   updateJob(
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
@@ -232,6 +327,8 @@ export class AdminController {
   }
 
   @Delete('jobs/:id')
+  @ApiOperation({ summary: 'Delete job post' })
+  @ApiParam({ name: 'id' })
   deleteJob(@Param('id') id: string, @Req() req: AuthRequest) {
     this.adminService.logActivity(this.getUserId(req), 'delete_job', 'job_post', id);
     return this.adminService.deleteJobPost(id);
@@ -240,6 +337,10 @@ export class AdminController {
   // ==================== JOB APPLICATIONS ====================
 
   @Get('applications')
+  @ApiOperation({ summary: 'List job applications' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
   getApplications(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -249,11 +350,22 @@ export class AdminController {
   }
 
   @Get('applications/:id')
+  @ApiOperation({ summary: 'Get job application' })
+  @ApiParam({ name: 'id' })
   getApplication(@Param('id') id: string) {
     return this.adminService.getApplication(id);
   }
 
   @Put('applications/:id')
+  @ApiOperation({ summary: 'Update application status' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['status'],
+      properties: { status: { type: 'string' }, notes: { type: 'string' } },
+    },
+  })
   updateApplicationStatus(
     @Param('id') id: string,
     @Body() body: { status: string; notes?: string },
@@ -265,6 +377,8 @@ export class AdminController {
   }
 
   @Delete('applications/:id')
+  @ApiOperation({ summary: 'Delete job application' })
+  @ApiParam({ name: 'id' })
   deleteApplication(@Param('id') id: string, @Req() req: AuthRequest) {
     this.adminService.logActivity(this.getUserId(req), 'delete_application', 'job_application', id);
     return this.adminService.deleteApplication(id);
@@ -273,6 +387,9 @@ export class AdminController {
   // ==================== AFFILIATES ====================
 
   @Get('affiliates/links')
+  @ApiOperation({ summary: 'All affiliate links' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   getAffiliateLinks(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -281,6 +398,9 @@ export class AdminController {
   }
 
   @Get('affiliates/sales')
+  @ApiOperation({ summary: 'All affiliate sales' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   getAffiliateSales(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -289,6 +409,9 @@ export class AdminController {
   }
 
   @Put('affiliates/links/:id')
+  @ApiOperation({ summary: 'Update affiliate link' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ schema: { type: 'object', additionalProperties: true } })
   updateAffiliateLink(
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
@@ -299,6 +422,9 @@ export class AdminController {
   }
 
   @Put('affiliates/sales/:id')
+  @ApiOperation({ summary: 'Update affiliate sale status' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ schema: { type: 'object', required: ['status'], properties: { status: { type: 'string' } } } })
   updateAffiliateSaleStatus(
     @Param('id') id: string,
     @Body() body: { status: string },

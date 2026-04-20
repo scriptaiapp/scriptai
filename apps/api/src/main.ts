@@ -17,12 +17,29 @@ async function bootstrap() {
 
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Creator AI API')
-      .setDescription('Backend API for Creator AI platform')
+      .setDescription(
+        [
+          'OpenAPI for the Creator AI backend. Global prefix: **/api/v1** (except `GET /` health).',
+          '',
+          '**Auth:** click *Authorize*, enter `Bearer <token>` or paste the Supabase JWT only — the guard reads `Authorization: Bearer …`.',
+          '',
+          '**Webhooks** (`POST /api/v1/lemonsqueezy/webhook`) require valid `x-signature` and Lemon Squeezy payload; not practical from Swagger alone.',
+          '',
+          '**SSE** job status routes are documented for visibility; use browser `EventSource` or a client — Swagger UI may not stream reliably.',
+        ].join('\n'),
+      )
       .setVersion('1.0')
-      .addBearerAuth()
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Supabase access token',
+      })
       .addTag('health', 'Health check endpoints')
+      .addTag('app', 'Internal / debug (authenticated)')
       .addTag('auth', 'Authentication & password reset')
       .addTag('billing', 'Plans, subscriptions & checkout')
+      .addTag('affiliate', 'Affiliate program')
       .addTag('admin', 'Admin management')
       .addTag('course', 'AI course generation')
       .addTag('dubbing', 'Video dubbing')
@@ -40,7 +57,14 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        docExpansion: 'list',
+        tryItOutEnabled: true,
+      },
+      customSiteTitle: 'Creator AI API',
+    });
 
     const allowedOrigins = [
       process.env.FRONTEND_DEV_URL,

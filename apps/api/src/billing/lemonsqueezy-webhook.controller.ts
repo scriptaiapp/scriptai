@@ -7,7 +7,7 @@ import {
   Logger,
   type RawBodyRequest,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiHeader, ApiBody } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { BillingService, type LsWebhookEvent } from './billing.service';
 
@@ -19,6 +19,21 @@ export class LemonSqueezyWebhookController {
   constructor(private readonly billingService: BillingService) {}
 
   @Post('webhook')
+  @ApiOperation({
+    summary: 'Lemon Squeezy webhook (signed)',
+    description:
+      'Requires raw body + valid `x-signature`. Headers: `x-event-name` (e.g. subscription_created). Intended for Lemon Squeezy servers, not interactive Swagger testing.',
+  })
+  @ApiHeader({ name: 'x-signature', required: true, description: 'Lemon Squeezy HMAC signature' })
+  @ApiHeader({
+    name: 'x-event-name',
+    required: true,
+    description: 'Event type (e.g. subscription_created, subscription_updated)',
+  })
+  @ApiBody({
+    description: 'Lemon Squeezy webhook JSON payload',
+    schema: { type: 'object', additionalProperties: true },
+  })
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Res() res: Response,

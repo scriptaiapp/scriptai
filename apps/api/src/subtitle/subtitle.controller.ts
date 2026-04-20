@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards, UnauthorizedException, BadRequestException, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, UsePipes } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubtitleService } from './subtitle.service';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
@@ -20,6 +20,7 @@ import type {
   UploadVideoInput,
   BurnSubtitleInput,
 } from '@repo/validation';
+import { ApiMultipartForm } from '../common/swagger-multipart';
 
 const SUBTITLE_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
@@ -31,6 +32,19 @@ export class SubtitleController {
   constructor(private readonly subtitleService: SubtitleService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Create subtitle record' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['subtitleId'],
+      properties: {
+        subtitleId: { type: 'string' },
+        language: { type: 'string' },
+        targetLanguage: { type: 'string' },
+        duration: { type: 'number' },
+      },
+    },
+  })
   @UsePipes(new ZodValidationPipe(CreateSubtitleSchema))
   create(@Body() body: CreateSubtitleInput, @Req() req: AuthRequest) {
     const userId = req.user?.id;
@@ -41,6 +55,7 @@ export class SubtitleController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List subtitles for user' })
   findAll(@Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) {
@@ -51,6 +66,16 @@ export class SubtitleController {
 
 
   @Post('upload')
+  @ApiOperation({ summary: 'Upload video for subtitle pipeline (multipart)' })
+  @ApiMultipartForm({
+    type: 'object',
+    required: ['video', 'duration'],
+    properties: {
+      video: { type: 'string', format: 'binary' },
+      duration: { type: 'string' },
+      scriptId: { type: 'string', format: 'uuid' },
+    },
+  })
   @UseInterceptors(FileInterceptor('video'))
   upload(
     @UploadedFile(
@@ -83,6 +108,27 @@ export class SubtitleController {
   }
 
   @Patch()
+  @ApiOperation({ summary: 'Update subtitle JSON by subtitle_id' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['subtitle_json', 'subtitle_id'],
+      properties: {
+        subtitle_id: { type: 'string' },
+        subtitle_json: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              start: { type: 'string' },
+              end: { type: 'string' },
+              text: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
   @UsePipes(new ZodValidationPipe(UpdateSubtitleSchema))
   update(@Body() body: UpdateSubtitleInput, @Req() req: AuthRequest) {
     const userId = req.user?.id;
@@ -93,6 +139,8 @@ export class SubtitleController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get subtitle by id' })
+  @ApiParam({ name: 'id' })
   findOne(@Param('id') id: string, @Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) {
@@ -102,6 +150,8 @@ export class SubtitleController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete subtitle' })
+  @ApiParam({ name: 'id' })
   remove(@Param('id') id: string, @Req() req: AuthRequest) {
     const userId = req.user?.id;
     if (!userId) {
@@ -111,6 +161,27 @@ export class SubtitleController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Replace subtitle lines for record id' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['subtitle_json'],
+      properties: {
+        subtitle_json: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              start: { type: 'string' },
+              end: { type: 'string' },
+              text: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
   updateSubtitles(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateSubtitleByIdSchema)) body: UpdateSubtitleByIdInput,
@@ -124,6 +195,27 @@ export class SubtitleController {
   }
 
   @Post('burn')
+  @ApiOperation({ summary: 'Burn subtitles into video (returns MP4 stream)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['videoUrl', 'subtitles'],
+      properties: {
+        videoUrl: { type: 'string', format: 'uri' },
+        subtitles: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              start: { type: 'string' },
+              end: { type: 'string' },
+              text: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
   async burnSubtitle(
     @Body(new ZodValidationPipe(BurnSubtitleSchema)) body: BurnSubtitleInput,
     @Res() res: Response,

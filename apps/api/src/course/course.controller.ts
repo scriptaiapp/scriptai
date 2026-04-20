@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../guards/auth.guard';
 import { getUserId } from '../common/get-user-id';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
@@ -13,6 +13,20 @@ export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
   @Post('generate')
+  @ApiOperation({ summary: 'Generate AI course outline/content' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['topic'],
+      properties: {
+        topic: { type: 'string' },
+        description: { type: 'string' },
+        difficulty: { type: 'string' },
+        videoCount: { type: 'integer' },
+        references: { type: 'string' },
+      },
+    },
+  })
   generate(
     @Body() body: {
       topic: string;

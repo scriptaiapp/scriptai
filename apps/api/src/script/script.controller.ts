@@ -2,7 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete,
   Param, Body, Req, Res, Sse, UseGuards, UseInterceptors, UploadedFiles,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -15,9 +15,9 @@ import { getUserId } from '../common/get-user-id';
 import type { AuthRequest } from '../common/interfaces/auth-request.interface';
 import { ScriptService } from './script.service';
 import { createJobSSE } from '../common/sse';
+import { ApiMultipartForm } from '../common/swagger-multipart';
 
 @ApiTags('script')
-@ApiBearerAuth()
 @Controller('script')
 export class ScriptController {
   constructor(
@@ -27,6 +27,34 @@ export class ScriptController {
 
   @Post('generate')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Queue script generation (multipart: fields + optional files)' })
+  @ApiMultipartForm({
+    type: 'object',
+    required: ['prompt'],
+    properties: {
+      prompt: { type: 'string' },
+      context: { type: 'string' },
+      tone: {
+        type: 'string',
+        enum: ['conversational', 'educational', 'motivational', 'funny', 'serious'],
+        default: 'conversational',
+      },
+      language: {
+        type: 'string',
+        enum: ['english', 'spanish', 'french', 'german', 'japanese'],
+        default: 'english',
+      },
+      duration: { type: 'string', default: '180' },
+      includeStorytelling: { type: 'boolean' },
+      includeTimestamps: { type: 'boolean' },
+      references: { type: 'string' },
+      personalized: { type: 'boolean', default: true },
+      ideationId: { type: 'string', format: 'uuid' },
+      ideaIndex: { type: 'integer', minimum: 0 },
+      files: { type: 'array', items: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FilesInterceptor('files'))
   generate(
     @Body(new ZodValidationPipe(CreateScriptSchema)) body: CreateScriptInput,
@@ -38,12 +66,17 @@ export class ScriptController {
 
   @Get()
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List script jobs' })
   list(@Req() req: AuthRequest) {
     return this.scriptService.list(getUserId(req));
   }
 
   @Get(':id/export')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Download script as PDF' })
+  @ApiParam({ name: 'id' })
   async exportPdf(
     @Param('id') id: string,
     @Req() req: AuthRequest,
@@ -59,12 +92,18 @@ export class ScriptController {
 
   @Get(':id')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get script job by id' })
+  @ApiParam({ name: 'id' })
   getOne(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.scriptService.getOne(id, getUserId(req));
   }
 
   @Patch(':id')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update script title and content' })
+  @ApiParam({ name: 'id' })
   update(
     @Param('id') id: string,
     @Body() body: { title: string; content: string },
@@ -75,11 +114,19 @@ export class ScriptController {
 
   @Delete(':id')
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete script job' })
+  @ApiParam({ name: 'id' })
   remove(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.scriptService.remove(id, getUserId(req));
   }
 
   @Sse('status/:jobId')
+  @ApiOperation({
+    summary: 'SSE: script generation job status',
+    description: 'No Bearer required on this route in the current implementation.',
+  })
+  @ApiParam({ name: 'jobId' })
   status(@Param('jobId') jobId: string, @Req() req: AuthRequest): Observable<MessageEvent> {
     return createJobSSE({
       queue: this.queue,
