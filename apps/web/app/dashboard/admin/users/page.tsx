@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAdminUsers, adminApi } from "@/hooks/useAdmin"
 import { Search, ChevronLeft, ChevronRight, Trash2, Edit, Shield } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import { Input } from "@repo/ui/input"
 import {
   Select,
@@ -86,9 +86,9 @@ export default function AdminUsersPage() {
               className="pl-9 bg-slate-900 border-slate-700 text-slate-100"
             />
           </div>
-          <Button type="submit" variant="outline" className="border-slate-700 text-slate-300">
+          <AdminButton type="submit" variant="secondary">
             Search
-          </Button>
+          </AdminButton>
         </form>
         <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v === "all" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-40 bg-slate-900 border-slate-700 text-slate-300">
@@ -178,27 +178,15 @@ export default function AdminUsersPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} total users</p>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-              className="border-slate-700 text-slate-300"
-            >
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">
               {page} / {totalPages}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
-              className="border-slate-700 text-slate-300"
-            >
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -234,12 +222,12 @@ export default function AdminUsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="tertiary" onClick={() => setEditUser(null)}>
               Cancel
-            </Button>
-            <Button onClick={handleUpdateUser} className="bg-purple-600 hover:bg-purple-700">
+            </AdminButton>
+            <AdminButton variant="primary" onClick={handleUpdateUser}>
               Save
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -252,12 +240,12 @@ export default function AdminUsersPage() {
           </DialogHeader>
           <p className="text-slate-400">Are you sure? This action cannot be undone. The user and all their data will be permanently deleted.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="tertiary" onClick={() => setDeleteConfirm(null)}>
               Cancel
-            </Button>
-            <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            </AdminButton>
+            <AdminButton variant="primary" tone="danger" onClick={handleDelete}>
               Delete
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

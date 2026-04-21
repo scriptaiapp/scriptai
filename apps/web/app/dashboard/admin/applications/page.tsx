@@ -11,7 +11,7 @@ import {
   Trash2,
   Download,
 } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import {
   Select,
   SelectContent,
@@ -171,13 +171,13 @@ export default function AdminApplicationsPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} applications</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -271,12 +271,12 @@ export default function AdminApplicationsPage() {
                 <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Add notes about this candidate..." className="bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-500" />
               </div>
               <div className="flex gap-3">
-                <Button onClick={handleStatusUpdate} disabled={updating} className="bg-purple-600 hover:bg-purple-700 text-white">
+                <AdminButton variant="primary" onClick={handleStatusUpdate} disabled={updating}>
                   {updating ? "Updating..." : "Save Changes"}
-                </Button>
-                <Button variant="outline" onClick={() => viewApp && handleDelete(viewApp.id)} className="border-red-800 text-red-400 hover:bg-red-900/30">
+                </AdminButton>
+                <AdminButton variant="secondary" tone="danger" onClick={() => viewApp && handleDelete(viewApp.id)}>
                   Delete Application
-                </Button>
+                </AdminButton>
               </div>
             </div>
           </div>

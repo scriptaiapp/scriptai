@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { adminApi } from "@/hooks/useAdmin"
 import { ArrowLeft, Save } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import { Input } from "@repo/ui/input"
 import {
   Select,
@@ -167,13 +167,13 @@ export default function NewBlogPage() {
         </div>
 
         <div className="flex gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()} className="border-slate-700 text-slate-300">
+          <AdminButton type="button" variant="tertiary" onClick={() => router.back()}>
             Cancel
-          </Button>
-          <Button type="submit" disabled={saving} className="bg-purple-600 hover:bg-purple-700">
-            <Save className="h-4 w-4 mr-2" />
+          </AdminButton>
+          <AdminButton type="submit" variant="primary" disabled={saving}>
+            <Save className="h-4 w-4" />
             {saving ? "Saving..." : "Create Post"}
-          </Button>
+          </AdminButton>
         </div>
       </form>
     </div>

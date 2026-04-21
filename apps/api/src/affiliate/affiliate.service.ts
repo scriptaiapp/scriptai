@@ -243,25 +243,27 @@ export class AffiliateService {
       throw new InternalServerErrorException('Approval email service is not configured');
     }
 
-    const affiliateLink = this.getLsAffiliateSignupUrl();
     const esc = (value: string) =>
       value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const safeName = esc(input.recipientName || 'there');
-    const safeNotes = input.adminNotes ? esc(input.adminNotes) : '';
+    const message = (input.adminNotes || '').trim();
+    const safeMessage = message
+      ? esc(message).replace(/\n/g, '<br/>')
+      : 'Your affiliate application has been approved. Our team will be in touch shortly with next steps.';
 
     try {
       await this.resend.emails.send({
-        from: 'Creator AI <notifications@tryscriptai.com>',
+        from: 'Creator AI Support <support@tryscriptai.com>',
         to: input.recipientEmail,
+        replyTo: 'support@tryscriptai.com',
         subject: 'Your affiliate application was approved',
         html: `<div style="font-family:Arial,sans-serif;color:#333;line-height:1.6;max-width:600px;margin:auto;padding:20px">
-          <h2 style="color:#4F46E5;margin-top:0">You are approved as a Creator AI affiliate</h2>
+          <h2 style="color:#4F46E5;margin-top:0">You're approved as a Creator AI affiliate</h2>
           <p>Hi ${safeName},</p>
-          <p>Your affiliate application has been approved. Use the link below to continue:</p>
-          <p><a href="${affiliateLink}" style="color:#4F46E5;font-weight:600">Open your affiliate link</a></p>
-          ${safeNotes ? `<p><strong>Note from admin:</strong><br/>${safeNotes}</p>` : ''}
-          <p style="margin-top:20px">Thanks,<br/>Creator AI Team</p>
+          <p>${safeMessage}</p>
+          <p style="margin-top:24px">Thanks,<br/>Creator AI Team</p>
+          <hr style="margin:20px 0;border:none;border-top:1px solid #eee"/>
         </div>`,
       });
     } catch (error) {

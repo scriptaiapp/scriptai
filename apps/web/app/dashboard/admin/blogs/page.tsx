@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAdminBlogs, adminApi } from "@/hooks/useAdmin"
-import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { AdminButton } from "@/components/admin/admin-button"
 import {
   Select,
   SelectContent,
@@ -61,10 +61,10 @@ export default function AdminBlogsPage() {
           <h1 className="text-2xl font-bold text-slate-100">Blog Posts</h1>
           <p className="text-slate-400 mt-1">Manage blog content</p>
         </div>
-        <Button onClick={() => router.push("/dashboard/admin/blogs/new")} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
+        <AdminButton onClick={() => router.push("/dashboard/admin/blogs/new")} variant="primary">
+          <Plus className="h-4 w-4" />
           New Post
-        </Button>
+        </AdminButton>
       </div>
 
       <div className="flex gap-3">
@@ -156,13 +156,13 @@ export default function AdminBlogsPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} posts</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -172,8 +172,8 @@ export default function AdminBlogsPage() {
           <DialogHeader><DialogTitle>Delete Blog Post</DialogTitle></DialogHeader>
           <p className="text-slate-400">Are you sure? This will permanently delete this blog post.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)} className="border-slate-700 text-slate-300">Cancel</Button>
-            <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</Button>
+            <AdminButton variant="tertiary" onClick={() => setDeleteId(null)}>Cancel</AdminButton>
+            <AdminButton variant="primary" tone="danger" onClick={handleDelete}>Delete</AdminButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

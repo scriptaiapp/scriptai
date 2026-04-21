@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { api } from "@/lib/api-client"
 import { adminApi } from "@/hooks/useAdmin"
 import { ChevronLeft, ChevronRight, DollarSign } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import {
   Select,
   SelectContent,
@@ -131,13 +131,13 @@ export default function AdminSalesPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{data?.total} total sales</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
