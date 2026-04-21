@@ -22,8 +22,15 @@ import {
   DollarSign,
   Edit,
   RotateCcw,
+  Globe,
+  Share2,
+  BarChart3,
+  Megaphone,
+  Mail,
+  Calendar,
+  StickyNote,
 } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import { Input } from "@repo/ui/input"
 import { Textarea } from "@repo/ui/textarea"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs"
@@ -156,14 +163,15 @@ function LinksTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-400">{data?.total ?? 0} total links</p>
-        <Button
+        <AdminButton
           onClick={() => { setForm({ sales_rep_id: "", code: generateCode(), label: "", commission_rate: "10", ls_affiliate_id: "" }); loadReps(); setShowCreate(true) }}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          variant="primary"
+          tone="success"
           size="sm"
         >
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="h-4 w-4" />
           Create Link for Rep
-        </Button>
+        </AdminButton>
       </div>
 
       <div className="rounded-xl border border-slate-800 overflow-hidden">
@@ -237,13 +245,13 @@ function LinksTab() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{data?.total} links</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -308,10 +316,10 @@ function LinksTab() {
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)} className="border-slate-700 text-slate-300">Cancel</Button>
-              <Button type="submit" disabled={creating} className="bg-emerald-600 hover:bg-emerald-700">
+              <AdminButton type="button" variant="tertiary" onClick={() => setShowCreate(false)}>Cancel</AdminButton>
+              <AdminButton type="submit" variant="primary" tone="success" disabled={creating}>
                 {creating ? "Creating..." : "Create & Assign"}
-              </Button>
+              </AdminButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -346,10 +354,10 @@ function LinksTab() {
               <span className="text-sm text-slate-300">{editForm.is_active ? "Active" : "Inactive"}</span>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditLink(null)} className="border-slate-700 text-slate-300">Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+              <AdminButton type="button" variant="tertiary" onClick={() => setEditLink(null)}>Cancel</AdminButton>
+              <AdminButton type="submit" variant="primary" disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
-              </Button>
+              </AdminButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -358,44 +366,61 @@ function LinksTab() {
   )
 }
 
+const REQUEST_STATUS_META: Record<AffiliateRequest["status"], { label: string; badge: string; icon: typeof CheckCircle; iconClass: string }> = {
+  approved: { label: "Approved", badge: "bg-green-900/40 text-green-400 border border-green-800/50", icon: CheckCircle, iconClass: "text-green-400" },
+  denied: { label: "Denied", badge: "bg-red-900/40 text-red-400 border border-red-800/50", icon: XCircle, iconClass: "text-red-400" },
+  pending: { label: "Pending", badge: "bg-yellow-900/40 text-yellow-400 border border-yellow-800/50", icon: Clock, iconClass: "text-yellow-400" },
+}
+
+function DetailRow({ icon: Icon, label, value, mono }: { icon: typeof Mail; label: string; value?: string | null; mono?: boolean }) {
+  if (!value) return null
+  return (
+    <div className="flex gap-3">
+      <div className="h-8 w-8 shrink-0 rounded-lg bg-slate-800/80 flex items-center justify-center">
+        <Icon className="h-4 w-4 text-slate-400" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>
+        <p className={`text-sm text-slate-200 break-words ${mono ? "font-mono" : ""}`}>{value}</p>
+      </div>
+    </div>
+  )
+}
+
 function RequestsTab() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [page, setPage] = useState(1)
   const { data, total, loading, refresh } = useAdminAffiliateRequests(page, statusFilter)
-  const [reviewingId, setReviewingId] = useState<string | null>(null)
-  const [reviewAction, setReviewAction] = useState<"approved" | "denied">("approved")
+  const [selected, setSelected] = useState<AffiliateRequest | null>(null)
   const [adminNotes, setAdminNotes] = useState("")
+  const [submitting, setSubmitting] = useState<"approved" | "denied" | "pending" | null>(null)
 
-  const handleReview = async () => {
-    if (!reviewingId) return
+  const openDetails = (req: AffiliateRequest) => {
+    setSelected(req)
+    setAdminNotes(req.admin_notes || "")
+  }
+
+  const closeDetails = () => {
+    setSelected(null)
+    setAdminNotes("")
+    setSubmitting(null)
+  }
+
+  const handleReview = async (action: "approved" | "denied" | "pending") => {
+    if (!selected || submitting) return
     try {
-      await adminApi.reviewAffiliateRequest(reviewingId, reviewAction, adminNotes || undefined)
-      toast.success(`Request ${reviewAction}`)
-      setReviewingId(null)
-      setAdminNotes("")
+      setSubmitting(action)
+      await adminApi.reviewAffiliateRequest(selected.id, action, adminNotes || undefined)
+      toast.success(action === "pending" ? "Reverted to pending" : `Request ${action}`)
+      closeDetails()
       refresh()
     } catch {
-      toast.error("Failed to review request")
+      toast.error("Failed to update request")
+      setSubmitting(null)
     }
   }
 
   const totalPages = Math.ceil((total || 0) / 20)
-
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "approved": return "bg-green-900/40 text-green-400"
-      case "denied": return "bg-red-900/40 text-red-400"
-      default: return "bg-yellow-900/40 text-yellow-400"
-    }
-  }
-
-  const StatusIcon = ({ status }: { status: string }) => {
-    switch (status) {
-      case "approved": return <CheckCircle className="h-4 w-4 text-green-400" />
-      case "denied": return <XCircle className="h-4 w-4 text-red-400" />
-      default: return <Clock className="h-4 w-4 text-yellow-400" />
-    }
-  }
 
   return (
     <div className="space-y-4">
@@ -425,68 +450,40 @@ function RequestsTab() {
                 <th className="px-4 py-3 font-medium">Promotion</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-5 bg-slate-800 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-5 bg-slate-800 rounded animate-pulse" /></td></tr>
                 ))
               ) : !data?.length ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     No affiliate requests yet
                   </td>
                 </tr>
               ) : (
-                data.map((req: AffiliateRequest) => (
-                  <tr key={req.id} className="hover:bg-slate-900/30">
-                    <td className="px-4 py-3 text-slate-200">{req.full_name}</td>
-                    <td className="px-4 py-3 text-slate-400">{req.email}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{req.website || "—"}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs max-w-[150px] truncate">{req.promotion_method || "—"}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(req.status)}`}>
-                        <StatusIcon status={req.status} />
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{new Date(req.created_at).toLocaleDateString()}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        {req.status !== "approved" && (
-                          <button
-                            onClick={() => { setReviewingId(req.id); setReviewAction("approved"); setAdminNotes("") }}
-                            className="p-1.5 rounded hover:bg-green-900/30 text-slate-400 hover:text-green-400"
-                            title="Approve"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                        {req.status !== "denied" && (
-                          <button
-                            onClick={() => { setReviewingId(req.id); setReviewAction("denied"); setAdminNotes("") }}
-                            className="p-1.5 rounded hover:bg-red-900/30 text-slate-400 hover:text-red-400"
-                            title="Deny"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                        {req.status !== "pending" && (
-                          <button
-                            onClick={() => { setReviewingId(req.id); setReviewAction("pending" as "approved"); setAdminNotes("") }}
-                            className="p-1.5 rounded hover:bg-yellow-900/30 text-slate-400 hover:text-yellow-400"
-                            title="Revert to Pending"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                data.map((req: AffiliateRequest) => {
+                  const meta = REQUEST_STATUS_META[req.status]
+                  const StatusIcon = meta.icon
+                  return (
+                    <tr key={req.id} onClick={() => openDetails(req)} className="hover:bg-slate-900/40 cursor-pointer transition-colors">
+                      <td className="px-4 py-3 text-slate-200 font-medium">{req.full_name}</td>
+                      <td className="px-4 py-3 text-slate-400">{req.email}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">{req.website || "—"}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs max-w-[180px] truncate">{req.promotion_method || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${meta.badge}`}>
+                          <StatusIcon className={`h-3.5 w-3.5 ${meta.iconClass}`} />
+                          {meta.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 text-xs">{new Date(req.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -495,51 +492,110 @@ function RequestsTab() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+          <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             <ChevronLeft className="h-4 w-4" />
-          </Button>
+          </AdminButton>
           <span className="text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+          <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </AdminButton>
         </div>
       )}
 
-      <Dialog open={!!reviewingId} onOpenChange={() => setReviewingId(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100">
-          <DialogHeader>
-            <DialogTitle>
-              {reviewAction === "approved" ? "Approve" : "Deny"} Affiliate Request
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-slate-400">
-              {reviewAction === "approved"
-                ? "The applicant will be notified they've been approved. You can include the Lemon Squeezy affiliate signup link in your notes."
-                : "The applicant will be notified their request was denied."}
-            </p>
-            <div>
-              <label className="text-sm text-slate-400 mb-1 block">Notes to applicant (optional)</label>
-              <Textarea
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder={reviewAction === "approved"
-                  ? "Welcome! Here's your affiliate signup link..."
-                  : "Unfortunately, we cannot approve your request at this time..."}
-                className="bg-slate-800 border-slate-700 text-slate-200"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewingId(null)} className="border-slate-700 text-slate-300">Cancel</Button>
-            <Button
-              onClick={handleReview}
-              className={reviewAction === "approved" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
-            >
-              {reviewAction === "approved" ? "Approve" : "Deny"}
-            </Button>
-          </DialogFooter>
+      <Dialog open={!!selected} onOpenChange={(open: boolean) => { if (!open) closeDetails() }}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selected && (() => {
+            const meta = REQUEST_STATUS_META[selected.status]
+            const StatusIcon = meta.icon
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <DialogTitle className="text-lg">{selected.full_name}</DialogTitle>
+                      <p className="text-sm text-slate-400 mt-1">Affiliate application details</p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${meta.badge}`}>
+                      <StatusIcon className={`h-3.5 w-3.5 ${meta.iconClass}`} />
+                      {meta.label}
+                    </span>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-5 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DetailRow icon={Mail} label="Email" value={selected.email} />
+                    <DetailRow icon={Globe} label="Website" value={selected.website} />
+                    <DetailRow icon={Share2} label="Social Media" value={selected.social_media} />
+                    <DetailRow icon={BarChart3} label="Audience Size" value={selected.audience_size} />
+                    <DetailRow icon={Megaphone} label="Promotion Method" value={selected.promotion_method} />
+                    <DetailRow icon={Calendar} label="Submitted" value={new Date(selected.created_at).toLocaleString()} />
+                  </div>
+
+                  {selected.reason && (
+                    <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500 mb-2">
+                        <StickyNote className="h-3.5 w-3.5" />
+                        Reason
+                      </div>
+                      <p className="text-sm text-slate-200 whitespace-pre-wrap">{selected.reason}</p>
+                    </div>
+                  )}
+
+                  <div className="border-t border-slate-800 pt-4 space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Admin notes</label>
+                    <p className="text-xs text-slate-500">
+                      On approval, this message is emailed to the applicant from <span className="text-slate-400">support@tryscriptai.com</span>.
+                    </p>
+                    <Textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Welcome aboard! Here's your affiliate signup link..."
+                      className="bg-slate-800 border-slate-700 text-slate-200"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter className="gap-2 sm:gap-2">
+                  <AdminButton variant="tertiary" onClick={closeDetails}>Close</AdminButton>
+                  {selected.status !== "pending" && (
+                    <AdminButton
+                      onClick={() => handleReview("pending")}
+                      disabled={!!submitting}
+                      variant="tertiary"
+                      className="text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {submitting === "pending" ? "Reverting..." : "Revert"}
+                    </AdminButton>
+                  )}
+                  {selected.status !== "denied" && (
+                    <AdminButton
+                      onClick={() => handleReview("denied")}
+                      disabled={!!submitting}
+                      variant="secondary"
+                      tone="danger"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      {submitting === "denied" ? "Denying..." : "Deny"}
+                    </AdminButton>
+                  )}
+                  {selected.status !== "approved" && (
+                    <AdminButton
+                      onClick={() => handleReview("approved")}
+                      disabled={!!submitting}
+                      variant="primary"
+                      tone="success"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      {submitting === "approved" ? "Approving..." : "Approve & Email"}
+                    </AdminButton>
+                  )}
+                </DialogFooter>
+              </>
+            )
+          })()}
         </DialogContent>
       </Dialog>
     </div>
@@ -661,13 +717,13 @@ function SalesTab() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+          <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             <ChevronLeft className="h-4 w-4" />
-          </Button>
+          </AdminButton>
           <span className="text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+          <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </AdminButton>
         </div>
       )}
     </div>
@@ -682,19 +738,15 @@ function LsAffiliatesTab() {
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-400">{affiliates.length} Lemon Squeezy affiliates</p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={refresh} className="border-slate-700 text-slate-300">
+          <AdminButton variant="secondary" size="sm" onClick={refresh}>
             Sync from LS
-          </Button>
-          <a
-            href="https://app.lemonsqueezy.com/affiliates"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="outline" size="sm" className="border-slate-700 text-slate-300 gap-1">
+          </AdminButton>
+          <AdminButton variant="primary" size="sm" asChild>
+            <a href="https://app.lemonsqueezy.com/affiliates" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-3.5 w-3.5" />
               Open LS Dashboard
-            </Button>
-          </a>
+            </a>
+          </AdminButton>
         </div>
       </div>
 

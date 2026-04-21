@@ -137,7 +137,7 @@ describe('AffiliateService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('sends approval email with affiliate link when approved', async () => {
+    it('sends approval email with the admin note as the message when approved', async () => {
       const sendMock = jest.fn().mockResolvedValue({ id: 'mail-1' });
       (service as any).resend = { emails: { send: sendMock } };
       const updateMock = jest.fn().mockReturnValue({
@@ -187,9 +187,10 @@ describe('AffiliateService', () => {
       );
       expect(sendMock).toHaveBeenCalledWith(
         expect.objectContaining({
+          from: expect.stringContaining('support@tryscriptai.com'),
           to: 'applicant@test.com',
           subject: expect.stringContaining('approved'),
-          html: expect.stringContaining('/affiliates/store/store_123'),
+          html: expect.stringContaining('Welcome aboard!'),
         }),
       );
     });

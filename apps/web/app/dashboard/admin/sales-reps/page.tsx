@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAdminSalesReps, adminApi } from "@/hooks/useAdmin"
 import { Plus, Trash2, ChevronLeft, ChevronRight, Copy, Check, Eye, EyeOff } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import { Input } from "@repo/ui/input"
 import {
   Dialog,
@@ -105,10 +105,10 @@ export default function AdminSalesRepsPage() {
           <h1 className="text-2xl font-bold text-slate-100">Sales Reps</h1>
           <p className="text-slate-400 mt-1">Manage sales representative accounts</p>
         </div>
-        <Button onClick={openCreateDialog} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
+        <AdminButton onClick={openCreateDialog} variant="primary">
+          <Plus className="h-4 w-4" />
           Add Sales Rep
-        </Button>
+        </AdminButton>
       </div>
 
       <div className="rounded-xl border border-slate-800 overflow-hidden">
@@ -164,13 +164,13 @@ export default function AdminSalesRepsPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} total</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -227,12 +227,12 @@ export default function AdminSalesRepsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)} className="border-slate-700 text-slate-300">
+              <AdminButton type="button" variant="tertiary" onClick={() => setShowCreate(false)}>
                 Cancel
-              </Button>
-              <Button type="submit" disabled={creating} className="bg-purple-600 hover:bg-purple-700">
+              </AdminButton>
+              <AdminButton type="submit" variant="primary" disabled={creating}>
                 {creating ? "Creating..." : "Create"}
-              </Button>
+              </AdminButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -294,17 +294,13 @@ export default function AdminSalesRepsPage() {
           </div>
 
           <DialogFooter className="flex gap-2 sm:gap-2">
-            <Button
-              onClick={copyAllCreds}
-              variant="outline"
-              className="border-slate-700 text-slate-300 flex-1"
-            >
-              {copiedField === "all" ? <Check className="h-4 w-4 mr-2 text-green-400" /> : <Copy className="h-4 w-4 mr-2" />}
+            <AdminButton onClick={copyAllCreds} variant="secondary" className="flex-1">
+              {copiedField === "all" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
               Copy All
-            </Button>
-            <Button onClick={() => setCreatedCreds(null)} className="bg-purple-600 hover:bg-purple-700 flex-1">
+            </AdminButton>
+            <AdminButton onClick={() => setCreatedCreds(null)} variant="primary" className="flex-1">
               Done
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -317,12 +313,12 @@ export default function AdminSalesRepsPage() {
           </DialogHeader>
           <p className="text-slate-400">This will demote the user to a regular user role. They will lose access to the Sales Rep dashboard.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRemoveConfirm(null)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="tertiary" onClick={() => setRemoveConfirm(null)}>
               Cancel
-            </Button>
-            <Button onClick={handleRemove} className="bg-red-600 hover:bg-red-700">
+            </AdminButton>
+            <AdminButton variant="primary" tone="danger" onClick={handleRemove}>
               Remove Role
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

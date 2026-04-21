@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAdminMails, adminApi } from "@/hooks/useAdmin"
 import { ChevronLeft, ChevronRight, Mail, Eye, Archive, Reply, MailOpen } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import {
   Select,
   SelectContent,
@@ -159,13 +159,13 @@ export default function AdminMailsPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} mails</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}

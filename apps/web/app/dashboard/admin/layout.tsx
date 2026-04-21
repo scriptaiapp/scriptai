@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
+import { AdminButton } from "@/components/admin/admin-button"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -63,80 +64,95 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user || profile?.role !== "admin") return null
 
+  const initial = (profile?.full_name || profile?.email || "A").charAt(0).toUpperCase()
+
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100">
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 border-r border-slate-800 transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900/95 backdrop-blur border-r border-slate-800 transition-transform lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800">
-          <Link href="/dashboard/admin" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+        <div className="flex h-16 items-center justify-between px-5 border-b border-slate-800">
+          <Link href="/dashboard/admin" className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-900/30">
               A
             </div>
-            <span className="font-semibold text-lg">Admin Panel</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-semibold">Admin Panel</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">Creator AI</span>
+            </div>
           </Link>
           <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {adminLinks.map((link) => {
-            const isActive = pathname === link.href || (link.href !== "/dashboard/admin" && pathname.startsWith(link.href))
+            const isActive = link.href === "/dashboard/admin"
+              ? pathname === link.href
+              : pathname.startsWith(link.href)
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors mb-1",
+                  "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   isActive
-                    ? "bg-purple-600/20 text-purple-400"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                    ? "bg-gradient-to-r from-purple-600/20 to-pink-600/10 text-purple-300"
+                    : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-100"
                 )}
               >
-                <link.icon className="h-4 w-4 shrink-0" />
+                {isActive && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-pink-400" />}
+                <link.icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-purple-300" : "text-slate-500 group-hover:text-slate-300")} />
                 {link.label}
               </Link>
             )
           })}
         </nav>
 
-        <div className="border-t border-slate-800 p-4">
-          <button
+        <div className="border-t border-slate-800 p-3">
+          <div className="flex items-center gap-3 rounded-lg px-2 py-2 mb-2">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+              {initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-slate-100 truncate">{profile?.full_name || profile?.email}</p>
+              <p className="text-xs text-slate-500">Administrator</p>
+            </div>
+          </div>
+          <AdminButton
+            variant="tertiary"
+            tone="danger"
             onClick={() => logout()}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-red-400 transition-colors w-full"
+            className="w-full justify-start"
           >
             <LogOut className="h-4 w-4" />
             Logout
-          </button>
+          </AdminButton>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex h-16 items-center gap-4 border-b border-slate-800 bg-slate-900/50 px-6">
-          <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
+        <header className="flex h-16 items-center gap-4 border-b border-slate-800 bg-slate-950/60 backdrop-blur px-6 lg:hidden">
+          <button className="text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex-1" />
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-slate-200">{profile?.full_name || profile?.email}</p>
-              <p className="text-xs text-slate-500">Administrator</p>
-            </div>
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
-              {(profile?.full_name || profile?.email || "A").charAt(0).toUpperCase()}
-            </div>
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-xs">
+            {initial}
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto">
+          <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">{children}</div>
+        </main>
       </div>
     </div>
   )

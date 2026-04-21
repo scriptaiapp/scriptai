@@ -10,7 +10,7 @@ import {
   Trash2,
   Briefcase,
 } from "lucide-react"
-import { Button } from "@repo/ui/button"
+import { AdminButton } from "@/components/admin/admin-button"
 import { Input } from "@repo/ui/input"
 import { Label } from "@repo/ui/label"
 import { Textarea } from "@repo/ui/textarea"
@@ -133,10 +133,10 @@ export default function AdminJobsPage() {
           <h1 className="text-2xl font-bold text-slate-100">Job Posts</h1>
           <p className="text-slate-400 mt-1">Manage career openings</p>
         </div>
-        <Button onClick={openNew} className="bg-purple-600 hover:bg-purple-700 text-white">
-          <Plus className="h-4 w-4 mr-1.5" />
+        <AdminButton onClick={openNew} variant="primary">
+          <Plus className="h-4 w-4" />
           New Job
-        </Button>
+        </AdminButton>
       </div>
 
       <div className="flex gap-3">
@@ -207,13 +207,13 @@ export default function AdminJobsPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{total} jobs</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </AdminButton>
             <span className="flex items-center text-sm text-slate-400 px-2">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="border-slate-700 text-slate-300">
+            <AdminButton variant="secondary" size="icon" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </AdminButton>
           </div>
         </div>
       )}
@@ -289,12 +289,12 @@ export default function AdminJobsPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-700 text-white">
+              <AdminButton variant="primary" onClick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : isNew ? "Create Job" : "Save Changes"}
-              </Button>
-              <Button variant="outline" onClick={() => setEditJob(null)} className="border-slate-700 text-slate-300">
+              </AdminButton>
+              <AdminButton variant="tertiary" onClick={() => setEditJob(null)}>
                 Cancel
-              </Button>
+              </AdminButton>
             </div>
           </div>
         </DialogContent>
