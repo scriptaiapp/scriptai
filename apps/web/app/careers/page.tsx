@@ -57,6 +57,7 @@ const perks = [
 
 export default function CareersPage() {
   const [openings, setOpenings] = useState<JobPost[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const lenis = new Lenis({ autoRaf: true })
@@ -70,7 +71,10 @@ export default function CareersPage() {
       .select("*")
       .eq("status", "active")
       .order("created_at", { ascending: true })
-      .then(({ data }) => { if (data) setOpenings(data) })
+      .then(({ data }) => {
+        setOpenings(data ?? [])
+        setLoading(false)
+      })
   }, [])
 
   return (
@@ -245,8 +249,13 @@ export default function CareersPage() {
                 </motion.div>
               ))}
 
-              {openings.length === 0 && (
+              {loading && openings.length === 0 && (
                 <div className="text-center py-12 text-slate-500">Loading positions...</div>
+              )}
+              {!loading && openings.length === 0 && (
+                <div className="text-center py-12 text-slate-500">
+                  No openings right now — but we're always meeting great people.
+                </div>
               )}
             </div>
 

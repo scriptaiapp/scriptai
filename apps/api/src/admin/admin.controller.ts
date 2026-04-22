@@ -291,22 +291,15 @@ export class AdminController {
         team: { type: 'string' },
         location: { type: 'string' },
         type: { type: 'string' },
+        category: { type: 'string', enum: ['engineering', 'ai', 'design', 'marketing', 'business', 'other'] },
         description: { type: 'string' },
         requirements: { type: 'string' },
-        status: { type: 'string' },
+        status: { type: 'string', enum: ['active', 'inactive', 'closed'] },
       },
     },
   })
   createJob(
-    @Body() body: {
-      title: string;
-      team: string;
-      location?: string;
-      type?: string;
-      description: string;
-      requirements?: string;
-      status?: string;
-    },
+    @Body() body: Record<string, unknown>,
     @Req() req: AuthRequest,
   ) {
     this.adminService.logActivity(this.getUserId(req), 'create_job', 'job_post', undefined, { title: body.title });

@@ -235,12 +235,24 @@ export default function AdminApplicationsPage() {
             {(viewApp?.resume_file_path || viewApp?.cover_letter_file_path) && (
               <div className="flex flex-wrap gap-3 border-t border-slate-800 pt-4">
                 {viewApp.resume_file_path && (
-                  <a href={viewApp.resume_file_path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-green-400 hover:bg-slate-700">
+                  <a
+                    href={viewApp.resume_file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={`${viewApp.full_name.replace(/\s+/g, "_")}_resume.pdf`}
+                    className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-green-400 hover:bg-slate-700"
+                  >
                     <Download className="h-3.5 w-3.5" /> Resume PDF
                   </a>
                 )}
                 {viewApp.cover_letter_file_path && (
-                  <a href={viewApp.cover_letter_file_path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-blue-400 hover:bg-slate-700">
+                  <a
+                    href={viewApp.cover_letter_file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={`${viewApp.full_name.replace(/\s+/g, "_")}_cover_letter.pdf`}
+                    className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-blue-400 hover:bg-slate-700"
+                  >
                     <Download className="h-3.5 w-3.5" /> Cover Letter PDF
                   </a>
                 )}

@@ -336,18 +336,27 @@ export class AdminService {
     return data;
   }
 
-  async createJobPost(job: {
-    title: string;
-    team: string;
-    location?: string;
-    type?: string;
-    description: string;
-    requirements?: string;
-    status?: string;
-  }) {
+  private static readonly ALLOWED_JOB_FIELDS = new Set([
+    'title', 'team', 'location', 'type', 'category', 'description', 'requirements', 'status',
+  ]);
+
+  private filterJobFields(input: Record<string, unknown>) {
+    const out: Record<string, unknown> = {};
+    for (const k of Object.keys(input)) {
+      if (AdminService.ALLOWED_JOB_FIELDS.has(k) && input[k] !== undefined) out[k] = input[k];
+    }
+    return out;
+  }
+
+  async createJobPost(job: Record<string, unknown>) {
+    const filtered = this.filterJobFields(job);
+    if (!filtered.title || !filtered.team || !filtered.description) {
+      throw new BadRequestException('Title, team, and description are required');
+    }
+
     const { data, error } = await this.db
       .from('job_posts')
-      .insert(job)
+      .insert(filtered)
       .select()
       .single();
 
@@ -356,9 +365,14 @@ export class AdminService {
   }
 
   async updateJobPost(id: string, updates: Record<string, unknown>) {
+    const filtered = this.filterJobFields(updates);
+    if (Object.keys(filtered).length === 0) {
+      throw new BadRequestException('No valid fields to update');
+    }
+
     const { data, error } = await this.db
       .from('job_posts')
-      .update(updates)
+      .update(filtered)
       .eq('id', id)
       .select()
       .single();
