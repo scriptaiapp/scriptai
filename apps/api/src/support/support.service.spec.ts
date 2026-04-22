@@ -5,6 +5,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupportService } from './support.service';
+import { SupabaseService } from '../supabase/supabase.service';
+
+const mockSupabaseService: Pick<SupabaseService, 'getClient'> = {
+  getClient: () => ({
+    from: () => ({ insert: () => Promise.resolve({ error: null }) }),
+  }) as unknown as ReturnType<SupabaseService['getClient']>,
+};
 
 describe('SupportService', () => {
   let service: SupportService;
@@ -15,6 +22,7 @@ describe('SupportService', () => {
         providers: [
           SupportService,
           { provide: ConfigService, useValue: { get: () => undefined } },
+          { provide: SupabaseService, useValue: mockSupabaseService },
         ],
       }).compile();
       service = module.get<SupportService>(SupportService);
@@ -33,6 +41,7 @@ describe('SupportService', () => {
         providers: [
           SupportService,
           { provide: ConfigService, useValue: { get: () => undefined } },
+          { provide: SupabaseService, useValue: mockSupabaseService },
         ],
       }).compile();
       service = module.get<SupportService>(SupportService);
