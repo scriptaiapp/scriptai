@@ -35,6 +35,7 @@ export const footerItems: FooterSection = {
     { name: "Features", href: "/features" },
     { name: "Pricing", href: "/pricing" },
     { name: "Blog", href: "/blog" },
+    { name: "Changelog", href: "/changelog" },
     { name: "FAQ", href: "/#faq" },
     { name: "Contact Us", href: "/contact-us" },
   ],

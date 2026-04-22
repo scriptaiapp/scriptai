@@ -1,6 +1,6 @@
 {
   "name": "creatorai",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "",
@@ -22,7 +22,8 @@
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "release": "node ./scripts/release.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
