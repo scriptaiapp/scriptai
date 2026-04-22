@@ -52,15 +52,15 @@ export async function POST(request: NextRequest) {
 
   const { email_id, from, to, subject } = event.data;
   const sender = parseAddress(from);
-  const recipients = (to ?? []).map((a) => a.toLowerCase());
+  const recipients = (to ?? []).map((a) => parseAddress(a).email).filter(Boolean);
 
   // Loop guard: drop anything originating from our own domain (self-sent / forward artifacts).
-  if (sender.email.endsWith(`@${OWN_DOMAIN}`)) {
+  if (!sender.email || sender.email.endsWith(`@${OWN_DOMAIN}`)) {
     console.warn(`[resend-webhook] dropped self-origin email id=${email_id} from=${sender.email}`);
     return NextResponse.json({ received: true, skipped: "self-origin" });
   }
 
-  if (!recipients.some((addr) => addr.includes(SUPPORT_INBOX))) {
+  if (!recipients.includes(SUPPORT_INBOX)) {
     return NextResponse.json({ received: true, skipped: "not-support" });
   }
 
