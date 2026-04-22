@@ -89,23 +89,33 @@ export default function AdminJobsPage() {
 
   const handleSave = async () => {
     if (!editJob || saving) return
-    if (!editJob.title || !editJob.description || !editJob.team) {
+    if (!editJob.title?.trim() || !editJob.description?.trim() || !editJob.team?.trim()) {
       toast.error("Title, team, and description are required")
       return
     }
     setSaving(true)
     try {
+      const payload: Partial<JobPost> = {
+        title: editJob.title?.trim(),
+        team: editJob.team,
+        location: editJob.location?.trim() || "Remote",
+        type: editJob.type || "Full-time",
+        category: editJob.category || "other",
+        description: editJob.description?.trim(),
+        requirements: editJob.requirements?.trim() || undefined,
+        status: editJob.status || "active",
+      }
       if (isNew) {
-        await adminApi.createJob(editJob)
+        await adminApi.createJob(payload)
         toast.success("Job created")
       } else {
-        await adminApi.updateJob(editJob.id!, editJob)
+        await adminApi.updateJob(editJob.id!, payload)
         toast.success("Job updated")
       }
       setEditJob(null)
       refresh()
-    } catch {
-      toast.error("Failed to save job")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save job")
     } finally {
       setSaving(false)
     }

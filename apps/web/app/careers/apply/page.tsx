@@ -65,16 +65,14 @@ function ApplyPageContent() {
   const [job, setJob] = useState<JobPost | null>(null)
 
   useEffect(() => {
-    if (!position) return
+    if (!jobPostId && !position) return
     const supabase = createClient()
-    supabase
-      .from("job_posts")
-      .select("*")
-      .eq("status", "active")
-      .ilike("title", position)
-      .maybeSingle()
-      .then(({ data }) => { if (data) setJob(data) })
-  }, [position])
+    const base = supabase.from("job_posts").select("*").eq("status", "active")
+    const promise = jobPostId
+      ? base.eq("id", jobPostId).maybeSingle()
+      : base.ilike("title", position).maybeSingle()
+    promise.then(({ data }) => { if (data) setJob(data) })
+  }, [position, jobPostId])
 
   const isDev = useMemo(() => {
     const team = job?.team || ""
@@ -108,7 +106,7 @@ function ApplyPageContent() {
 
     try {
       const fd = new FormData()
-      fd.append("position", position || "General Application")
+      fd.append("position", position || job?.title || "General Application")
       fd.append("full_name", formData.full_name)
       fd.append("email", formData.email)
       fd.append("phone", formData.phone)
