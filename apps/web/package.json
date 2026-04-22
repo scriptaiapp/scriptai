@@ -85,7 +85,7 @@
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
-    "resend": "^6.0.1",
+    "resend": "^6.12.2",
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.1",
     "svix": "^1.87.0",
