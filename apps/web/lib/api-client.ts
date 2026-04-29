@@ -80,7 +80,7 @@ function getBackendUrl(): string {
   if (typeof window === 'undefined') {
     return process.env.NEXT_PUBLIC_BACKEND_URL || '';
   }
-  return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8001';
+  return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 }
 
 // Create the Axios Instance
